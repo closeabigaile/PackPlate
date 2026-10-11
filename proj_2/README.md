@@ -141,11 +141,9 @@ the job moves on. Only one run can happen at a time.
 
 **Sources and etiquette.** Menus and nutrition come from NC State's NetNutrition
 (`netmenu2.cbord.com`), hours from `dining.ncsu.edu`. The job is deliberately
-slow (1 request/s, sequential, identifying User-Agent, labels cached). **Do not schedule it until NC State
-Dining has given permission**; run it by hand. The intended schedule once
-allowed is once a day at 4am Eastern, re-scraping all 7 days (a cached run is
-roughly 10 minutes; the first run, which fills the label cache, takes longer).
-The `menus_changed` stat shows how often menus really change.
+slow (1 request/s, sequential, identifying User-Agent, labels cached). NC State
+Dining has allowed scraping **at most once or twice a day**; run it by hand for
+now. The `menus_changed` stat shows how often menus really change.
 
 Known source limits: "Contains Nuts" covers peanuts and tree nuts, and
 "Contains Seafood" covers fish and shellfish; the source can't tell them apart.
