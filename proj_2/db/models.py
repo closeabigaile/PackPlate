@@ -2,7 +2,7 @@
 
 Single writer per table (proj_1b report, Figure 1):
     ingestion/  writes locations, hours_days, menus, menu_items, nutrition, ingest_runs
-    backend/    reads those; writes only crowd_reports (added with the crowd feature)
+    backend/    reads those; writes only crowd_reports
 
 Unknown stays unknown: a NULL nutrient or a missing label means "not published",
 never zero or safe.
@@ -10,7 +10,7 @@ never zero or safe.
 
 from datetime import date, datetime
 
-from sqlalchemy import Date, DateTime, Float, ForeignKey, Integer, String, Text
+from sqlalchemy import CheckConstraint, Date, DateTime, Float, ForeignKey, Index, Integer, String, Text, func
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
@@ -136,3 +136,26 @@ class IngestRun(Base):
     options: Mapped[dict] = mapped_column(JSONB, default=dict)
     stats: Mapped[dict] = mapped_column(JSONB, default=dict)
     errors: Mapped[list] = mapped_column(JSONB, default=list)
+
+
+CROWD_LEVELS = ("not_busy", "moderate", "crowded")
+
+
+class CrowdReport(Base):
+    """One student's report of how busy a location is. Writer: backend (the API).
+
+    Append-only: the API never updates a row, and the crowd level is computed from
+    recent rows on read, so two reports at once can't race. Nothing about the
+    reporter is stored.
+    """
+
+    __tablename__ = "crowd_reports"
+    __table_args__ = (
+        CheckConstraint("level IN ('not_busy', 'moderate', 'crowded')", name="ck_crowd_reports_level"),
+        Index("ix_crowd_reports_location_id_created_at", "location_id", "created_at"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    location_id: Mapped[int] = mapped_column(ForeignKey("locations.id", ondelete="CASCADE"))
+    level: Mapped[str] = mapped_column(String(20))  # one of CROWD_LEVELS
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())

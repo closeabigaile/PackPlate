@@ -14,10 +14,12 @@ import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import make_url, text
 
+from app.api.crowd import get_throttle
 from app.deps import get_db
 from app.main import app
+from app.services.crowd import Throttle
 from db.migrate import upgrade
-from db.models import Base, HoursDay, IngestRun, Location, Menu, MenuItem, Nutrition
+from db.models import Base, CrowdReport, HoursDay, IngestRun, Location, Menu, MenuItem, Nutrition
 from db.session import make_engine, make_session_factory, sqlalchemy_url
 
 SCRAPED = datetime(2026, 10, 6, 8, 0, tzinfo=timezone.utc)
@@ -64,8 +66,10 @@ def db(pg_engine):
 
 @pytest.fixture
 def client(db):
-    """The API, reading from the test database."""
+    """The API, reading from the test database, with a fresh crowd-report throttle."""
+    throttle = Throttle(60)
     app.dependency_overrides[get_db] = lambda: db
+    app.dependency_overrides[get_throttle] = lambda: throttle
     yield TestClient(app)
     app.dependency_overrides.clear()
 
@@ -100,6 +104,10 @@ class Seed:
         self.db.add(MenuItem(menu_id=menu_id, detail_oid=1, name=name, traits_raw=[],
                              allergens=list(allergens), diets=list(diets),
                              unrecognized_traits=list(unrecognized), nutrition_key=nutrition_key, **values))
+        self.db.commit()
+
+    def crowd(self, location_id, level, created_at):
+        self.db.add(CrowdReport(location_id=location_id, level=level, created_at=created_at))
         self.db.commit()
 
     def run(self, status="ok", finished_at=SCRAPED):

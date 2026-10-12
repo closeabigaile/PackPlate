@@ -10,11 +10,13 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
 from app.deps import get_db
+from app.repositories import crowd_reports as crowd_repo
 from app.repositories import locations as locations_repo
 from app.repositories import menus as menus_repo
 from app.schemas.locations import (
     HoursDay, LocationDetail, LocationSummary, Menu, MenuItem, MenuSummary, Period,
 )
+from app.services.crowd import WINDOW, aggregate
 from app.services.hours import campus_time, open_state, periods
 from app.services.menus import menu_sort_key
 
@@ -35,7 +37,7 @@ def _hours_day(day: date, row) -> HoursDay:
     )
 
 
-def _summary(location, hours: dict, at: datetime) -> dict:
+def _summary(location, hours: dict, reports: dict, at: datetime) -> dict:
     today = at.date()
     todays = hours.get((location.id, today))
     state = open_state(at, todays, hours.get((location.id, today - timedelta(days=1))))
@@ -48,6 +50,7 @@ def _summary(location, hours: dict, at: datetime) -> dict:
         "closes_at": state.closes_at,
         "opens_next_at": state.opens_next_at,
         "today": _hours_day(today, todays),
+        "crowd": vars(aggregate(reports.get(location.id, []), at)),
     }
 
 
@@ -64,10 +67,11 @@ def _get_location_or_404(db: Session, location_id: int):
 
 @router.get("", response_model=list[LocationSummary])
 def list_locations(at: datetime | None = None, db: Session = Depends(get_db)):
-    """Every location, with today's hours and whether it is open at `at`."""
+    """Every location, with today's hours, whether it is open at `at`, and its crowd level."""
     at = campus_time(at)
     hours = locations_repo.hours_between(db, at.date() - timedelta(days=1), at.date())
-    return [_summary(loc, hours, at) for loc in locations_repo.list_locations(db)]
+    reports = crowd_repo.reports_between(db, at - WINDOW, at)
+    return [_summary(loc, hours, reports, at) for loc in locations_repo.list_locations(db)]
 
 
 @router.get("/{location_id}", response_model=LocationDetail)
@@ -78,8 +82,9 @@ def get_location(location_id: int, at: datetime | None = None, db: Session = Dep
     days = [at.date() + timedelta(days=i) for i in range(DAYS_SHOWN)]
     hours = locations_repo.hours_between(db, days[0] - timedelta(days=1), days[-1], location_id)
     menus = sorted(menus_repo.menus_from(db, location_id, days[0]), key=menu_sort_key)
+    reports = crowd_repo.reports_between(db, at - WINDOW, at, location_id)
     return {
-        **_summary(location, hours, at),
+        **_summary(location, hours, reports, at),
         "hours": [_hours_day(day, hours.get((location_id, day))) for day in days],
         "menus": [_menu_summary(m) for m in menus],
     }
