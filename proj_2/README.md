@@ -22,15 +22,15 @@ proj_2/
 │   │   ├── api/            routes, one file per feature
 │   │   │   ├── locations.py    /locations, /locations/{id}, /locations/{id}/menus
 │   │   │   ├── meta.py         /freshness
-│   │   │   ├── filters.py
-│   │   │   └── crowd.py
+│   │   │   ├── filters.py      /filters/locations/{id}/menus, /filters/group
+│   │   │   └── crowd.py        /crowd/{id}
 │   │   ├── schemas/        Pydantic response models
 │   │   ├── services/       business logic (no database)
 │   │   │   ├── hours.py        open now?, past-midnight windows
 │   │   │   ├── menus.py        meal ordering
 │   │   │   ├── freshness.py    stale-data rule
-│   │   │   ├── filter_engine.py
-│   │   │   └── crowd.py
+│   │   │   ├── filter_engine.py  fits / conflicts / incomplete rules
+│   │   │   └── crowd.py        crowd level from recent reports, report throttle
 │   │   └── repositories/   data access (only layer that queries Postgres)
 │   └── tests/              pytest; API tests need TEST_DATABASE_URL
 │
@@ -104,11 +104,27 @@ python -m uvicorn app.main:app --app-dir backend --reload
 | `GET /locations` | every location: today's hours, `is_open`, `closes_at`, `opens_next_at` |
 | `GET /locations/{id}` | the same, plus 7 days of hours and the menus listed from today on |
 | `GET /locations/{id}/menus?date=YYYY-MM-DD` | every menu that day (default today) with items, allergens, diets, and nutrition |
+| `POST /filters/locations/{id}/menus?date=` | the same menus, each item checked against every profile in the body: `fits`, `conflicts`, or `incomplete`, with reasons |
+| `POST /filters/group?at=` | every location for a group: per profile how many items fit, and `everyone_fits`; ranked everyone-fits first, then open, then name |
+| `POST /crowd/{id}` | body `{"level": "not_busy" \| "moderate" \| "crowded"}`; returns the new crowd level (201), or 429 if this client reported this location in the last minute |
 
 Time-dependent routes take `?at=2026-10-06T12:00:00-04:00` (default now, campus
 time), so you can check "open at noon" without waiting for noon. Unknown stays
 unknown: `is_open: null` means today's hours aren't known, and `nutrition: null`
 means the item has no label, so its allergens come from icons only.
+
+`/locations` and `/locations/{id}` also carry `crowd`: the level from reports in
+the last 30 minutes (`CROWD_WINDOW_MINUTES`), newer reports counting more, or
+`level: null` when nobody has reported. Reports are stored without anything about
+the reporter.
+
+**Filtering.** The body is `{"profiles": [...]}`, 1–10 profiles, each with any of
+`name`, `avoid` (allergen keys: dairy, egg, gluten, nuts, pork, seafood, sesame,
+soy), `diets` (halal, vegan, vegetarian), `min_protein_g`, `max_calories`,
+`max_sodium_mg`. Unknown keys or fields are a 422, never ignored. Profiles are
+not stored. The rules are at the top of `services/filter_engine.py`; in short, an
+item only `fits` an allergy when it has a nutrition label and no unrecognized
+traits, and only fits a diet when it is tagged with it.
 
 Frontend:
 

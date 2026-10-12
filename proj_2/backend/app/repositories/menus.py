@@ -22,3 +22,12 @@ def menus_on(db: Session, location_id: int, day: date) -> list[Menu]:
         .where(Menu.location_id == location_id, Menu.date == day)
         .options(selectinload(Menu.items).selectinload(MenuItem.nutrition))
     ))
+
+
+def all_menus_on(db: Session, day: date) -> list[Menu]:
+    """Every location's menus on `day`, with items and their nutrition labels loaded."""
+    return list(db.scalars(
+        select(Menu)
+        .where(Menu.date == day)
+        .options(selectinload(Menu.items).selectinload(MenuItem.nutrition))
+    ))
