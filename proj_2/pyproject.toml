@@ -1,0 +1,29 @@
+# Tool settings for proj_2's Python code (backend/, ingestion/, db/).
+# Not a package: dependencies stay in the requirements files.
+
+[tool.black]
+line-length = 88
+target-version = ["py312"]
+
+[tool.ruff]
+line-length = 88
+target-version = "py312"
+# backend/ holds the `app` package, so imports of it count as first-party.
+src = [".", "backend"]
+
+[tool.ruff.lint]
+# E4/E7/E9/F: Ruff's defaults (errors, syntax, undefined/unused names).
+# I: import order. B: likely bugs. UP: newer Python syntax.
+# Line length is left to Black.
+select = ["E4", "E7", "E9", "F", "I", "B", "UP"]
+
+[tool.ruff.lint.flake8-bugbear]
+# FastAPI's dependency style, not a real mutable default.
+extend-immutable-calls = ["fastapi.Depends", "fastapi.Query"]
+
+[tool.coverage.run]
+branch = true
+omit = ["*/tests/*"]
+
+[tool.coverage.report]
+show_missing = true
