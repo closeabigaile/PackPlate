@@ -5,7 +5,8 @@ Parser tests use real pages captured from NetNutrition and dining.ncsu.edu on
 the HTML the parser reads; when re-capturing after a site change, trim again
 (no scripts, API keys, analytics, or staff contact details in the repo).
 
-Database tests need TEST_DATABASE_URL (see proj_2/.env.example) and skip without it.
+Database tests need TEST_DATABASE_URL (see proj_2/.env.example) and skip without it,
+unless REQUIRE_TEST_DB=1 (set in CI), which makes them fail instead.
 The test database is created if missing, rebuilt from the Alembic migrations once per
 session (so the migrations are tested too), and emptied before each test.
 """
@@ -42,15 +43,22 @@ def _create_database_if_missing(url: str):
             conn.execute(f'CREATE DATABASE "{target.database}"')
 
 
+def _no_database(reason: str):
+    # In CI a missing database must fail the build, not quietly skip half the tests.
+    if os.getenv("REQUIRE_TEST_DB") == "1":
+        pytest.fail(reason)
+    pytest.skip(reason)
+
+
 @pytest.fixture(scope="session")
 def pg_engine():
     url = os.getenv("TEST_DATABASE_URL")
     if not url:
-        pytest.skip("TEST_DATABASE_URL not set")
+        _no_database("TEST_DATABASE_URL not set")
     try:
         _create_database_if_missing(url)
     except psycopg.OperationalError as e:
-        pytest.skip(f"test database unreachable: {e}")
+        _no_database(f"test database unreachable: {e}")
     engine = make_engine(url)
     with engine.begin() as conn:
         conn.execute(text("DROP SCHEMA public CASCADE"))
