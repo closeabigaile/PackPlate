@@ -16,17 +16,29 @@ def test_list_locations_with_open_status(client, seed):
     response = client.get("/locations", params={"at": NOON})
     assert response.status_code == 200
     by_id = {loc["id"]: loc for loc in response.json()}
-    assert [loc["name"] for loc in response.json()] == sorted(loc["name"] for loc in response.json())
+    assert [loc["name"] for loc in response.json()] == sorted(
+        loc["name"] for loc in response.json()
+    )
 
     fountain = by_id[1]
     assert fountain["is_open"] is True
     assert fountain["closes_at"] == "2026-10-06T21:00:00-04:00"
     assert fountain["dining_url"] == "https://dining.ncsu.edu/location/fountain/"
     assert fountain["today"] == {
-        "date": "2026-10-06", "status": "open", "raw_text": "7:00am - 9:00pm",
-        "periods": [{"opens_at": "2026-10-06T07:00:00-04:00", "closes_at": "2026-10-06T21:00:00-04:00"}],
+        "date": "2026-10-06",
+        "status": "open",
+        "raw_text": "7:00am - 9:00pm",
+        "periods": [
+            {
+                "opens_at": "2026-10-06T07:00:00-04:00",
+                "closes_at": "2026-10-06T21:00:00-04:00",
+            }
+        ],
     }
-    assert by_id[2]["is_open"] is True and by_id[2]["closes_at"] == "2026-10-06T13:30:00-04:00"
+    assert (
+        by_id[2]["is_open"] is True
+        and by_id[2]["closes_at"] == "2026-10-06T13:30:00-04:00"
+    )
 
     # No hours stored and no hours page: unknown, not closed.
     bistro = by_id[12]
@@ -48,7 +60,7 @@ def test_location_detail_has_a_week_of_hours_and_upcoming_menus(client, seed):
     seed.location(1, description="All you care to eat.")
     seed.hours(1, TUE, windows=[(420, 1260)])
     seed.hours(1, WED, status="closed")
-    seed.menu(10, 1, MON, "Lunch")                     # past: not listed
+    seed.menu(10, 1, MON, "Lunch")  # past: not listed
     seed.menu(11, 1, TUE, "Dinner")
     seed.menu(12, 1, TUE, "Breakfast")
     seed.menu(13, 1, TUE, "Daily", scraped=False)
@@ -58,7 +70,9 @@ def test_location_detail_has_a_week_of_hours_and_upcoming_menus(client, seed):
     assert detail["description"] == "All you care to eat."
     assert [h["date"] for h in detail["hours"]][:2] == ["2026-10-06", "2026-10-07"]
     assert len(detail["hours"]) == 7
-    assert [h["status"] for h in detail["hours"]] == ["open", "closed"] + ["unknown"] * 5
+    assert [h["status"] for h in detail["hours"]] == ["open", "closed"] + [
+        "unknown"
+    ] * 5
     assert [(m["date"], m["meal"], m["scraped"]) for m in detail["menus"]] == [
         ("2026-10-06", "Breakfast", True),
         ("2026-10-06", "Dinner", True),
@@ -77,11 +91,27 @@ def test_all_menus_for_a_day_with_items_and_nutrition(client, seed):
     seed.menu(11, 1, TUE, "Lunch")
     seed.menu(12, 1, TUE, "Breakfast")
     seed.menu(14, 1, WED, "Lunch")
-    seed.nutrition("1|pita|1 each", calories=170, protein_g=6, fat_g=1, carbs_g=34, sodium_mg=320,
-                   serving_size="1 each", ingredients="flour, water", contains=["Contains Gluten"],
-                   missing_fields=["Potassium"])
-    seed.item(12, "Pita", nutrition_key="1|pita|1 each", allergens=["gluten"], diets=["vegan"],
-              course="Bread", serving_size="1 each")
+    seed.nutrition(
+        "1|pita|1 each",
+        calories=170,
+        protein_g=6,
+        fat_g=1,
+        carbs_g=34,
+        sodium_mg=320,
+        serving_size="1 each",
+        ingredients="flour, water",
+        contains=["Contains Gluten"],
+        missing_fields=["Potassium"],
+    )
+    seed.item(
+        12,
+        "Pita",
+        nutrition_key="1|pita|1 each",
+        allergens=["gluten"],
+        diets=["vegan"],
+        course="Bread",
+        serving_size="1 each",
+    )
     seed.item(12, "Mystery Bar", unrecognized=["Contains Shellfish"])
     seed.item(11, "Grilled Chicken", allergens=[], course="Grill")
 
@@ -98,7 +128,7 @@ def test_all_menus_for_a_day_with_items_and_nutrition(client, seed):
     assert pita["nutrition"]["missing_fields"] == ["Potassium"]
 
     mystery = breakfast["items"][1]
-    assert mystery["nutrition"] is None   # no label: allergens are icons only
+    assert mystery["nutrition"] is None  # no label: allergens are icons only
     assert mystery["unrecognized_traits"] == ["Contains Shellfish"]
 
 
@@ -109,4 +139,6 @@ def test_day_without_menus_is_empty(client, seed):
 
 def test_bad_date_is_422(client, seed):
     seed.location(1)
-    assert client.get("/locations/1/menus", params={"date": "tuesday"}).status_code == 422
+    assert (
+        client.get("/locations/1/menus", params={"date": "tuesday"}).status_code == 422
+    )

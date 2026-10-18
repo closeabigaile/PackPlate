@@ -23,9 +23,9 @@ MAX_PROFILES = 10
 class Profile(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    name: str | None = Field(None, max_length=50)   # echoed back, e.g. "Sam"
-    avoid: list[Allergen] = []          # allergens to avoid
-    diets: list[Diet] = []              # diets the item must meet, all of them
+    name: str | None = Field(None, max_length=50)  # echoed back, e.g. "Sam"
+    avoid: list[Allergen] = []  # allergens to avoid
+    diets: list[Diet] = []  # diets the item must meet, all of them
     min_protein_g: float | None = Field(None, ge=0, le=1000)
     max_calories: float | None = Field(None, ge=0, le=10000)
     max_sodium_mg: float | None = Field(None, ge=0, le=100000)
@@ -38,11 +38,13 @@ class FilterRequest(BaseModel):
 
 class ItemResult(BaseModel):
     verdict: Verdict
-    reasons: list[str]   # why it doesn't fit, or what we couldn't check; empty for "fits"
+    reasons: list[
+        str
+    ]  # why it doesn't fit, or what we couldn't check; empty for "fits"
 
 
 class FilteredItem(MenuItem):
-    results: list[ItemResult]   # one per profile, in request order
+    results: list[ItemResult]  # one per profile, in request order
 
 
 class FilteredMenu(MenuSummary):
@@ -59,9 +61,9 @@ class ProfileCounts(BaseModel):
 class GroupLocation(BaseModel):
     id: int
     name: str
-    is_open: bool | None        # at `at`; null = hours unknown
+    is_open: bool | None  # at `at`; null = hours unknown
     closes_at: datetime | None
     opens_next_at: datetime | None
-    items_checked: int          # menu items that day; 0 = no menu scraped
-    everyone_fits: bool         # every profile has at least one item that fits
-    profiles: list[ProfileCounts]   # one per profile, in request order
+    items_checked: int  # menu items that day; 0 = no menu scraped
+    everyone_fits: bool  # every profile has at least one item that fits
+    profiles: list[ProfileCounts]  # one per profile, in request order

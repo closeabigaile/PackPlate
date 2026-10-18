@@ -12,8 +12,12 @@ def test_split_traits_maps_site_wording_to_keys():
 
 
 def test_label_item_merges_icons_with_contains_and_keeps_unknown_names():
-    row = ItemRow(1, "Shrimp Pasta", "Entree", "1 cup", ["Contains Gluten", "Vegetarian"])
-    out = normalize.label_item(row, ["Contains Dairy", "Contains Gluten", "Contains Shellfish"])
+    row = ItemRow(
+        1, "Shrimp Pasta", "Entree", "1 cup", ["Contains Gluten", "Vegetarian"]
+    )
+    out = normalize.label_item(
+        row, ["Contains Dairy", "Contains Gluten", "Contains Shellfish"]
+    )
     assert out["allergens"] == ["dairy", "gluten"]
     assert out["diets"] == ["vegetarian"]
     # A "Contains:" name we have no key for must stay visible, never silently dropped.
@@ -35,10 +39,20 @@ def test_parse_amount_never_guesses():
 
 
 def test_normalize_label_lists_missing_key_fields():
-    label = Label(name="X", serving_size="1 cup", ingredients="rice", contains=[],
-                  nutrients={"Calories": "200", "Protein": "NA", "Total Fat": "1g",
-                             "Total Carbohydrate": "40g", "Sodium": "5mg"},
-                  incomplete=["Protein"])
+    label = Label(
+        name="X",
+        serving_size="1 cup",
+        ingredients="rice",
+        contains=[],
+        nutrients={
+            "Calories": "200",
+            "Protein": "NA",
+            "Total Fat": "1g",
+            "Total Carbohydrate": "40g",
+            "Sodium": "5mg",
+        },
+        incomplete=["Protein"],
+    )
     data = normalize.normalize_label(label)
     assert data["calories"] == 200.0
     assert data["protein_g"] is None
@@ -46,15 +60,29 @@ def test_normalize_label_lists_missing_key_fields():
 
 
 def test_normalize_label_flags_absent_key_nutrients():
-    label = Label(name="X", serving_size=None, ingredients=None, contains=[],
-                  nutrients={"Calories": "200"})
+    label = Label(
+        name="X",
+        serving_size=None,
+        ingredients=None,
+        contains=[],
+        nutrients={"Calories": "200"},
+    )
     assert normalize.normalize_label(label)["missing_fields"] == [
-        "Protein", "Sodium", "Total Carbohydrate", "Total Fat"]
+        "Protein",
+        "Sodium",
+        "Total Carbohydrate",
+        "Total Fat",
+    ]
 
 
 def test_nutrition_key_is_scoped_per_location():
-    assert normalize.nutrition_key(1, " Cheese  Pizza", "1 Slice") == "1|cheese pizza|1 slice"
-    assert normalize.nutrition_key(1, "Cheese Pizza", "1 slice") != normalize.nutrition_key(7, "Cheese Pizza", "1 slice")
+    assert (
+        normalize.nutrition_key(1, " Cheese  Pizza", "1 Slice")
+        == "1|cheese pizza|1 slice"
+    )
+    assert normalize.nutrition_key(
+        1, "Cheese Pizza", "1 slice"
+    ) != normalize.nutrition_key(7, "Cheese Pizza", "1 slice")
 
 
 def test_same_dish_tolerates_case_and_spacing_only():

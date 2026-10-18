@@ -28,7 +28,11 @@ from dataclasses import dataclass, field
 # Keys ingestion/normalize.py writes to menu_items.allergens and .diets. A test
 # checks these match, so a key added there can't be silently unfilterable here.
 ALLERGEN_KEYS = ("dairy", "egg", "gluten", "nuts", "pork", "seafood", "sesame", "soy")
-DIET_KEYS = ("halal", "vegan", "vegetarian")   # "sustainable" is a tag, not a restriction
+DIET_KEYS = (
+    "halal",
+    "vegan",
+    "vegetarian",
+)  # "sustainable" is a tag, not a restriction
 
 # Diet tags that satisfy a required diet.
 DIET_SATISFIED_BY = {
@@ -48,8 +52,8 @@ FITS, CONFLICTS, INCOMPLETE = "fits", "conflicts", "incomplete"
 
 @dataclass(frozen=True)
 class Profile:
-    avoid: frozenset[str] = frozenset()   # allergen keys
-    diets: frozenset[str] = frozenset()   # diet keys, all required
+    avoid: frozenset[str] = frozenset()  # allergen keys
+    diets: frozenset[str] = frozenset()  # diet keys, all required
     min_protein_g: float | None = None
     max_calories: float | None = None
     max_sodium_mg: float | None = None
@@ -58,7 +62,9 @@ class Profile:
 @dataclass
 class Result:
     verdict: str
-    reasons: list[str] = field(default_factory=list)   # why it isn't "fits"; empty when it is
+    reasons: list[str] = field(
+        default_factory=list
+    )  # why it isn't "fits"; empty when it is
 
 
 def _num(value: float) -> str:
@@ -80,8 +86,10 @@ def check(item, profile: Profile) -> Result:
         found = sorted(profile.avoid & allergens)
         conflicts += [f"contains {a}" for a in found]
         if not found:
-            incomplete += [f"unrecognized trait {t!r}: can't rule out an allergen"
-                           for t in item.unrecognized_traits]
+            incomplete += [
+                f"unrecognized trait {t!r}: can't rule out an allergen"
+                for t in item.unrecognized_traits
+            ]
             if label is None:
                 incomplete.append("no nutrition label: allergens come from icons only")
 
@@ -104,10 +112,15 @@ def check(item, profile: Profile) -> Result:
             continue
         value = getattr(label, column) if label is not None else None
         if value is None:
-            incomplete.append(f"{name} not published" if label is not None
-                              else f"no nutrition label: can't check {name}")
+            incomplete.append(
+                f"{name} not published"
+                if label is not None
+                else f"no nutrition label: can't check {name}"
+            )
         elif (value < limit) if bad_side == "below" else (value > limit):
-            conflicts.append(f"{name} {_num(value)}{unit} {bad_side} {_num(limit)}{unit}")
+            conflicts.append(
+                f"{name} {_num(value)}{unit} {bad_side} {_num(limit)}{unit}"
+            )
 
     if conflicts:
         return Result(CONFLICTS, conflicts + incomplete)

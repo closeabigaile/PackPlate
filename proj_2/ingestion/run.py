@@ -29,7 +29,9 @@ from ingestion.normalize import UNIT_TO_DINING_SLUG, nutrition_key, same_dish
 
 log = logging.getLogger("ingestion")
 
-LOCK_KEY = 5102026  # Postgres advisory lock id meaning "an ingestion run is in progress"
+LOCK_KEY = (
+    5102026  # Postgres advisory lock id meaning "an ingestion run is in progress"
+)
 
 
 class AlreadyRunning(Exception):
@@ -64,8 +66,9 @@ class LabelCache:
 
     def __init__(self, db: Session, location_ids: list[int], fresh_after: datetime):
         rows = db.execute(
-            select(Nutrition.key, Nutrition.fetched_at, Nutrition.contains)
-            .where(Nutrition.location_id.in_(location_ids))
+            select(Nutrition.key, Nutrition.fetched_at, Nutrition.contains).where(
+                Nutrition.location_id.in_(location_ids)
+            )
         )
         self._rows = {key: (fetched_at, contains) for key, fetched_at, contains in rows}
         self._fresh_after = fresh_after
@@ -84,13 +87,27 @@ class LabelCache:
 
 
 class Job:
-    def __init__(self, db: Session, nn, dining, *, unit_ids, days, nutrition, refresh_labels,
-                 max_labels, today: date, started: datetime):
+    def __init__(
+        self,
+        db: Session,
+        nn,
+        dining,
+        *,
+        unit_ids,
+        days,
+        nutrition,
+        refresh_labels,
+        max_labels,
+        today: date,
+        started: datetime,
+    ):
         self.db, self.nn, self.dining = db, nn, dining
         self.unit_ids, self.nutrition, self.max_labels = unit_ids, nutrition, max_labels
         self.days = [today + timedelta(days=i) for i in range(days)]
         # --refresh-labels: anything stored before this run counts as stale.
-        self.fresh_after = started if refresh_labels else started - timedelta(days=LABEL_MAX_AGE_DAYS)
+        self.fresh_after = (
+            started if refresh_labels else started - timedelta(days=LABEL_MAX_AGE_DAYS)
+        )
         self.stats = Stats()
         self.errors: list[str] = []
         self.labels: LabelCache | None = None
@@ -148,19 +165,27 @@ class Job:
         # One request covers today and tomorrow; later days need ?date= each.
         first = parse.parse_location_hours(self.dining.location_page(slug))
         if not first:
-            raise ValueError(f"no hours boxes on /location/{slug}/ (blocked, or layout changed?)")
+            raise ValueError(
+                f"no hours boxes on /location/{slug}/ (blocked, or layout changed?)"
+            )
         out = {}
         for i, day in enumerate(self.days):
             if i < 2:
                 entry = first.get("today" if i == 0 else "tomorrow")
             else:
                 try:
-                    entry = parse.parse_location_hours(self.dining.location_page(slug, day)).get("pick")
+                    entry = parse.parse_location_hours(
+                        self.dining.location_page(slug, day)
+                    ).get("pick")
                 except FetchError as e:
                     self.error(f"hours {unit.name} {day}: {e}")
                     entry = None
-            if entry is not None and not parse.hours_label_matches(entry.date_label, day):
-                self.error(f"hours {unit.name}: page showed {entry.date_label!r}, expected {day}")
+            if entry is not None and not parse.hours_label_matches(
+                entry.date_label, day
+            ):
+                self.error(
+                    f"hours {unit.name}: page showed {entry.date_label!r}, expected {day}"
+                )
                 entry = None
             out[day] = entry
         return out
@@ -177,11 +202,15 @@ class Job:
         menu_list = parse.parse_menu_list(panels["menuPanel"])
         if not menu_list.menus:
             if not menu_list.no_menus_notice:
-                raise ValueError("menu list is empty but has no 'no menus' notice (layout changed?)")
+                raise ValueError(
+                    "menu list is empty but has no 'no menus' notice (layout changed?)"
+                )
             self.stats.units_without_menus.append(unit.name)
         write.upsert_location(self.db, unit, menu_list.description)
         write.upsert_menu_refs(self.db, unit.oid, menu_list.menus)
-        self.stats.menus_removed += write.delete_unlisted_menus(self.db, unit.oid, menu_list.menus)
+        self.stats.menus_removed += write.delete_unlisted_menus(
+            self.db, unit.oid, menu_list.menus
+        )
         self.db.commit()
         self.stats.menus_listed += len(menu_list.menus)
 
@@ -218,18 +247,24 @@ class Job:
                 self.stats.labels_fetched += 1
                 # Server state can drift between requests: never attach another dish's label.
                 if same_dish(label.name, r.name):
-                    contains = write.upsert_nutrition(self.db, unit.oid, r.detail_oid, r, label)
+                    contains = write.upsert_nutrition(
+                        self.db, unit.oid, r.detail_oid, r, label
+                    )
                     contains_by_key[key] = stored_now[key] = contains
                     continue
                 self.stats.label_mismatches += 1
-                self.error(f"label mismatch at {unit.name}: asked for {r.name!r} "
-                           f"(detail {r.detail_oid}), got {label.name!r}; not attached")
+                self.error(
+                    f"label mismatch at {unit.name}: asked for {r.name!r} "
+                    f"(detail {r.detail_oid}), got {label.name!r}; not attached"
+                )
             older = self.labels.any_age(key)
             if older is not None:  # verified when it was stored; better than nothing
                 contains_by_key[key] = older
                 self.stats.labels_stale_reused += 1
 
-        outcome = write.replace_menu_items(self.db, ref.oid, unit.oid, rows, contains_by_key)
+        outcome = write.replace_menu_items(
+            self.db, ref.oid, unit.oid, rows, contains_by_key
+        )
         self.db.commit()
         self.labels.add(stored_now)
 
@@ -244,15 +279,29 @@ class Job:
         log.info("  %s %-9s %3d items (%s)", ref.date, ref.meal, len(rows), outcome)
 
     def can_fetch_label(self) -> bool:
-        return self.nutrition and (self.max_labels is None or self.stats.labels_fetched < self.max_labels)
+        return self.nutrition and (
+            self.max_labels is None or self.stats.labels_fetched < self.max_labels
+        )
 
 
-def run(unit_ids: list[int] | None = None, days: int = DEFAULT_DAYS, nutrition: bool = True,
-        refresh_labels: bool = False, max_labels: int | None = None, delay: float | None = None,
-        *, engine: Engine | None = None, nn=None, dining=None, today: date | None = None) -> IngestRun:
+def run(
+    unit_ids: list[int] | None = None,
+    days: int = DEFAULT_DAYS,
+    nutrition: bool = True,
+    refresh_labels: bool = False,
+    max_labels: int | None = None,
+    delay: float | None = None,
+    *,
+    engine: Engine | None = None,
+    nn=None,
+    dining=None,
+    today: date | None = None,
+) -> IngestRun:
     """Run once and return the ingest_runs row. engine/nn/dining/today are for tests."""
     if not 1 <= days <= MAX_DAYS:
-        raise ValueError(f"days must be 1..{MAX_DAYS} (NetNutrition lists {MAX_DAYS} days)")
+        raise ValueError(
+            f"days must be 1..{MAX_DAYS} (NetNutrition lists {MAX_DAYS} days)"
+        )
     engine = engine or make_engine()
     check_current(engine)
     with engine.connect() as lock:
@@ -260,16 +309,36 @@ def run(unit_ids: list[int] | None = None, days: int = DEFAULT_DAYS, nutrition: 
             raise AlreadyRunning("another ingestion run is in progress")
         lock.commit()  # the lock is session-level: it outlives this transaction
         try:
-            return _run_locked(engine, unit_ids, days, nutrition, refresh_labels, max_labels, delay,
-                               nn, dining, today)
+            return _run_locked(
+                engine,
+                unit_ids,
+                days,
+                nutrition,
+                refresh_labels,
+                max_labels,
+                delay,
+                nn,
+                dining,
+                today,
+            )
         finally:
             # Pooled connections stay open, so release explicitly.
             lock.scalar(text("SELECT pg_advisory_unlock(:k)"), {"k": LOCK_KEY})
             lock.commit()
 
 
-def _run_locked(engine, unit_ids, days, nutrition, refresh_labels, max_labels, delay,
-                nn, dining, today) -> IngestRun:
+def _run_locked(
+    engine,
+    unit_ids,
+    days,
+    nutrition,
+    refresh_labels,
+    max_labels,
+    delay,
+    nn,
+    dining,
+    today,
+) -> IngestRun:
     client_kw = {"delay": delay} if delay is not None else {}
     own_nn, own_dining = nn is None, dining is None
     nn = nn or NetNutritionClient(**client_kw)
@@ -278,15 +347,36 @@ def _run_locked(engine, unit_ids, days, nutrition, refresh_labels, max_labels, d
     started = write.now()
     today = today or datetime.now(CAMPUS_TZ).date()
 
-    record = IngestRun(started_at=started, status="running", stats={}, errors=[], options={
-        "units": unit_ids, "days": days, "first_day": today.isoformat(), "nutrition": nutrition,
-        "refresh_labels": refresh_labels, "max_labels": max_labels, "delay": delay,
-    })
+    record = IngestRun(
+        started_at=started,
+        status="running",
+        stats={},
+        errors=[],
+        options={
+            "units": unit_ids,
+            "days": days,
+            "first_day": today.isoformat(),
+            "nutrition": nutrition,
+            "refresh_labels": refresh_labels,
+            "max_labels": max_labels,
+            "delay": delay,
+        },
+    )
     db.add(record)
     db.commit()
 
-    job = Job(db, nn, dining, unit_ids=unit_ids, days=days, nutrition=nutrition,
-              refresh_labels=refresh_labels, max_labels=max_labels, today=today, started=started)
+    job = Job(
+        db,
+        nn,
+        dining,
+        unit_ids=unit_ids,
+        days=days,
+        nutrition=nutrition,
+        refresh_labels=refresh_labels,
+        max_labels=max_labels,
+        today=today,
+        started=started,
+    )
     try:
         job.execute()
         record.status = "partial" if job.errors else "ok"
@@ -317,26 +407,56 @@ def _unit_list(value: str) -> list[int]:
     try:
         return [int(x) for x in value.split(",") if x.strip()]
     except ValueError:
-        raise argparse.ArgumentTypeError("expected comma-separated unit ids, e.g. 1,2,3") from None
+        raise argparse.ArgumentTypeError(
+            "expected comma-separated unit ids, e.g. 1,2,3"
+        ) from None
 
 
 def main(argv: list[str] | None = None) -> int:
-    p = argparse.ArgumentParser(description="Scrape NC State dining menus, nutrition, and hours into Postgres.")
-    p.add_argument("--units", type=_unit_list, help="comma-separated NetNutrition unit ids (default: all)")
-    p.add_argument("--days", type=int, default=DEFAULT_DAYS,
-                   help=f"days starting today, America/New_York (default {DEFAULT_DAYS}, max {MAX_DAYS})")
-    p.add_argument("--no-nutrition", action="store_true", help="skip fetching nutrition labels")
-    p.add_argument("--refresh-labels", action="store_true", help="re-fetch labels even if recently stored")
+    p = argparse.ArgumentParser(
+        description="Scrape NC State dining menus, nutrition, and hours into Postgres."
+    )
+    p.add_argument(
+        "--units",
+        type=_unit_list,
+        help="comma-separated NetNutrition unit ids (default: all)",
+    )
+    p.add_argument(
+        "--days",
+        type=int,
+        default=DEFAULT_DAYS,
+        help=f"days starting today, America/New_York (default {DEFAULT_DAYS}, max {MAX_DAYS})",
+    )
+    p.add_argument(
+        "--no-nutrition", action="store_true", help="skip fetching nutrition labels"
+    )
+    p.add_argument(
+        "--refresh-labels",
+        action="store_true",
+        help="re-fetch labels even if recently stored",
+    )
     p.add_argument("--max-labels", type=int, help="cap label requests this run")
-    p.add_argument("--delay", type=float, help="seconds between requests (default SCRAPE_DELAY or 1.0)")
+    p.add_argument(
+        "--delay",
+        type=float,
+        help="seconds between requests (default SCRAPE_DELAY or 1.0)",
+    )
     a = p.parse_args(argv)
 
-    logging.basicConfig(level=logging.INFO, format="%(asctime)s %(message)s", datefmt="%H:%M:%S")
+    logging.basicConfig(
+        level=logging.INFO, format="%(asctime)s %(message)s", datefmt="%H:%M:%S"
+    )
     for noisy in ("httpx", "httpx2", "httpcore", "alembic"):
         logging.getLogger(noisy).setLevel(logging.WARNING)
     try:
-        record = run(unit_ids=a.units, days=a.days, nutrition=not a.no_nutrition,
-                     refresh_labels=a.refresh_labels, max_labels=a.max_labels, delay=a.delay)
+        record = run(
+            unit_ids=a.units,
+            days=a.days,
+            nutrition=not a.no_nutrition,
+            refresh_labels=a.refresh_labels,
+            max_labels=a.max_labels,
+            delay=a.delay,
+        )
     except (AlreadyRunning, RuntimeError, ValueError) as e:
         print(f"not started: {e}", file=sys.stderr)
         return 2

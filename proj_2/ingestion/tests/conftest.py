@@ -31,9 +31,13 @@ def fixture_html():
 
 def _create_database_if_missing(url: str):
     target = make_url(sqlalchemy_url(url))
-    admin = target.set(drivername="postgresql", database="postgres").render_as_string(hide_password=False)
+    admin = target.set(drivername="postgresql", database="postgres").render_as_string(
+        hide_password=False
+    )
     with psycopg.connect(admin, autocommit=True, connect_timeout=3) as conn:
-        exists = conn.execute("SELECT 1 FROM pg_database WHERE datname = %s", (target.database,)).fetchone()
+        exists = conn.execute(
+            "SELECT 1 FROM pg_database WHERE datname = %s", (target.database,)
+        ).fetchone()
         if not exists:
             conn.execute(f'CREATE DATABASE "{target.database}"')
 

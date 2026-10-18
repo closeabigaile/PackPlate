@@ -10,24 +10,30 @@ from db.models import Menu, MenuItem
 
 def menus_from(db: Session, location_id: int, start: date) -> list[Menu]:
     """A location's menus dated `start` or later, without their items."""
-    return list(db.scalars(
-        select(Menu).where(Menu.location_id == location_id, Menu.date >= start)
-    ))
+    return list(
+        db.scalars(
+            select(Menu).where(Menu.location_id == location_id, Menu.date >= start)
+        )
+    )
 
 
 def menus_on(db: Session, location_id: int, day: date) -> list[Menu]:
     """A location's menus on `day`, with items and their nutrition labels loaded."""
-    return list(db.scalars(
-        select(Menu)
-        .where(Menu.location_id == location_id, Menu.date == day)
-        .options(selectinload(Menu.items).selectinload(MenuItem.nutrition))
-    ))
+    return list(
+        db.scalars(
+            select(Menu)
+            .where(Menu.location_id == location_id, Menu.date == day)
+            .options(selectinload(Menu.items).selectinload(MenuItem.nutrition))
+        )
+    )
 
 
 def all_menus_on(db: Session, day: date) -> list[Menu]:
     """Every location's menus on `day`, with items and their nutrition labels loaded."""
-    return list(db.scalars(
-        select(Menu)
-        .where(Menu.date == day)
-        .options(selectinload(Menu.items).selectinload(MenuItem.nutrition))
-    ))
+    return list(
+        db.scalars(
+            select(Menu)
+            .where(Menu.date == day)
+            .options(selectinload(Menu.items).selectinload(MenuItem.nutrition))
+        )
+    )

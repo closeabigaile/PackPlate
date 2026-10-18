@@ -14,7 +14,12 @@ from app.repositories import crowd_reports as crowd_repo
 from app.repositories import locations as locations_repo
 from app.repositories import menus as menus_repo
 from app.schemas.locations import (
-    HoursDay, LocationDetail, LocationSummary, Menu, MenuItem, MenuSummary, Period,
+    HoursDay,
+    LocationDetail,
+    LocationSummary,
+    Menu,
+    MenuItem,
+    Period,
 )
 from app.services.crowd import WINDOW, aggregate
 from app.services.hours import campus_time, open_state, periods
@@ -32,7 +37,9 @@ def _hours_day(day: date, row) -> HoursDay:
     return HoursDay(
         date=day,
         status=row.status,
-        periods=[Period(opens_at=o, closes_at=c) for o, c in periods(row.date, row.windows)],
+        periods=[
+            Period(opens_at=o, closes_at=c) for o, c in periods(row.date, row.windows)
+        ],
         raw_text=row.raw_text,
     )
 
@@ -45,7 +52,11 @@ def _summary(location, hours: dict, reports: dict, at: datetime) -> dict:
         "id": location.id,
         "name": location.name,
         "description": location.description,
-        "dining_url": DINING_LOCATION_URL.format(slug=location.dining_slug) if location.dining_slug else None,
+        "dining_url": (
+            DINING_LOCATION_URL.format(slug=location.dining_slug)
+            if location.dining_slug
+            else None
+        ),
         "is_open": state.is_open,
         "closes_at": state.closes_at,
         "opens_next_at": state.opens_next_at,
@@ -55,7 +66,12 @@ def _summary(location, hours: dict, reports: dict, at: datetime) -> dict:
 
 
 def _menu_summary(menu) -> dict:
-    return {"id": menu.id, "date": menu.date, "meal": menu.meal, "scraped": menu.fetched_at is not None}
+    return {
+        "id": menu.id,
+        "date": menu.date,
+        "meal": menu.meal,
+        "scraped": menu.fetched_at is not None,
+    }
 
 
 def _get_location_or_404(db: Session, location_id: int):
@@ -71,16 +87,22 @@ def list_locations(at: datetime | None = None, db: Session = Depends(get_db)):
     at = campus_time(at)
     hours = locations_repo.hours_between(db, at.date() - timedelta(days=1), at.date())
     reports = crowd_repo.reports_between(db, at - WINDOW, at)
-    return [_summary(loc, hours, reports, at) for loc in locations_repo.list_locations(db)]
+    return [
+        _summary(loc, hours, reports, at) for loc in locations_repo.list_locations(db)
+    ]
 
 
 @router.get("/{location_id}", response_model=LocationDetail)
-def get_location(location_id: int, at: datetime | None = None, db: Session = Depends(get_db)):
+def get_location(
+    location_id: int, at: datetime | None = None, db: Session = Depends(get_db)
+):
     """One location: open status, hours for the next 7 days, and the menus listed from today on."""
     location = _get_location_or_404(db, location_id)
     at = campus_time(at)
     days = [at.date() + timedelta(days=i) for i in range(DAYS_SHOWN)]
-    hours = locations_repo.hours_between(db, days[0] - timedelta(days=1), days[-1], location_id)
+    hours = locations_repo.hours_between(
+        db, days[0] - timedelta(days=1), days[-1], location_id
+    )
     menus = sorted(menus_repo.menus_from(db, location_id, days[0]), key=menu_sort_key)
     reports = crowd_repo.reports_between(db, at - WINDOW, at, location_id)
     return {
@@ -91,8 +113,11 @@ def get_location(location_id: int, at: datetime | None = None, db: Session = Dep
 
 
 @router.get("/{location_id}/menus", response_model=list[Menu])
-def get_menus(location_id: int, on: date | None = Query(None, alias="date"),
-              db: Session = Depends(get_db)):
+def get_menus(
+    location_id: int,
+    on: date | None = Query(None, alias="date"),
+    db: Session = Depends(get_db),
+):
     """Every menu at a location on `date` (default today), with all items at once."""
     _get_location_or_404(db, location_id)
     day = on or campus_time().date()
@@ -100,8 +125,10 @@ def get_menus(location_id: int, on: date | None = Query(None, alias="date"),
     return [
         {
             **_menu_summary(menu),
-            "items": [MenuItem.model_validate(item, from_attributes=True)
-                      for item in sorted(menu.items, key=lambda i: i.id)],
+            "items": [
+                MenuItem.model_validate(item, from_attributes=True)
+                for item in sorted(menu.items, key=lambda i: i.id)
+            ],
         }
         for menu in menus
     ]

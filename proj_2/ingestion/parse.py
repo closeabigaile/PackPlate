@@ -29,6 +29,7 @@ def _clean(text: str | None) -> str:
 
 # ---------- NetNutrition: units ----------
 
+
 @dataclass
 class UnitRef:
     oid: int
@@ -45,6 +46,7 @@ def parse_units(home_html: str) -> list[UnitRef]:
 
 
 # ---------- NetNutrition: a unit's menu list ----------
+
 
 @dataclass
 class MenuRef:
@@ -87,6 +89,7 @@ def parse_menu_list(html: str) -> MenuList:
 
 # ---------- NetNutrition: items on one menu ----------
 
+
 @dataclass
 class ItemRow:
     detail_oid: int
@@ -113,17 +116,20 @@ def parse_menu_items(html: str) -> list[ItemRow]:
         traits = [img["title"] for img in link.select("img[title]")]
         cells = tr.find_all("td", recursive=False)
         serving = _clean(cells[2].get_text()) if len(cells) > 2 else None
-        items.append(ItemRow(
-            detail_oid=int(link["id"].split("_", 1)[1]),
-            name=name,
-            course=course,
-            serving_size=serving or None,
-            traits=traits,
-        ))
+        items.append(
+            ItemRow(
+                detail_oid=int(link["id"].split("_", 1)[1]),
+                name=name,
+                course=course,
+                serving_size=serving or None,
+                traits=traits,
+            )
+        )
     return items
 
 
 # ---------- NetNutrition: nutrition label ----------
+
 
 @dataclass
 class Label:
@@ -132,7 +138,9 @@ class Label:
     nutrients: dict[str, str]  # "Protein" -> "4g", "Cholesterol" -> "NA"
     ingredients: str | None
     contains: list[str]
-    incomplete: list[str] = field(default_factory=list)  # nutrients the site flags as missing
+    incomplete: list[str] = field(
+        default_factory=list
+    )  # nutrients the site flags as missing
 
 
 def parse_label(html: str) -> Label:
@@ -141,7 +149,9 @@ def parse_label(html: str) -> Label:
     serving_el = soup.select_one(".cbo_nn_LabelBottomBorderLabel")
     serving = None
     if serving_el:
-        serving = _clean(serving_el.get_text()).removeprefix("Serving Size:").strip() or None
+        serving = (
+            _clean(serving_el.get_text()).removeprefix("Serving Size:").strip() or None
+        )
 
     nutrients: dict[str, str] = {}
     incomplete: list[str] = []
@@ -151,7 +161,12 @@ def parse_label(html: str) -> Label:
         key = _clean(name_span.get_text())
         row = name_span.find_parent("tr")
         value_el = name_span.find_next("span")
-        if not key or key in nutrients or value_el is None or value_el.find_parent("tr") is not row:
+        if (
+            not key
+            or key in nutrients
+            or value_el is None
+            or value_el.find_parent("tr") is not row
+        ):
             continue
         nutrients[key] = _clean(value_el.get_text())
         if any(c.endswith("Incomplete") for c in value_el.get("class") or []):
@@ -159,13 +174,17 @@ def parse_label(html: str) -> Label:
     # Vitamin and mineral rows use a label cell + value cell instead.
     for label_el in soup.select("td.cbo_nn_SecondaryNutrientLabel"):
         value_el = label_el.find_next_sibling("td")
-        nutrients.setdefault(_clean(label_el.get_text()), _clean(value_el.get_text()) if value_el else "")
+        nutrients.setdefault(
+            _clean(label_el.get_text()), _clean(value_el.get_text()) if value_el else ""
+        )
 
     ingredients_el = soup.select_one(".cbo_nn_LabelIngredients")
     contains_el = soup.select_one(".cbo_nn_LabelAllergens")
     contains = []
     if contains_el:
-        contains = [c.strip() for c in _clean(contains_el.get_text()).split(",") if c.strip()]
+        contains = [
+            c.strip() for c in _clean(contains_el.get_text()).split(",") if c.strip()
+        ]
     return Label(
         name=_clean(name_el.get_text()) if name_el else None,
         serving_size=serving,
@@ -178,6 +197,7 @@ def parse_label(html: str) -> Label:
 
 # ---------- dining.ncsu.edu: hours ----------
 
+
 @dataclass
 class HoursEntry:
     date_label: str  # "Monday, Sep. 28" (the page shows no year)
@@ -186,7 +206,9 @@ class HoursEntry:
     closed: bool
 
 
-_RANGE = re.compile(r"(\d{1,2}(?::\d{2})?\s*[ap]m)\s*-\s*(\d{1,2}(?::\d{2})?\s*[ap]m)", re.I)
+_RANGE = re.compile(
+    r"(\d{1,2}(?::\d{2})?\s*[ap]m)\s*-\s*(\d{1,2}(?::\d{2})?\s*[ap]m)", re.I
+)
 
 
 def _to_minutes(t: str) -> int:
@@ -207,7 +229,8 @@ def parse_time_ranges(text: str) -> list[tuple[int, int]]:
 
 def parse_location_hours(html: str) -> dict[str, HoursEntry]:
     """Returns {'today': ..., 'tomorrow': ..., 'pick': ...} from a location page;
-    'pick' is the day ?date=YYYY-MM-DD asked for. Empty if the page has no hours boxes."""
+    'pick' is the day ?date=YYYY-MM-DD asked for. Empty if the page has no hours boxes.
+    """
     soup = _soup(html)
     out = {}
     for key in ("today", "tomorrow", "pick"):
@@ -219,7 +242,9 @@ def parse_location_hours(html: str) -> dict[str, HoursEntry]:
         raw = _clean(info.get_text(" ")) if info else ""
         windows = parse_time_ranges(raw)
         out[key] = HoursEntry(
-            date_label=_clean(h3.get_text()).removeprefix("Hours for").strip() if h3 else "",
+            date_label=(
+                _clean(h3.get_text()).removeprefix("Hours for").strip() if h3 else ""
+            ),
             raw_text=raw,
             windows=windows,
             closed=("closed" in raw.lower() and not windows),
@@ -227,10 +252,22 @@ def parse_location_hours(html: str) -> dict[str, HoursEntry]:
     return out
 
 
-_WEEKDAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+_WEEKDAYS = [
+    "Monday",
+    "Tuesday",
+    "Wednesday",
+    "Thursday",
+    "Friday",
+    "Saturday",
+    "Sunday",
+]
 
 
 def hours_label_matches(label: str, day: date) -> bool:
     """The hours box says 'Monday, Sep. 28' with no year; check weekday and day of month."""
     m = re.match(r"^(\w+),.*?(\d{1,2})$", label)
-    return bool(m) and m.group(1) == _WEEKDAYS[day.weekday()] and int(m.group(2)) == day.day
+    return (
+        bool(m)
+        and m.group(1) == _WEEKDAYS[day.weekday()]
+        and int(m.group(2)) == day.day
+    )

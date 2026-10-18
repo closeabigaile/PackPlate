@@ -7,7 +7,7 @@ test. Tests insert rows directly, standing in for the ingestion job.
 """
 
 import os
-from datetime import date, datetime, timezone
+from datetime import UTC, date, datetime
 
 import psycopg
 import pytest
@@ -19,17 +19,30 @@ from app.deps import get_db
 from app.main import app
 from app.services.crowd import Throttle
 from db.migrate import upgrade
-from db.models import Base, CrowdReport, HoursDay, IngestRun, Location, Menu, MenuItem, Nutrition
+from db.models import (
+    Base,
+    CrowdReport,
+    HoursDay,
+    IngestRun,
+    Location,
+    Menu,
+    MenuItem,
+    Nutrition,
+)
 from db.session import make_engine, make_session_factory, sqlalchemy_url
 
-SCRAPED = datetime(2026, 10, 6, 8, 0, tzinfo=timezone.utc)
+SCRAPED = datetime(2026, 10, 6, 8, 0, tzinfo=UTC)
 
 
 def _create_database_if_missing(url: str):
     target = make_url(sqlalchemy_url(url))
-    admin = target.set(drivername="postgresql", database="postgres").render_as_string(hide_password=False)
+    admin = target.set(drivername="postgresql", database="postgres").render_as_string(
+        hide_password=False
+    )
     with psycopg.connect(admin, autocommit=True, connect_timeout=3) as conn:
-        exists = conn.execute("SELECT 1 FROM pg_database WHERE datname = %s", (target.database,)).fetchone()
+        exists = conn.execute(
+            "SELECT 1 FROM pg_database WHERE datname = %s", (target.database,)
+        ).fetchone()
         if not exists:
             conn.execute(f'CREATE DATABASE "{target.database}"')
 
@@ -80,39 +93,102 @@ class Seed:
     def __init__(self, db):
         self.db = db
 
-    def location(self, id=1, name="Fountain Dining Hall", slug="fountain", description=None):
-        self.db.add(Location(id=id, name=name, dining_slug=slug, description=description, updated_at=SCRAPED))
+    def location(
+        self, id=1, name="Fountain Dining Hall", slug="fountain", description=None
+    ):
+        self.db.add(
+            Location(
+                id=id,
+                name=name,
+                dining_slug=slug,
+                description=description,
+                updated_at=SCRAPED,
+            )
+        )
         self.db.commit()
 
     def hours(self, location_id, day: date, status="open", windows=(), raw_text=None):
-        self.db.add(HoursDay(location_id=location_id, date=day, status=status,
-                             windows=[list(w) for w in windows], raw_text=raw_text, fetched_at=SCRAPED))
+        self.db.add(
+            HoursDay(
+                location_id=location_id,
+                date=day,
+                status=status,
+                windows=[list(w) for w in windows],
+                raw_text=raw_text,
+                fetched_at=SCRAPED,
+            )
+        )
         self.db.commit()
 
     def menu(self, id, location_id, day: date, meal, scraped=True):
-        self.db.add(Menu(id=id, location_id=location_id, date=day, meal=meal,
-                         fetched_at=SCRAPED if scraped else None))
+        self.db.add(
+            Menu(
+                id=id,
+                location_id=location_id,
+                date=day,
+                meal=meal,
+                fetched_at=SCRAPED if scraped else None,
+            )
+        )
         self.db.commit()
 
     def nutrition(self, key, location_id=1, **values):
-        self.db.add(Nutrition(key=key, location_id=location_id, source_detail_oid=1, fetched_at=SCRAPED,
-                              nutrients_raw={}, contains=values.pop("contains", []),
-                              missing_fields=values.pop("missing_fields", []), **values))
+        self.db.add(
+            Nutrition(
+                key=key,
+                location_id=location_id,
+                source_detail_oid=1,
+                fetched_at=SCRAPED,
+                nutrients_raw={},
+                contains=values.pop("contains", []),
+                missing_fields=values.pop("missing_fields", []),
+                **values,
+            )
+        )
         self.db.commit()
 
-    def item(self, menu_id, name, nutrition_key=None, allergens=(), diets=(), unrecognized=(), **values):
-        self.db.add(MenuItem(menu_id=menu_id, detail_oid=1, name=name, traits_raw=[],
-                             allergens=list(allergens), diets=list(diets),
-                             unrecognized_traits=list(unrecognized), nutrition_key=nutrition_key, **values))
+    def item(
+        self,
+        menu_id,
+        name,
+        nutrition_key=None,
+        allergens=(),
+        diets=(),
+        unrecognized=(),
+        **values,
+    ):
+        self.db.add(
+            MenuItem(
+                menu_id=menu_id,
+                detail_oid=1,
+                name=name,
+                traits_raw=[],
+                allergens=list(allergens),
+                diets=list(diets),
+                unrecognized_traits=list(unrecognized),
+                nutrition_key=nutrition_key,
+                **values,
+            )
+        )
         self.db.commit()
 
     def crowd(self, location_id, level, created_at):
-        self.db.add(CrowdReport(location_id=location_id, level=level, created_at=created_at))
+        self.db.add(
+            CrowdReport(location_id=location_id, level=level, created_at=created_at)
+        )
         self.db.commit()
 
     def run(self, status="ok", finished_at=SCRAPED):
-        self.db.add(IngestRun(started_at=finished_at, finished_at=finished_at, status=status,
-                              options={}, stats={}, errors=[]))
+        self.db.add(
+            IngestRun(
+                started_at=finished_at,
+                finished_at=finished_at,
+                status=status,
+                options={},
+                stats={},
+                errors=[],
+            )
+        )
         self.db.commit()
 
 

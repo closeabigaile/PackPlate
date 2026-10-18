@@ -39,8 +39,12 @@ def _retry_after(response: httpx2.Response) -> float | None:
 
 
 class _PoliteClient:
-    def __init__(self, delay: float = REQUEST_DELAY_SECONDS, attempts: int = REQUEST_ATTEMPTS,
-                 http: httpx2.Client | None = None):
+    def __init__(
+        self,
+        delay: float = REQUEST_DELAY_SECONDS,
+        attempts: int = REQUEST_ATTEMPTS,
+        http: httpx2.Client | None = None,
+    ):
         self.delay = max(delay, MIN_DELAY_SECONDS)
         self.attempts = attempts
         self.http = http or httpx2.Client(
@@ -76,8 +80,12 @@ class _PoliteClient:
                     raise FetchError(f"{method} {url}: {problem}")
                 retry_after = _retry_after(response)
             if attempt == self.attempts:
-                raise FetchError(f"{method} {url}: {problem} (gave up after {attempt} attempts)")
-            time.sleep(retry_after if retry_after is not None else self.delay * 2 ** attempt)
+                raise FetchError(
+                    f"{method} {url}: {problem} (gave up after {attempt} attempts)"
+                )
+            time.sleep(
+                retry_after if retry_after is not None else self.delay * 2**attempt
+            )
         raise AssertionError("unreachable")
 
     def close(self):
@@ -100,10 +108,14 @@ class NetNutritionClient(_PoliteClient):
         try:
             payload = response.json()
         except ValueError as e:
-            raise FetchError(f"{controller}/{action} {data}: response was not JSON") from e
+            raise FetchError(
+                f"{controller}/{action} {data}: response was not JSON"
+            ) from e
         if not payload.get("success"):
             # The site's own JS reloads the page here; for us the session is gone.
-            raise FetchError(f"{controller}/{action} {data}: success=false (session expired?)")
+            raise FetchError(
+                f"{controller}/{action} {data}: success=false (session expired?)"
+            )
         return {p["id"]: p["html"] for p in payload.get("panels", []) if p.get("html")}
 
     def select_unit(self, unit_oid: int) -> dict[str, str]:
@@ -113,11 +125,15 @@ class NetNutritionClient(_PoliteClient):
         return self._panels("Menu", "SelectMenu", {"menuOid": menu_oid})
 
     def nutrition_label(self, detail_oid: int) -> str:
-        return self._action("NutritionDetail", "ShowItemNutritionLabel", {"detailOid": detail_oid}).text
+        return self._action(
+            "NutritionDetail", "ShowItemNutritionLabel", {"detailOid": detail_oid}
+        ).text
 
 
 class DiningSiteClient(_PoliteClient):
     def location_page(self, slug: str, on: date | None = None) -> str:
         """A dining.ncsu.edu location page; ?date= fills its "pick a date" hours box."""
         params = {"date": on.isoformat()} if on else None
-        return self.request("GET", f"{DINING_SITE_BASE}/location/{slug}/", params=params).text
+        return self.request(
+            "GET", f"{DINING_SITE_BASE}/location/{slug}/", params=params
+        ).text

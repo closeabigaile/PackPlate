@@ -14,6 +14,6 @@ class CrowdReportIn(BaseModel):
 
 
 class Crowd(BaseModel):
-    level: CrowdLevel | None          # null = no recent reports: unknown, not "not busy"
-    report_count: int                 # reports in the window
+    level: CrowdLevel | None  # null = no recent reports: unknown, not "not busy"
+    report_count: int  # reports in the window
     last_reported_at: datetime | None
