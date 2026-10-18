@@ -1,7 +1,8 @@
 # M4 — "Where can we eat right now?" web app
 
-**Status (2026-10-12):** wireframes done on `feature/frontend` (Savanah). The
-Next.js pages (`/`, `/locations`, `/group`) are still stubs.
+**Status (2026-10-18):** wireframes merged into `dev` (Savanah). The frontend
+helper code (API client, types, diet logic, profile storage) is on
+`feature/frontend`; the page and component files there are still empty.
 
 ## Goal
 
@@ -45,10 +46,24 @@ report's privacy stakeholders. Options:
 
 Option 1 delivers the same experience with far less risk and work.
 
-## Done when
+## Checklist
 
-- [ ] Every page above works on a phone and a computer, against the real API
+- [x] Wireframes for every page
+- [x] Frontend helper code: API client, types, diet logic, profile storage
+  (on `feature/frontend`)
+- [ ] Home page
+- [ ] What's Open Now page
+- [ ] Menus & Nutrition page
+- [ ] My Dietary Profile page
+- [ ] Eat as a Group page
+- [ ] How Busy Is It? page
+- [ ] Login decision made (no accounts, or accounts that store profiles)
+- [ ] `incomplete` items never shown as safe, with their reasons visible
+- [ ] Data freshness shown, with a warning when stale
+- [ ] TypeScript types generated from the API, not hand-written (`types.ts`
+  is hand-written for now)
+- [ ] NC State theme
+- [ ] Every page works on a phone and a computer, against the real API
 - [ ] A group can go from opening the site to choosing a location in under
   two minutes (measured in M0's bonus study)
-- [ ] TypeScript types are generated from the API, not hand-written
 - [ ] Teaser (12–30 s) and walk-through (2–5 min) videos recorded from it

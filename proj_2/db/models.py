@@ -10,7 +10,18 @@ never zero or safe.
 
 from datetime import date, datetime
 
-from sqlalchemy import CheckConstraint, Date, DateTime, Float, ForeignKey, Index, Integer, String, Text, func
+from sqlalchemy import (
+    CheckConstraint,
+    Date,
+    DateTime,
+    Float,
+    ForeignKey,
+    Index,
+    Integer,
+    String,
+    Text,
+    func,
+)
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
@@ -24,10 +35,14 @@ class Location(Base):
 
     __tablename__ = "locations"
 
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=False)  # NetNutrition unitOid
+    id: Mapped[int] = mapped_column(
+        Integer, primary_key=True, autoincrement=False
+    )  # NetNutrition unitOid
     name: Mapped[str] = mapped_column(String(200))
     description: Mapped[str | None] = mapped_column(Text)
-    dining_slug: Mapped[str | None] = mapped_column(String(100))  # dining.ncsu.edu/location/<slug>/
+    dining_slug: Mapped[str | None] = mapped_column(
+        String(100)
+    )  # dining.ncsu.edu/location/<slug>/
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
 
     menus: Mapped[list["Menu"]] = relationship(back_populates="location")
@@ -43,7 +58,9 @@ class HoursDay(Base):
 
     __tablename__ = "hours_days"
 
-    location_id: Mapped[int] = mapped_column(ForeignKey("locations.id", ondelete="CASCADE"), primary_key=True)
+    location_id: Mapped[int] = mapped_column(
+        ForeignKey("locations.id", ondelete="CASCADE"), primary_key=True
+    )
     date: Mapped[date] = mapped_column(Date, primary_key=True)
     status: Mapped[str] = mapped_column(String(10))
     windows: Mapped[list] = mapped_column(JSONB, default=list)
@@ -56,11 +73,19 @@ class Menu(Base):
 
     __tablename__ = "menus"
 
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=False)  # NetNutrition menuOid
-    location_id: Mapped[int] = mapped_column(ForeignKey("locations.id", ondelete="CASCADE"), index=True)
+    id: Mapped[int] = mapped_column(
+        Integer, primary_key=True, autoincrement=False
+    )  # NetNutrition menuOid
+    location_id: Mapped[int] = mapped_column(
+        ForeignKey("locations.id", ondelete="CASCADE"), index=True
+    )
     date: Mapped[date] = mapped_column(Date, index=True)
-    meal: Mapped[str] = mapped_column(String(50))  # Breakfast / Lunch / Dinner / Daily / ...
-    fetched_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))  # NULL = listed, items not scraped
+    meal: Mapped[str] = mapped_column(
+        String(50)
+    )  # Breakfast / Lunch / Dinner / Daily / ...
+    fetched_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True)
+    )  # NULL = listed, items not scraped
 
     location: Mapped[Location] = relationship(back_populates="menus")
     items: Mapped[list["MenuItem"]] = relationship(
@@ -79,7 +104,9 @@ class Nutrition(Base):
     __tablename__ = "nutrition"
 
     key: Mapped[str] = mapped_column(String(500), primary_key=True)
-    location_id: Mapped[int] = mapped_column(ForeignKey("locations.id", ondelete="CASCADE"), index=True)
+    location_id: Mapped[int] = mapped_column(
+        ForeignKey("locations.id", ondelete="CASCADE"), index=True
+    )
     source_detail_oid: Mapped[int] = mapped_column(Integer)
     serving_size: Mapped[str | None] = mapped_column(String(200))
     calories: Mapped[float | None] = mapped_column(Float)
@@ -87,10 +114,16 @@ class Nutrition(Base):
     fat_g: Mapped[float | None] = mapped_column(Float)
     carbs_g: Mapped[float | None] = mapped_column(Float)
     sodium_mg: Mapped[float | None] = mapped_column(Float)
-    nutrients_raw: Mapped[dict] = mapped_column(JSONB, default=dict)  # every row as printed, "Cholesterol": "NA"
+    nutrients_raw: Mapped[dict] = mapped_column(
+        JSONB, default=dict
+    )  # every row as printed, "Cholesterol": "NA"
     ingredients: Mapped[str | None] = mapped_column(Text)
-    contains: Mapped[list] = mapped_column(JSONB, default=list)  # the label's "Contains:" names, as printed
-    missing_fields: Mapped[list] = mapped_column(JSONB, default=list)  # flagged Incomplete or unparseable
+    contains: Mapped[list] = mapped_column(
+        JSONB, default=list
+    )  # the label's "Contains:" names, as printed
+    missing_fields: Mapped[list] = mapped_column(
+        JSONB, default=list
+    )  # flagged Incomplete or unparseable
     fetched_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
 
 
@@ -106,16 +139,26 @@ class MenuItem(Base):
     __tablename__ = "menu_items"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    menu_id: Mapped[int] = mapped_column(ForeignKey("menus.id", ondelete="CASCADE"), index=True)
+    menu_id: Mapped[int] = mapped_column(
+        ForeignKey("menus.id", ondelete="CASCADE"), index=True
+    )
     detail_oid: Mapped[int] = mapped_column(Integer)
     name: Mapped[str] = mapped_column(String(300))
     course: Mapped[str | None] = mapped_column(String(200))  # station, e.g. "Deli"
     serving_size: Mapped[str | None] = mapped_column(String(200))
-    traits_raw: Mapped[list] = mapped_column(JSONB, default=list)  # icon titles as published
-    allergens: Mapped[list] = mapped_column(JSONB, default=list)  # normalized keys, see normalize.py
-    diets: Mapped[list] = mapped_column(JSONB, default=list)  # halal / sustainable / vegan / vegetarian
+    traits_raw: Mapped[list] = mapped_column(
+        JSONB, default=list
+    )  # icon titles as published
+    allergens: Mapped[list] = mapped_column(
+        JSONB, default=list
+    )  # normalized keys, see normalize.py
+    diets: Mapped[list] = mapped_column(
+        JSONB, default=list
+    )  # halal / sustainable / vegan / vegetarian
     unrecognized_traits: Mapped[list] = mapped_column(JSONB, default=list)
-    nutrition_key: Mapped[str | None] = mapped_column(ForeignKey("nutrition.key", ondelete="SET NULL"))
+    nutrition_key: Mapped[str | None] = mapped_column(
+        ForeignKey("nutrition.key", ondelete="SET NULL")
+    )
 
     menu: Mapped[Menu] = relationship(back_populates="items")
     nutrition: Mapped[Nutrition | None] = relationship()
@@ -151,11 +194,18 @@ class CrowdReport(Base):
 
     __tablename__ = "crowd_reports"
     __table_args__ = (
-        CheckConstraint("level IN ('not_busy', 'moderate', 'crowded')", name="ck_crowd_reports_level"),
+        CheckConstraint(
+            "level IN ('not_busy', 'moderate', 'crowded')",
+            name="ck_crowd_reports_level",
+        ),
         Index("ix_crowd_reports_location_id_created_at", "location_id", "created_at"),
     )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    location_id: Mapped[int] = mapped_column(ForeignKey("locations.id", ondelete="CASCADE"))
+    location_id: Mapped[int] = mapped_column(
+        ForeignKey("locations.id", ondelete="CASCADE")
+    )
     level: Mapped[str] = mapped_column(String(20))  # one of CROWD_LEVELS
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )

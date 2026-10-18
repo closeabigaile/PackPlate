@@ -16,8 +16,9 @@ def get_location(db: Session, location_id: int) -> Location | None:
     return db.get(Location, location_id)
 
 
-def hours_between(db: Session, start: date, end: date,
-                  location_id: int | None = None) -> dict[tuple[int, date], HoursDay]:
+def hours_between(
+    db: Session, start: date, end: date, location_id: int | None = None
+) -> dict[tuple[int, date], HoursDay]:
     """Stored hours rows from start to end inclusive, keyed by (location_id, date)."""
     query = select(HoursDay).where(HoursDay.date.between(start, end))
     if location_id is not None:

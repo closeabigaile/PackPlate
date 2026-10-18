@@ -19,32 +19,34 @@ class Period(BaseModel):
 
 class HoursDay(BaseModel):
     date: date
-    status: Literal["open", "closed", "unknown"]   # unknown = no hours published or scraped
+    status: Literal[
+        "open", "closed", "unknown"
+    ]  # unknown = no hours published or scraped
     periods: list[Period]
-    raw_text: str | None    # as shown on dining.ncsu.edu
+    raw_text: str | None  # as shown on dining.ncsu.edu
 
 
 class LocationSummary(BaseModel):
     id: int
     name: str
     description: str | None
-    dining_url: str | None   # the location's dining.ncsu.edu page, if we know it
-    is_open: bool | None     # null = today's hours are unknown
+    dining_url: str | None  # the location's dining.ncsu.edu page, if we know it
+    is_open: bool | None  # null = today's hours are unknown
     closes_at: datetime | None
-    opens_next_at: datetime | None   # next opening later today
+    opens_next_at: datetime | None  # next opening later today
     today: HoursDay
-    crowd: Crowd             # from recent student reports (services/crowd.py)
+    crowd: Crowd  # from recent student reports (services/crowd.py)
 
 
 class MenuSummary(BaseModel):
     id: int
     date: date
     meal: str
-    scraped: bool    # false = listed by NetNutrition, items not scraped yet
+    scraped: bool  # false = listed by NetNutrition, items not scraped yet
 
 
 class LocationDetail(LocationSummary):
-    hours: list[HoursDay]    # today and the next 6 days
+    hours: list[HoursDay]  # today and the next 6 days
     menus: list[MenuSummary]  # today onward
 
 
@@ -56,7 +58,7 @@ class Nutrition(BaseModel):
     carbs_g: float | None
     sodium_mg: float | None
     ingredients: str | None
-    contains: list[str]       # the label's "Contains:" names, as printed
+    contains: list[str]  # the label's "Contains:" names, as printed
     missing_fields: list[str]  # nutrients the label doesn't give
     fetched_at: datetime
 
@@ -64,12 +66,12 @@ class Nutrition(BaseModel):
 class MenuItem(BaseModel):
     id: int
     name: str
-    course: str | None         # station, e.g. "Grill Stations"
+    course: str | None  # station, e.g. "Grill Stations"
     serving_size: str | None
-    allergens: list[str]       # icon traits plus the label's "Contains:" list
+    allergens: list[str]  # icon traits plus the label's "Contains:" list
     diets: list[str]
     unrecognized_traits: list[str]  # names we have no key for: treat as data incomplete
-    nutrition: Nutrition | None     # null = no label, so allergens come from icons only
+    nutrition: Nutrition | None  # null = no label, so allergens come from icons only
 
 
 class Menu(MenuSummary):

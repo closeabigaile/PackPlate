@@ -37,8 +37,8 @@ def periods(day: date, windows: list) -> list[tuple[datetime, datetime]]:
 
 @dataclass
 class OpenState:
-    is_open: bool | None          # None = we don't know today's hours
-    closes_at: datetime | None    # when the current period ends, if open
+    is_open: bool | None  # None = we don't know today's hours
+    closes_at: datetime | None  # when the current period ends, if open
     opens_next_at: datetime | None  # next opening later today, if closed
 
 

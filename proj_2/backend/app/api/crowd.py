@@ -29,8 +29,13 @@ def get_throttle() -> Throttle:
 
 
 @router.post("/{location_id}", response_model=Crowd, status_code=201)
-def report_crowd(location_id: int, report: CrowdReportIn, request: Request,
-                 db: Session = Depends(get_db), throttle: Throttle = Depends(get_throttle)):
+def report_crowd(
+    location_id: int,
+    report: CrowdReportIn,
+    request: Request,
+    db: Session = Depends(get_db),
+    throttle: Throttle = Depends(get_throttle),
+):
     """Report how busy a location is right now. Returns the location's crowd level after it.
 
     One report per location per client every CROWD_REPORT_COOLDOWN_SECONDS (429 otherwise).
@@ -40,8 +45,11 @@ def report_crowd(location_id: int, report: CrowdReportIn, request: Request,
     client = request.client.host if request.client else None
     retry_after = throttle.hit((client, location_id))
     if retry_after:
-        raise HTTPException(status_code=429, detail="you reported this location recently",
-                            headers={"Retry-After": str(math.ceil(retry_after))})
+        raise HTTPException(
+            status_code=429,
+            detail="you reported this location recently",
+            headers={"Retry-After": str(math.ceil(retry_after))},
+        )
     now = campus_time()
     crowd_repo.add_report(db, location_id, report.level, now)
     reports = crowd_repo.reports_between(db, now - WINDOW, now, location_id)

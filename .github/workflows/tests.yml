@@ -1,0 +1,105 @@
+# Runs proj_2's test suites on every push and pull request.
+# Versions match docker-compose.yml and the Dockerfiles (Postgres 16, Python 3.12, Node 22).
+name: Tests
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  python:
+    name: Backend and ingestion tests
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: packplate
+          POSTGRES_PASSWORD: packplate
+          POSTGRES_DB: packplate
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      # The tests create this database if missing (see the conftest files).
+      TEST_DATABASE_URL: postgresql://packplate:packplate@localhost:5432/packplate_test
+      # Fail, don't skip, if the database tests can't reach Postgres.
+      REQUIRE_TEST_DB: "1"
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: |
+            proj_2/requirements-dev.txt
+            proj_2/backend/requirements.txt
+            proj_2/ingestion/requirements.txt
+
+      - name: Install dependencies
+        run: pip install -r proj_2/requirements-dev.txt
+
+      - name: Backend tests
+        working-directory: proj_2/backend
+        run: >-
+          pytest --cov=app --cov-config=../pyproject.toml
+          --junitxml="$GITHUB_WORKSPACE/test-results/backend.xml"
+
+      - name: Ingestion tests
+        # Run even if the backend failed, so the badge counts both suites.
+        if: ${{ !cancelled() }}
+        working-directory: proj_2
+        run: >-
+          pytest ingestion --cov=ingestion --cov=db --cov-config=pyproject.toml
+          --junitxml="$GITHUB_WORKSPACE/test-results/ingestion.xml"
+
+      # Test-count badge: only pushes to dev update it, so feature branches
+      # don't overwrite the number. The JSON lives in a gist that shields.io reads.
+      - name: Count tests
+        id: count
+        if: ${{ !cancelled() }}
+        # Explicit bash adds pipefail, so a script error isn't hidden by tee.
+        shell: bash
+        run: >-
+          python .github/scripts/test_badge.py
+          test-results/backend.xml test-results/ingestion.xml | tee -a "$GITHUB_OUTPUT"
+
+      - name: Update test badge
+        if: ${{ !cancelled() && github.event_name == 'push' && github.ref == 'refs/heads/dev' }}
+        uses: schneegans/dynamic-badges-action@28b0fa8bdeb46170ac397105ece0c1fe58f68910 # v1.9.0
+        with:
+          auth: ${{ secrets.GIST_SECRET }}
+          gistID: ${{ vars.TEST_BADGE_GIST_ID }}
+          filename: packplate-tests.json
+          label: tests
+          message: ${{ steps.count.outputs.message }}
+          color: ${{ steps.count.outputs.color }}
+
+  frontend:
+    name: Frontend build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: proj_2/frontend
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: proj_2/frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build

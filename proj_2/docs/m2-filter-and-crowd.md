@@ -1,7 +1,7 @@
 # M2 — Dietary filter, group finder, and crowd reports
 
-**Status (2026-10-12):** backend built on `feature/filters-crowd`, not yet
-merged. The filter rules need team review. No frontend yet (see M4).
+**Status (2026-10-18):** backend built and merged into `dev` (PR #6). The
+filter rules need team review. No frontend yet (see M4).
 
 ## Goal
 
@@ -90,10 +90,16 @@ AI_USAGE.md says people should own them.
 - Crowd reports checked end to end against the dev database (see AI artifact
   04): report accepted, repeat refused with 429, level shown in `/locations`.
 
-## Done when
+## Checklist
 
-- [ ] The team has reviewed and signed off on the filter rules
-- [ ] Merged into `dev`
+- [x] Filter engine with the rules written out in `filter_engine.py`
+- [x] `POST /filters/locations/{id}/menus` and `POST /filters/group`
+- [x] Crowd reports: `POST /crowd/{id}`, and `crowd` in `/locations`
+- [x] Backend tests for every filter rule and the crowd logic, run in CI (see
+  M3)
+- [x] Merged into `dev`
+- [ ] The team has reviewed and signed off on the filter rules (the four
+  questions above)
 - [ ] M0's safety and usefulness thresholds are met (or the review decision is
   recorded)
 - [ ] The group and menu pages in M4 show verdicts and reasons

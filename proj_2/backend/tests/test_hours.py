@@ -1,7 +1,7 @@
 """services/hours.py: no database."""
 
 from dataclasses import dataclass
-from datetime import date, datetime, timezone
+from datetime import UTC, date, datetime
 
 from app.services.hours import CAMPUS_TZ, campus_time, open_state, periods
 
@@ -35,7 +35,9 @@ def test_open_inside_a_window():
 
 
 def test_between_windows_reports_next_opening():
-    state = open_state(at(TUE, 10, 30), Row(TUE, "open", [[420, 600], [660, 810]]), None)
+    state = open_state(
+        at(TUE, 10, 30), Row(TUE, "open", [[420, 600], [660, 810]]), None
+    )
     assert state.is_open is False
     assert state.opens_next_at == at(TUE, 11)
 
@@ -46,7 +48,9 @@ def test_after_last_window_has_no_next_opening_today():
 
 
 def test_closing_time_itself_is_closed():
-    assert open_state(at(TUE, 21), Row(TUE, "open", [[420, 1260]]), None).is_open is False
+    assert (
+        open_state(at(TUE, 21), Row(TUE, "open", [[420, 1260]]), None).is_open is False
+    )
 
 
 def test_closed_all_day():
@@ -60,12 +64,19 @@ def test_unknown_or_missing_hours_are_unknown_not_closed():
 
 def test_after_midnight_uses_yesterdays_late_window():
     # Monday 7am - Tuesday 1am; Tuesday itself is closed all day.
-    state = open_state(at(TUE, 0, 30), Row(TUE, "closed", []), Row(MON, "open", [[420, 1500]]))
+    state = open_state(
+        at(TUE, 0, 30), Row(TUE, "closed", []), Row(MON, "open", [[420, 1500]])
+    )
     assert state.is_open is True
     assert state.closes_at == at(TUE, 1)
-    assert open_state(at(TUE, 1, 30), Row(TUE, "closed", []), Row(MON, "open", [[420, 1500]])).is_open is False
+    assert (
+        open_state(
+            at(TUE, 1, 30), Row(TUE, "closed", []), Row(MON, "open", [[420, 1500]])
+        ).is_open
+        is False
+    )
 
 
 def test_campus_time_handles_naive_and_utc():
     assert campus_time(datetime(2026, 10, 6, 12)) == at(TUE, 12)
-    assert campus_time(datetime(2026, 10, 6, 16, tzinfo=timezone.utc)) == at(TUE, 12)
+    assert campus_time(datetime(2026, 10, 6, 16, tzinfo=UTC)) == at(TUE, 12)

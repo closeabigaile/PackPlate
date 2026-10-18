@@ -94,7 +94,11 @@ def label_item(row: ItemRow, contains: list[str] | None) -> dict:
         extra, unknown_contains = split_contains(contains)
         allergens |= extra
         unknown += [c for c in unknown_contains if c not in unknown]
-    return {"allergens": sorted(allergens), "diets": sorted(diets), "unrecognized_traits": unknown}
+    return {
+        "allergens": sorted(allergens),
+        "diets": sorted(diets),
+        "unrecognized_traits": unknown,
+    }
 
 
 _AMOUNT = re.compile(r"^(<)?\s*(\d+(?:\.\d+)?)\s*(mg|g|%)?$", re.I)
@@ -123,10 +127,14 @@ KEY_NUTRIENTS = {
 
 
 def normalize_label(label: Label) -> dict:
-    values = {col: parse_amount(label.nutrients.get(name)) for col, name in KEY_NUTRIENTS.items()}
-    missing = sorted(set(label.incomplete) | {
-        name for col, name in KEY_NUTRIENTS.items() if values[col] is None
-    })
+    values = {
+        col: parse_amount(label.nutrients.get(name))
+        for col, name in KEY_NUTRIENTS.items()
+    }
+    missing = sorted(
+        set(label.incomplete)
+        | {name for col, name in KEY_NUTRIENTS.items() if values[col] is None}
+    )
     return {
         **values,
         "serving_size": label.serving_size,
@@ -155,7 +163,11 @@ def same_dish(label_name: str | None, item_name: str) -> bool:
 def item_signature(rows) -> list[tuple]:
     """Comparable summary of a menu's items, used to count menus that changed between runs.
     Accepts parse.ItemRow or db.models.MenuItem objects."""
+
     def traits(r):
         return r.traits if isinstance(r, ItemRow) else r.traits_raw
 
-    return sorted((r.name, r.course or "", r.serving_size or "", tuple(traits(r) or [])) for r in rows)
+    return sorted(
+        (r.name, r.course or "", r.serving_size or "", tuple(traits(r) or []))
+        for r in rows
+    )

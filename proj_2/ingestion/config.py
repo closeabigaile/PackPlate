@@ -11,7 +11,9 @@ DINING_SITE_BASE = "https://dining.ncsu.edu"
 # Stay slow, sequential, and identifiable.
 USER_AGENT = "PackPlate/0.1 (NC State CSC 510 student project; +https://github.com/morgansimon425/PackPlate)"
 REQUEST_DELAY_SECONDS = float(os.getenv("SCRAPE_DELAY", "1.0"))
-MIN_DELAY_SECONDS = 0.5  # floor for --delay / SCRAPE_DELAY, so a typo can't hammer the sites
+MIN_DELAY_SECONDS = (
+    0.5  # floor for --delay / SCRAPE_DELAY, so a typo can't hammer the sites
+)
 REQUEST_ATTEMPTS = 3
 MAX_RETRY_AFTER_SECONDS = 60
 

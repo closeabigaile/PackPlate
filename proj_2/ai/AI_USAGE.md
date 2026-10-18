@@ -47,3 +47,4 @@ changed, and how the result was checked.
 | 02 | [Ingestion pipeline](artifacts/02-ingestion.md) | Ethan Goodman | 2026-10-06 |
 | 03 | [Backend database connection and read API](artifacts/03-backend-read-api.md) | Moe Ko | 2026-10-07 |
 | 04 | [Filter engine and crowd reports](artifacts/04-filters-crowd.md) | Moe Ko | 2026-10-12 |
+| 05 | [CI, code quality tools, and badges](artifacts/05-ci-quality.md) | Ethan Goodman | 2026-10-18 |

@@ -26,7 +26,9 @@ def database_url() -> str:
 
 
 def make_engine(url: str | None = None) -> Engine:
-    return create_engine(sqlalchemy_url(url) if url else database_url(), pool_pre_ping=True)
+    return create_engine(
+        sqlalchemy_url(url) if url else database_url(), pool_pre_ping=True
+    )
 
 
 def make_session_factory(engine: Engine) -> sessionmaker[Session]:

@@ -22,14 +22,16 @@ WINDOW = timedelta(minutes=int(os.getenv("CROWD_WINDOW_MINUTES", "30")))
 
 @dataclass
 class Crowd:
-    level: str | None              # None = no reports in the window
-    report_count: int              # reports in the window
+    level: str | None  # None = no reports in the window
+    report_count: int  # reports in the window
     last_reported_at: datetime | None
 
 
 def aggregate(reports, at: datetime) -> Crowd:
     """reports: (level, created_at) pairs for one location. Only those in (at - WINDOW, at] count."""
-    recent = [(level, created) for level, created in reports if at - WINDOW < created <= at]
+    recent = [
+        (level, created) for level, created in reports if at - WINDOW < created <= at
+    ]
     if not recent:
         return Crowd(None, 0, None)
     total = weights = 0.0
@@ -64,5 +66,7 @@ class Throttle:
                 return self.seconds - (now - last)
             self._last[key] = now
             if len(self._last) > 10_000:
-                self._last = {k: t for k, t in self._last.items() if now - t < self.seconds}
+                self._last = {
+                    k: t for k, t in self._last.items() if now - t < self.seconds
+                }
             return 0.0
