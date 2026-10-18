@@ -1,7 +1,10 @@
 # M0 — Risk-killer eval
 
-**Status (2026-10-12):** not started. Thresholds below are proposed; the team
-must agree and pre-register them before the first run.
+**Status (2026-10-18):** not started. Thresholds below are proposed; the team
+must agree and pre-register them before the first run. The full scrape it
+needs now exists in the shared database (2026-10-11, issue #3): every item has
+a nutrition label, but 2,418 of 6,239 items list no allergen info, which is the
+usefulness risk this eval measures.
 
 ## The risk
 
@@ -81,10 +84,17 @@ once with dining.ncsu.edu and NetNutrition, once with PackPlate. Record each
 person's restrictions, the time taken, and whether the chosen location
 actually worked for everyone.
 
-## Done when
+## Checklist
 
 - [ ] Thresholds agreed and posted in a GitHub issue before the first run
-- [ ] Snapshot and hand labels committed, with the labelers' agreement rate
+- [x] Full scrape run, all units with labels on (2026-10-11, ingest run #2 in
+  the shared database)
+- [ ] That scrape exported to a JSON snapshot and committed
+- [ ] At least 300 items hand-labeled by two teammates, with their agreement
+  rate recorded
+- [ ] Simulated group scenarios with a fixed seed, and restriction frequencies
+  from a cited source in a config file
 - [ ] `eval/m0.py` runs from a clean checkout with one command
-- [ ] The eval runs in CI
+- [ ] The eval runs in CI (the CI pipeline exists; see M3)
 - [ ] Results and the review decision recorded in the issue
+- [ ] Bonus: timing study with 6–10 real student groups

@@ -1,8 +1,10 @@
 # M3 — Testing and quality pipeline
 
-**Status (2026-10-12):** tests exist for the backend and ingestion, but
-nothing runs them automatically. No CI, coverage, formatter, or Python style
-checker yet. The frontend has ESLint and no tests.
+**Status (2026-10-18):** CI runs the backend and ingestion tests against
+Postgres, plus Ruff, Black, Prettier, ESLint, and a type check, each with a
+README badge. Pre-commit hooks format code on commit, and CONTRIBUTING.md
+explains the setup. Still open: a coverage badge, the M0 eval in CI, frontend
+and end-to-end tests, and reaching 150 tests.
 
 ## Goal
 
@@ -18,9 +20,9 @@ The Project 2 rubric marks tests, CI, coverage, and style tools directly, and
 
 | Area | Tests | Runs in CI |
 |---|---|---|
-| Backend (`backend/tests`) | 69 on `feature/filters-crowd` (22 on `dev`) | No |
-| Ingestion (`ingestion/tests`) | 43, including offline parsing of captured pages | No |
-| Frontend | None; `npm run lint` only | No |
+| Backend (`backend/tests`) | 69 | Yes, against Postgres 16 |
+| Ingestion (`ingestion/tests`) | 43, including offline parsing of captured pages | Yes, against Postgres 16 |
+| Frontend | None yet | Build, ESLint, Prettier, and type check only |
 
 Strengths to keep:
 
@@ -54,13 +56,23 @@ Strengths to keep:
 7. **Badges.** Build, tests passing, coverage, and one for each checker, at
    the top of the README. Every badge must link to its proof.
 
-## Done when
+## Checklist
 
-- [ ] CI runs every test suite, the M0 eval, and every checker on every push
-- [ ] At least 150 tests across backend, ingestion, and frontend, covering
-  expected and failure cases
-- [ ] Coverage is measured and shown in a live badge
-- [ ] Style, format, and syntax checkers configured, enforced in CI, and badged
+- [x] CI runs the backend and ingestion tests against Postgres 16 on every push
+  and pull request; a skipped database test fails the build
+- [x] CI runs the frontend build
+- [x] Style, format, and syntax checkers configured in the repo and enforced
+  in CI: Ruff, Black, Prettier, ESLint, Typecheck
+- [x] Pre-commit hooks run Ruff, Black, and Prettier on every commit
+- [x] Badges for the build, the test count, and each checker, each linking to
+  its runs
+- [x] Coverage measured with `pytest-cov` and printed in CI
+- [ ] Coverage shown in a live badge (Codecov; needs the repo owner)
+- [ ] CI runs the M0 eval and fails if a threshold is missed (needs M0)
+- [ ] Frontend tests, with coverage, run in CI (needs M4 pages)
 - [ ] At least one end-to-end test of the group flow
+- [ ] At least 150 tests across backend, ingestion, and frontend, covering
+  expected and failure cases (112 now)
 - [ ] Failing tests tracked as issues and closed by fixes
-- [ ] CONTRIBUTING.md explains how to run the tests and add new ones
+- [x] CONTRIBUTING.md explains how to run the tests and add new ones
+- [ ] DOI badge from Zenodo (needs the repo owner and a GitHub release)
