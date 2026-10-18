@@ -97,4 +97,3 @@ actually worked for everyone.
 - [ ] `eval/m0.py` runs from a clean checkout with one command
 - [ ] The eval runs in CI (the CI pipeline exists; see M3)
 - [ ] Results and the review decision recorded in the issue
-- [ ] Bonus: timing study with 6–10 real student groups

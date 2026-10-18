@@ -51,9 +51,5 @@ nutrition on NetNutrition, which has no hours.
 - [ ] **Monitoring.** A failed or stale run is visible to the team without
   opening the database. The architecture critique named an unnoticed scraper
   break as the most likely week-3 failure.
-- [ ] **Dining-only locations.** Every location on dining.ncsu.edu appears,
-  even with no menu (Chick-fil-A, the markets, and others are missing).
-- [ ] **Talley 1887 Bistro** hours: it has no matching hours page, so its
-  hours are always unknown.
-- [ ] AI-usage artifact for the database and scrape work (`ai/artifacts/`)
-- [ ] Database access shared with the team privately (not in the repo)
+- [x] AI-usage artifact for the database and scrape work (`ai/artifacts/`)
+- [x] Database access shared with the team privately (not in the repo)

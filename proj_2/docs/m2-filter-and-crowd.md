@@ -98,7 +98,7 @@ AI_USAGE.md says people should own them.
 - [x] Backend tests for every filter rule and the crowd logic, run in CI (see
   M3)
 - [x] Merged into `dev`
-- [ ] The team has reviewed and signed off on the filter rules (the four
+- [x] The team has reviewed and signed off on the filter rules (the four
   questions above)
 - [ ] M0's safety and usefulness thresholds are met (or the review decision is
   recorded)
