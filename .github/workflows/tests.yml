@@ -49,11 +49,39 @@ jobs:
 
       - name: Backend tests
         working-directory: proj_2/backend
-        run: pytest --cov=app --cov-config=../pyproject.toml
+        run: >-
+          pytest --cov=app --cov-config=../pyproject.toml
+          --junitxml="$GITHUB_WORKSPACE/test-results/backend.xml"
 
       - name: Ingestion tests
+        # Run even if the backend failed, so the badge counts both suites.
+        if: ${{ !cancelled() }}
         working-directory: proj_2
-        run: pytest ingestion --cov=ingestion --cov=db --cov-config=pyproject.toml
+        run: >-
+          pytest ingestion --cov=ingestion --cov=db --cov-config=pyproject.toml
+          --junitxml="$GITHUB_WORKSPACE/test-results/ingestion.xml"
+
+      # Test-count badge: only pushes to dev update it, so feature branches
+      # don't overwrite the number. The JSON lives in a gist that shields.io reads.
+      - name: Count tests
+        id: count
+        if: ${{ !cancelled() }}
+        # Explicit bash adds pipefail, so a script error isn't hidden by tee.
+        shell: bash
+        run: >-
+          python .github/scripts/test_badge.py
+          test-results/backend.xml test-results/ingestion.xml | tee -a "$GITHUB_OUTPUT"
+
+      - name: Update test badge
+        if: ${{ !cancelled() && github.event_name == 'push' && github.ref == 'refs/heads/dev' }}
+        uses: schneegans/dynamic-badges-action@28b0fa8bdeb46170ac397105ece0c1fe58f68910 # v1.9.0
+        with:
+          auth: ${{ secrets.GIST_SECRET }}
+          gistID: ${{ vars.TEST_BADGE_GIST_ID }}
+          filename: packplate-tests.json
+          label: tests
+          message: ${{ steps.count.outputs.message }}
+          color: ${{ steps.count.outputs.color }}
 
   frontend:
     name: Frontend build
