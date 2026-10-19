@@ -62,7 +62,10 @@ export function toRequestProfile(profile: Profile): Profile {
 }
 
 function numberInRange(value: unknown, max: number): number | null {
-  return typeof value === "number" && Number.isFinite(value) && value >= 0 && value <= max
+  return typeof value === "number" &&
+    Number.isFinite(value) &&
+    value >= 0 &&
+    value <= max
     ? value
     : null;
 }
@@ -78,13 +81,20 @@ export function parseProfile(raw: string | null): Profile {
     const allergenKeys = new Set<string>(ALLERGENS.map((a) => a.key));
     const dietKeys = new Set<string>(DIETS.map((d) => d.key));
     const avoid = Array.isArray(record.avoid)
-      ? record.avoid.filter((v): v is Allergen => typeof v === "string" && allergenKeys.has(v))
+      ? record.avoid.filter(
+          (v): v is Allergen => typeof v === "string" && allergenKeys.has(v),
+        )
       : [];
     const diets = Array.isArray(record.diets)
-      ? record.diets.filter((v): v is Diet => typeof v === "string" && dietKeys.has(v))
+      ? record.diets.filter(
+          (v): v is Diet => typeof v === "string" && dietKeys.has(v),
+        )
       : [];
     return {
-      name: typeof record.name === "string" ? record.name.slice(0, MAX_NAME_LENGTH) : "",
+      name:
+        typeof record.name === "string"
+          ? record.name.slice(0, MAX_NAME_LENGTH)
+          : "",
       avoid,
       diets,
       min_protein_g: numberInRange(record.min_protein_g, LIMITS.min_protein_g),
@@ -104,7 +114,10 @@ export function validateProfile(profile: Profile): string | null {
     [profile.max_sodium_mg, LIMITS.max_sodium_mg, "Maximum sodium"],
   ];
   for (const [value, max, label] of checks) {
-    if (value != null && !(Number.isFinite(value) && value >= 0 && value <= max)) {
+    if (
+      value != null &&
+      !(Number.isFinite(value) && value >= 0 && value <= max)
+    ) {
       return `${label} must be a number from 0 to ${max.toLocaleString("en-US")}.`;
     }
   }

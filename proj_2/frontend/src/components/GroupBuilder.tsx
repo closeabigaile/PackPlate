@@ -32,7 +32,13 @@ function labelFor(profile: Profile, index: number): string {
   return profile.name?.trim() || `Person ${index + 1}`;
 }
 
-function ResultCard({ location, labels }: { location: GroupLocation; labels: string[] }) {
+function ResultCard({
+  location,
+  labels,
+}: {
+  location: GroupLocation;
+  labels: string[];
+}) {
   const when =
     location.is_open === true && location.closes_at
       ? `Closes at ${formatTime(location.closes_at)}`
@@ -60,10 +66,12 @@ function ResultCard({ location, labels }: { location: GroupLocation; labels: str
         <ul className="count-list">
           {location.profiles.map((counts, index) => (
             <li key={index}>
-              <strong>{counts.name?.trim() || labels[index] || `Person ${index + 1}`}</strong>
+              <strong>
+                {counts.name?.trim() || labels[index] || `Person ${index + 1}`}
+              </strong>
               {": "}
-              {counts.fits} fit · {counts.incomplete} can’t confirm · {counts.conflicts}{" "}
-              don’t fit
+              {counts.fits} fit · {counts.incomplete} can’t confirm ·{" "}
+              {counts.conflicts} don’t fit
               {counts.fits === 0 ? " — nothing here fits" : ""}
             </li>
           ))}
@@ -78,13 +86,17 @@ function ResultCard({ location, labels }: { location: GroupLocation; labels: str
 }
 
 function GroupForm({ initial }: { initial: Profile }) {
-  const [members, setMembers] = useState<Member[]>([{ id: 1, profile: initial }]);
+  const [members, setMembers] = useState<Member[]>([
+    { id: 1, profile: initial },
+  ]);
   const [nextId, setNextId] = useState(2);
   const [search, setSearch] = useState<Search>({ status: "idle" });
   const [problem, setProblem] = useState<string | null>(null);
 
   function updateMember(id: number, profile: Profile) {
-    setMembers((list) => list.map((m) => (m.id === id ? { ...m, profile } : m)));
+    setMembers((list) =>
+      list.map((m) => (m.id === id ? { ...m, profile } : m)),
+    );
   }
 
   function addMember() {
@@ -93,7 +105,9 @@ function GroupForm({ initial }: { initial: Profile }) {
   }
 
   function removeMember(id: number) {
-    setMembers((list) => (list.length > 1 ? list.filter((m) => m.id !== id) : list));
+    setMembers((list) =>
+      list.length > 1 ? list.filter((m) => m.id !== id) : list,
+    );
   }
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
@@ -123,9 +137,13 @@ function GroupForm({ initial }: { initial: Profile }) {
 
   const nobodyRestricted = members.every((m) => !hasConstraints(m.profile));
   const everyone =
-    search.status === "done" ? search.results.filter((r) => r.everyone_fits) : [];
+    search.status === "done"
+      ? search.results.filter((r) => r.everyone_fits)
+      : [];
   const others =
-    search.status === "done" ? search.results.filter((r) => !r.everyone_fits) : [];
+    search.status === "done"
+      ? search.results.filter((r) => !r.everyone_fits)
+      : [];
 
   return (
     <>
@@ -182,7 +200,11 @@ function GroupForm({ initial }: { initial: Profile }) {
           >
             Add a person
           </button>
-          <button type="submit" className="btn" disabled={search.status === "loading"}>
+          <button
+            type="submit"
+            className="btn"
+            disabled={search.status === "loading"}
+          >
             {search.status === "loading" ? "Finding a match…" : "Find a match"}
           </button>
         </div>
@@ -205,7 +227,8 @@ function GroupForm({ initial }: { initial: Profile }) {
             <div className="page-body" style={{ marginTop: 0 }}>
               <div>
                 <h2 className="section-title">
-                  Everyone can eat here <span className="count">({everyone.length})</span>
+                  Everyone can eat here{" "}
+                  <span className="count">({everyone.length})</span>
                 </h2>
                 {everyone.length === 0 ? (
                   <StateMessage kind="empty">
@@ -215,7 +238,11 @@ function GroupForm({ initial }: { initial: Profile }) {
                 ) : (
                   <ul className="stack">
                     {everyone.map((location) => (
-                      <ResultCard key={location.id} location={location} labels={search.labels} />
+                      <ResultCard
+                        key={location.id}
+                        location={location}
+                        labels={search.labels}
+                      />
                     ))}
                   </ul>
                 )}
@@ -224,11 +251,16 @@ function GroupForm({ initial }: { initial: Profile }) {
               {others.length > 0 ? (
                 <div>
                   <h2 className="section-title">
-                    Someone is left out <span className="count">({others.length})</span>
+                    Someone is left out{" "}
+                    <span className="count">({others.length})</span>
                   </h2>
                   <ul className="stack">
                     {others.map((location) => (
-                      <ResultCard key={location.id} location={location} labels={search.labels} />
+                      <ResultCard
+                        key={location.id}
+                        location={location}
+                        labels={search.labels}
+                      />
                     ))}
                   </ul>
                 </div>

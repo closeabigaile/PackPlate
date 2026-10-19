@@ -29,11 +29,17 @@ export function LocationRow({ location }: { location: LocationSummary }) {
         Today: {formatHours(location.today)}
         {when ? ` · ${when}` : ""}
       </p>
-      {location.description ? <p className="meta">{location.description}</p> : null}
+      {location.description ? (
+        <p className="meta">{location.description}</p>
+      ) : null}
       <div className="row-links">
         <Link href={`/menus?location=${location.id}`}>View menu</Link>
         {location.dining_url ? (
-          <a href={location.dining_url} target="_blank" rel="noopener noreferrer">
+          <a
+            href={location.dining_url}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
             Dining page (opens in a new tab)
           </a>
         ) : null}

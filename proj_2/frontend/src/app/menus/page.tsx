@@ -9,7 +9,9 @@ export default async function MenusPage({
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const params = await searchParams;
-  const raw = Array.isArray(params.location) ? params.location[0] : params.location;
+  const raw = Array.isArray(params.location)
+    ? params.location[0]
+    : params.location;
   const initialLocationId = raw && /^\d+$/.test(raw) ? Number(raw) : null;
 
   return (

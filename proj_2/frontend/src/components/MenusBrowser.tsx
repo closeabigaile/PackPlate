@@ -25,9 +25,12 @@ function describeProfile(profile: Profile): string {
   if (profile.diets.length > 0) {
     parts.push(profile.diets.map(dietLabel).join(" + "));
   }
-  if (profile.min_protein_g != null) parts.push(`at least ${profile.min_protein_g} g protein`);
-  if (profile.max_calories != null) parts.push(`under ${profile.max_calories} calories`);
-  if (profile.max_sodium_mg != null) parts.push(`under ${profile.max_sodium_mg} mg sodium`);
+  if (profile.min_protein_g != null)
+    parts.push(`at least ${profile.min_protein_g} g protein`);
+  if (profile.max_calories != null)
+    parts.push(`under ${profile.max_calories} calories`);
+  if (profile.max_sodium_mg != null)
+    parts.push(`under ${profile.max_sodium_mg} mg sodium`);
   return parts.join("; ");
 }
 
@@ -92,7 +95,10 @@ function MenuDay({
       ) : !menus.data ? (
         <StateMessage kind="loading">Loading menu…</StateMessage>
       ) : (
-        <MenuView menus={menus.data} hideConflicts={hideConflicts && profile !== null} />
+        <MenuView
+          menus={menus.data}
+          hideConflicts={hideConflicts && profile !== null}
+        />
       )}
     </>
   );
@@ -108,7 +114,10 @@ function LocationMenus({
   profile: Profile | null;
   hideConflicts: boolean;
 }) {
-  const detail = useAsync(() => api.location(location.id), `location-${location.id}`);
+  const detail = useAsync(
+    () => api.location(location.id),
+    `location-${location.id}`,
+  );
 
   if (detail.error) {
     return (
@@ -117,9 +126,14 @@ function LocationMenus({
       </StateMessage>
     );
   }
-  if (!detail.data) return <StateMessage kind="loading">Loading menu…</StateMessage>;
+  if (!detail.data)
+    return <StateMessage kind="loading">Loading menu…</StateMessage>;
   return (
-    <MenuDay detail={detail.data} profile={profile} hideConflicts={hideConflicts} />
+    <MenuDay
+      detail={detail.data}
+      profile={profile}
+      hideConflicts={hideConflicts}
+    />
   );
 }
 
@@ -170,7 +184,11 @@ function LocationPanel({
   );
 }
 
-export function MenusBrowser({ initialLocationId }: { initialLocationId: number | null }) {
+export function MenusBrowser({
+  initialLocationId,
+}: {
+  initialLocationId: number | null;
+}) {
   const locations = useAsync(api.locations, "locations");
   const saved = useSavedProfile();
   const [applyProfile, setApplyProfile] = useState(true);
@@ -212,7 +230,10 @@ export function MenusBrowser({ initialLocationId }: { initialLocationId: number 
               <>
                 <p className="help">
                   Using your profile: {describeProfile(saved)}.{" "}
-                  <Link href="/profile" style={{ color: "var(--red)", fontWeight: 600 }}>
+                  <Link
+                    href="/profile"
+                    style={{ color: "var(--red)", fontWeight: 600 }}
+                  >
                     Edit
                   </Link>
                 </p>
@@ -222,7 +243,8 @@ export function MenusBrowser({ initialLocationId }: { initialLocationId: number 
                     checked={hideConflicts}
                     onChange={(event) => setHideConflicts(event.target.checked)}
                   />
-                  Hide items that don’t fit (items we can’t confirm stay visible)
+                  Hide items that don’t fit (items we can’t confirm stay
+                  visible)
                 </label>
               </>
             ) : null}
@@ -230,7 +252,10 @@ export function MenusBrowser({ initialLocationId }: { initialLocationId: number 
         ) : (
           <p className="help">
             Showing every item.{" "}
-            <Link href="/profile" style={{ color: "var(--red)", fontWeight: 600 }}>
+            <Link
+              href="/profile"
+              style={{ color: "var(--red)", fontWeight: 600 }}
+            >
               Set your dietary profile
             </Link>{" "}
             to see which items fit you.
@@ -245,7 +270,9 @@ export function MenusBrowser({ initialLocationId }: { initialLocationId: number 
       ) : !locations.data ? (
         <StateMessage kind="loading">Loading locations…</StateMessage>
       ) : locations.data.length === 0 ? (
-        <StateMessage kind="empty">No dining locations have been loaded yet.</StateMessage>
+        <StateMessage kind="empty">
+          No dining locations have been loaded yet.
+        </StateMessage>
       ) : (
         <>
           <section aria-labelledby="open-menus-title">
@@ -256,7 +283,9 @@ export function MenusBrowser({ initialLocationId }: { initialLocationId: number 
               Open a location to see its menu for today.
             </p>
             {open.length === 0 ? (
-              <StateMessage kind="empty">Nothing is open right now.</StateMessage>
+              <StateMessage kind="empty">
+                Nothing is open right now.
+              </StateMessage>
             ) : (
               <div className="stack">{renderPanels(open)}</div>
             )}
@@ -280,7 +309,9 @@ export function MenusBrowser({ initialLocationId }: { initialLocationId: number 
               like.
             </p>
             {closed.length === 0 ? (
-              <StateMessage kind="empty">Nothing is closed right now.</StateMessage>
+              <StateMessage kind="empty">
+                Nothing is closed right now.
+              </StateMessage>
             ) : (
               <div className="stack">{renderPanels(closed)}</div>
             )}

@@ -27,8 +27,8 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <footer className="site-footer">
           <p>
             PackPlate is a student project, not run by NC State Dining. Menus
-            come from NC State’s NetNutrition and hours from dining.ncsu.edu.
-            If you have a serious allergy, check the label or ask dining staff
+            come from NC State’s NetNutrition and hours from dining.ncsu.edu. If
+            you have a serious allergy, check the label or ask dining staff
             before you eat.
           </p>
         </footer>

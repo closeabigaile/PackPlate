@@ -82,7 +82,9 @@ export default function BusyPage() {
               Open now <span className="count">({reportable.length})</span>
             </h2>
             {reportable.length === 0 ? (
-              <StateMessage kind="empty">Nothing is open right now.</StateMessage>
+              <StateMessage kind="empty">
+                Nothing is open right now.
+              </StateMessage>
             ) : (
               <ul className="stack">
                 {reportable.map((location) => {
@@ -126,7 +128,11 @@ export default function BusyPage() {
 
                       {notice ? (
                         <p
-                          className={notice.tone === "ok" ? "banner banner-ok" : "banner banner-bad"}
+                          className={
+                            notice.tone === "ok"
+                              ? "banner banner-ok"
+                              : "banner banner-bad"
+                          }
                           role="status"
                         >
                           {notice.text}
@@ -142,7 +148,8 @@ export default function BusyPage() {
           {closed.length > 0 ? (
             <section aria-labelledby="busy-closed-title">
               <h2 id="busy-closed-title" className="section-title">
-                Closed right now <span className="count">({closed.length})</span>
+                Closed right now{" "}
+                <span className="count">({closed.length})</span>
               </h2>
               <ul className="stack">
                 {closed.map((location) => (
@@ -151,7 +158,9 @@ export default function BusyPage() {
                       <span className="location-name">{location.name}</span>
                       <StatusPill isOpen={false} />
                     </div>
-                    <p className="meta">Crowd reports are for open locations.</p>
+                    <p className="meta">
+                      Crowd reports are for open locations.
+                    </p>
                   </li>
                 ))}
               </ul>

@@ -21,7 +21,11 @@ export class ApiError extends Error {
   status: number; // 0 = the server could not be reached
   retryAfterSeconds: number | null;
 
-  constructor(message: string, status: number, retryAfterSeconds: number | null) {
+  constructor(
+    message: string,
+    status: number,
+    retryAfterSeconds: number | null,
+  ) {
     super(message);
     this.name = "ApiError";
     this.status = status;
@@ -34,7 +38,8 @@ async function request<T>(path: string, body?: unknown): Promise<T> {
   try {
     response = await fetch(`${API_URL}${path}`, {
       method: body === undefined ? "GET" : "POST",
-      headers: body === undefined ? undefined : { "Content-Type": "application/json" },
+      headers:
+        body === undefined ? undefined : { "Content-Type": "application/json" },
       body: body === undefined ? undefined : JSON.stringify(body),
     });
   } catch {
@@ -90,9 +95,12 @@ export const api = {
 
   // Profiles are sent in the body and are never stored by the server.
   filterMenus: (id: number, profiles: Profile[], date?: string) =>
-    request<FilteredMenu[]>(`/filters/locations/${id}/menus${query({ date })}`, {
-      profiles,
-    }),
+    request<FilteredMenu[]>(
+      `/filters/locations/${id}/menus${query({ date })}`,
+      {
+        profiles,
+      },
+    ),
 
   filterGroup: (profiles: Profile[]) =>
     request<GroupLocation[]>("/filters/group", { profiles }),

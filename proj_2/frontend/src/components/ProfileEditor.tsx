@@ -3,7 +3,12 @@
 import Link from "next/link";
 import { useState, type FormEvent } from "react";
 import { emptyProfile, validateProfile } from "@/lib/diet";
-import { clearProfile, saveProfile, useHydrated, useSavedProfile } from "@/lib/profileStore";
+import {
+  clearProfile,
+  saveProfile,
+  useHydrated,
+  useSavedProfile,
+} from "@/lib/profileStore";
 import type { Profile } from "@/lib/types";
 import { ProfileFields } from "./ProfileFields";
 import { StateMessage } from "./StateMessage";
@@ -61,9 +66,15 @@ function ProfileForm({ initial }: { initial: Profile }) {
 
         {status === "saved" ? (
           <p className="banner banner-ok" role="status">
-            Saved. <Link href="/menus" style={{ fontWeight: 700 }}>See menus for you</Link>
+            Saved.{" "}
+            <Link href="/menus" style={{ fontWeight: 700 }}>
+              See menus for you
+            </Link>
             {" or "}
-            <Link href="/group" style={{ fontWeight: 700 }}>eat as a group</Link>.
+            <Link href="/group" style={{ fontWeight: 700 }}>
+              eat as a group
+            </Link>
+            .
           </p>
         ) : null}
         {status === "cleared" ? (
@@ -85,8 +96,8 @@ function ProfileForm({ initial }: { initial: Profile }) {
         </h2>
         <p className="help">
           Only in this browser on this device. PackPlate has no accounts and
-          doesn’t store your diet on its servers. It’s sent along when you
-          check a menu so the check can be done, and then it’s forgotten.
+          doesn’t store your diet on its servers. It’s sent along when you check
+          a menu so the check can be done, and then it’s forgotten.
         </p>
       </section>
     </>
@@ -98,6 +109,7 @@ export function ProfileEditor() {
   const saved = useSavedProfile();
 
   // Wait for the browser so the form starts from what is actually saved.
-  if (!hydrated) return <StateMessage kind="loading">Loading your profile…</StateMessage>;
+  if (!hydrated)
+    return <StateMessage kind="loading">Loading your profile…</StateMessage>;
   return <ProfileForm initial={saved} />;
 }

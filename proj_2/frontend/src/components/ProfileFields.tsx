@@ -47,7 +47,9 @@ export function ProfileFields({
             type="text"
             maxLength={MAX_NAME_LENGTH}
             value={value.name ?? ""}
-            onChange={(event) => onChange({ ...value, name: event.target.value })}
+            onChange={(event) =>
+              onChange({ ...value, name: event.target.value })
+            }
           />
         </div>
       ) : null}
@@ -105,7 +107,9 @@ export function ProfileFields({
               min={0}
               max={LIMITS.min_protein_g}
               value={value.min_protein_g ?? ""}
-              onChange={(event) => setNumber("min_protein_g", event.target.value)}
+              onChange={(event) =>
+                setNumber("min_protein_g", event.target.value)
+              }
             />
           </div>
           <div className="field">
@@ -118,7 +122,9 @@ export function ProfileFields({
               min={0}
               max={LIMITS.max_calories}
               value={value.max_calories ?? ""}
-              onChange={(event) => setNumber("max_calories", event.target.value)}
+              onChange={(event) =>
+                setNumber("max_calories", event.target.value)
+              }
             />
           </div>
           <div className="field">
@@ -131,7 +137,9 @@ export function ProfileFields({
               min={0}
               max={LIMITS.max_sodium_mg}
               value={value.max_sodium_mg ?? ""}
-              onChange={(event) => setNumber("max_sodium_mg", event.target.value)}
+              onChange={(event) =>
+                setNumber("max_sodium_mg", event.target.value)
+              }
             />
           </div>
         </div>

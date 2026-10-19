@@ -37,7 +37,9 @@ export default function LocationsPage() {
               Open now <span className="count">({open.length})</span>
             </h2>
             {open.length === 0 ? (
-              <StateMessage kind="empty">Nothing is open right now.</StateMessage>
+              <StateMessage kind="empty">
+                Nothing is open right now.
+              </StateMessage>
             ) : (
               <ul className="stack">
                 {open.map((location) => (
@@ -69,7 +71,9 @@ export default function LocationsPage() {
               Closed <span className="count">({closed.length})</span>
             </h2>
             {closed.length === 0 ? (
-              <StateMessage kind="empty">Nothing is closed right now.</StateMessage>
+              <StateMessage kind="empty">
+                Nothing is closed right now.
+              </StateMessage>
             ) : (
               <ul className="stack">
                 {closed.map((location) => (

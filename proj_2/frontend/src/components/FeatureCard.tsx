@@ -18,7 +18,10 @@ export function FeatureCard({
   art: string;
 }) {
   return (
-    <article className="feature-card" style={{ "--accent": accent } as CSSProperties}>
+    <article
+      className="feature-card"
+      style={{ "--accent": accent } as CSSProperties}
+    >
       <div className="feature-art" aria-hidden="true">
         {art}
       </div>

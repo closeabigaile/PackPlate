@@ -8,14 +8,7 @@
 
 export type CrowdLevel = "not_busy" | "moderate" | "crowded";
 export type Allergen =
-  | "dairy"
-  | "egg"
-  | "gluten"
-  | "nuts"
-  | "pork"
-  | "seafood"
-  | "sesame"
-  | "soy";
+  "dairy" | "egg" | "gluten" | "nuts" | "pork" | "seafood" | "sesame" | "soy";
 export type Diet = "halal" | "vegan" | "vegetarian";
 export type Verdict = "fits" | "conflicts" | "incomplete";
 

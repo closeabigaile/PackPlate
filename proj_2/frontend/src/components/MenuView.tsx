@@ -127,14 +127,18 @@ export function MenuView({
   hideConflicts?: boolean;
 }) {
   if (menus.length === 0) {
-    return <StateMessage kind="empty">No menu is listed for this day.</StateMessage>;
+    return (
+      <StateMessage kind="empty">No menu is listed for this day.</StateMessage>
+    );
   }
 
   return (
     <div className="stack">
       {menus.map((menu) => {
         const visible = hideConflicts
-          ? menu.items.filter((item) => item.results?.[0]?.verdict !== "conflicts")
+          ? menu.items.filter(
+              (item) => item.results?.[0]?.verdict !== "conflicts",
+            )
           : menu.items;
         const hidden = menu.items.length - visible.length;
 
@@ -153,7 +157,8 @@ export function MenuView({
                 {hidden > 0 ? (
                   <p className="help">
                     {hidden} item{hidden === 1 ? "" : "s"} hidden because{" "}
-                    {hidden === 1 ? "it doesn’t" : "they don’t"} fit your profile.
+                    {hidden === 1 ? "it doesn’t" : "they don’t"} fit your
+                    profile.
                   </p>
                 ) : null}
                 {groupByCourse(visible).map(([course, items]) => (

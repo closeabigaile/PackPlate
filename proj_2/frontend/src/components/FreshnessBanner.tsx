@@ -8,7 +8,8 @@ import { useAsync } from "@/lib/useAsync";
 async function loadFreshness() {
   const freshness = await api.freshness();
   const ageHours = freshness.last_run_finished_at
-    ? (Date.now() - new Date(freshness.last_run_finished_at).getTime()) / 3_600_000
+    ? (Date.now() - new Date(freshness.last_run_finished_at).getTime()) /
+      3_600_000
     : null;
   return { freshness, ageHours };
 }
