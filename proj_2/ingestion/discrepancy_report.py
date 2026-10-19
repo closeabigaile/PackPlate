@@ -33,6 +33,7 @@ COLUMNS = ["location", "item", "nc_state_allergens", "nc_state_diets", "issue", 
 
 
 def rows(db: Session, start: date, end: date) -> list[dict]:
+    """One row per possible label gap on menus from start to end, by location and item."""
     query = (
         select(Location.name, MenuItem, Nutrition.key, Nutrition.ingredients)
         .join(Menu, Menu.id == MenuItem.menu_id)
@@ -70,6 +71,7 @@ def rows(db: Session, start: date, end: date) -> list[dict]:
 
 
 def main(argv: list[str] | None = None) -> int:
+    """Command-line entry point: print the report as CSV (default: the next 7 days)."""
     today = datetime.now(CAMPUS_TZ).date()
     p = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     p.add_argument("--start", type=date.fromisoformat, default=today)

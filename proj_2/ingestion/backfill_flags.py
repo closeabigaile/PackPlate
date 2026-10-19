@@ -51,6 +51,7 @@ def backfill(engine: Engine, write: bool) -> dict:
 
 
 def main(argv: list[str] | None = None) -> int:
+    """Command-line entry point: preview or save the flags and print how many changed."""
     p = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     p.add_argument("--write", action="store_true", help="save (default: preview only)")
     a = p.parse_args(argv)
