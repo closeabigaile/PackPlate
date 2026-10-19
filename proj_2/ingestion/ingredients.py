@@ -85,14 +85,16 @@ EXCEPT = [
     "coconut milk", "almond milk", "oat milk", "soy milk", "soymilk", "rice milk",
     "cocoa butter", "peanut butter", "nut butter", "almond butter", "cashew butter",
     "sunflower butter", "seed butter", "apple butter", "shea butter",
-    "cream of tartar", "coconut cream", "vegan cheese",
+    "cream of tartar", "coconut cream",
+    # the dairy-free shred inside NC State's "Vegan Mozzarella" (no milk in it)
+    "mozzarella style shred",
     # flours not made from a gluten-containing grain
     "rice flour", "corn flour", "potato flour", "almond flour", "coconut flour",
     "chickpea flour", "tapioca flour", "cassava flour", "oat flour", "sorghum flour",
     "buckwheat flour", "gluten free flour", "gluten friendly",
     # pork look-alikes
     "turkey bacon", "beef bacon", "turkey ham", "turkey pepperoni", "beef pepperoni",
-    "turkey salami", "chicken chorizo", "vegan chorizo",
+    "turkey salami", "chicken chorizo",
     # eggs from other fowl are egg, not meat
     "duck egg", "goose egg", "quail egg", "turkey egg",
     # highly refined soybean oil is exempt (21 U.S.C. 321(qq)(2)(A)); assumed refined
@@ -114,6 +116,27 @@ _ADVISORY = re.compile(
 )
 _FREE_OF = re.compile(r"\b[a-z]+[- ]free\b|\bnon-?dairy\b", re.I)
 
+# Plant-based modifiers and the plant-based brands that appear in NC State's
+# ingredient text. An animal-product word directly after one ("Vegan Mozzarella",
+# "Plant-Based Beef", "Impossible Sausage") names an imitation, so it is skipped.
+# Only the very next word: "Vegan Pesto with Cheese" is still flagged.
+PLANT_BASED = [
+    "vegan", "vegetarian", "veggie", "plant-based", "plant based", "meatless",
+    "meat-free", "dairy-free", "impossible", "beyond",
+]  # fmt: skip
+_ANIMAL_KEYS = ("dairy", "egg", "meat", "pork", "seafood", "honey")
+_ANIMAL_WORDS = sorted(
+    {t for k in _ANIMAL_KEYS for t in WORDS[k] if " " not in t}, key=len, reverse=True
+)
+_IMITATION = re.compile(
+    r"\b("
+    + "|".join(r"[\s-]+".join(map(re.escape, m.split())) for m in PLANT_BASED)
+    + r")[\s-]+(?:"
+    + "|".join(map(re.escape, _ANIMAL_WORDS))
+    + r")(?:e?s)?\b",
+    re.I,
+)
+
 
 def _pattern(term: str) -> re.Pattern:
     """Whole words, any case, optional plural; spaces also match hyphens."""
@@ -130,6 +153,7 @@ def possible_allergens(ingredients: str | None) -> list[str]:
     if not ingredients:
         return []
     text = _ADVISORY.sub(" ", ingredients)
+    text = _IMITATION.sub(r" \1 ", text)
     for pattern, keep in _EXCEPT:
         text = pattern.sub(f" {keep} ", text)
     text = _FREE_OF.sub(" ", text)

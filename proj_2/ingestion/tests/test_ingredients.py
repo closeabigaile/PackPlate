@@ -52,6 +52,33 @@ def test_honey_is_flagged_for_vegan_checks():
     assert possible_allergens("Oats, Honey") == ["honey"]
 
 
+def test_plant_based_imitations_are_not_flagged():
+    # Real phrases from NC State's ingredient text.
+    assert possible_allergens("Vegan Mozzarella (Coconut Oil, Potato Starch)") == []
+    assert possible_allergens("Plant-Based Beef Strips (Water, Pea Protein)") == []
+    assert possible_allergens("Impossible Sausage (Water, Sunflower Oil)") == []
+    assert possible_allergens("Beyond Meat Burger Patty (Pea Protein)") == []
+    assert possible_allergens("Dairy-Free Cheese (Cashews)") == ["nuts"]
+
+
+def test_nc_state_vegan_mozzarella_is_not_dairy():
+    text = (
+        "Vegan Mozzarella (Mozzarella Style Shred (Filtered Water, Modified Potato "
+        "Starch, Palm Oil, Sunflower Oil, Cassava Flour, Oat Fiber, Sea Salt))"
+    )
+    assert possible_allergens(text) == []
+    # A real "-style" cheese is still flagged.
+    assert possible_allergens("Parmesan-Style Cheese (Milk, Salt)") == ["dairy"]
+
+
+def test_plant_based_rule_only_skips_the_next_word():
+    assert possible_allergens("Vegan Pesto with Cheese") == ["dairy"]
+    # Real allergens inside an imitation are still flagged.
+    assert possible_allergens(
+        "Plant-Based Beef Strips (Water, Vital Wheat Gluten, Soy Protein Isolate)"
+    ) == ["gluten", "soy"]
+
+
 def test_peanut_butter_is_still_a_nut():
     assert possible_allergens("Peanut Butter, Celery") == ["nuts"]
 
