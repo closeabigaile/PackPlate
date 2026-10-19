@@ -12,6 +12,7 @@ STALE_AFTER_HOURS = int(os.getenv("STALE_AFTER_HOURS", "36"))
 
 
 def is_stale(last_finished_at: datetime | None, at: datetime) -> bool:
+    """True if there's no completed run, or the last one finished over STALE_AFTER_HOURS before `at`."""
     return last_finished_at is None or at - last_finished_at > timedelta(
         hours=STALE_AFTER_HOURS
     )

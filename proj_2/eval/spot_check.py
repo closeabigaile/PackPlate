@@ -126,6 +126,7 @@ def sheet(rows: list[dict], sample_size: int = SAMPLE_SIZE, seed: int = SEED):
 
 
 def main():
+    """Write eval/data/spot_check.csv, unless a sheet already exists."""
     if SHEET.exists():
         sys.exit(f"{SHEET} already exists; delete it first to rebuild it.")
     rows = candidates(load())

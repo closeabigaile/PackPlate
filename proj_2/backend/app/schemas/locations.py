@@ -13,11 +13,15 @@ from app.schemas.crowd import Crowd
 
 
 class Period(BaseModel):
+    """One opening period, from opens_at to closes_at (campus time)."""
+
     opens_at: datetime
     closes_at: datetime
 
 
 class HoursDay(BaseModel):
+    """A location's hours on one date, as published on dining.ncsu.edu."""
+
     date: date
     status: Literal[
         "open", "closed", "unknown"
@@ -27,6 +31,8 @@ class HoursDay(BaseModel):
 
 
 class LocationSummary(BaseModel):
+    """A location with today's hours, whether it's open, and its crowd level."""
+
     id: int
     name: str
     description: str | None
@@ -39,6 +45,8 @@ class LocationSummary(BaseModel):
 
 
 class MenuSummary(BaseModel):
+    """One meal's menu on one day, without its items."""
+
     id: int
     date: date
     meal: str
@@ -46,11 +54,15 @@ class MenuSummary(BaseModel):
 
 
 class LocationDetail(LocationSummary):
+    """A location's summary plus 7 days of hours (from today) and its menus from today on."""
+
     hours: list[HoursDay]  # today and the next 6 days
     menus: list[MenuSummary]  # today onward
 
 
 class Nutrition(BaseModel):
+    """An item's nutrition label from NetNutrition. Values it doesn't give are null, not zero."""
+
     serving_size: str | None
     calories: float | None
     protein_g: float | None
@@ -64,6 +76,8 @@ class Nutrition(BaseModel):
 
 
 class MenuItem(BaseModel):
+    """One dish on a menu, with its allergens, diets, and nutrition label if it has one."""
+
     id: int
     name: str
     course: str | None  # station, e.g. "Grill Stations"
@@ -75,4 +89,6 @@ class MenuItem(BaseModel):
 
 
 class Menu(MenuSummary):
+    """One meal's menu on one day, with its items."""
+
     items: list[MenuItem]

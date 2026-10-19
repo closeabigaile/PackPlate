@@ -44,6 +44,18 @@ PackPlate ever telling someone a dish is safe when it isn't.
   [the result](proj_2/eval/results.json), and the review decision in
   [issue #11](https://github.com/morgansimon425/PackPlate/issues/11).
 
+## 📚 Documentation
+
+| | |
+|---|---|
+| [Why PackPlate](proj_2/docs/why.md) | The problem, who it's for, and the evidence that it works |
+| [How to use it](proj_2/docs/how.md) | Worked examples: the website, the API, and common developer tasks |
+| [Code reference](proj_2/docs/reference.md) | Every module, class, and function, generated from the code |
+| [HTTP API](proj_2/docs/api.md) | Every endpoint and data model, generated from the API |
+| [Install](INSTALL.md) | Getting PackPlate running on your machine |
+| [Contributing](CONTRIBUTING.md) | Setup, tests, checkers, and how to make changes safely |
+| [Code of conduct](CODE-OF-CONDUCT.md) · [License](LICENSE.md) · [Third-party libraries](THIRD_PARTY_LIBRARIES.md) | |
+
 ## 📁 Structure
 
 ```

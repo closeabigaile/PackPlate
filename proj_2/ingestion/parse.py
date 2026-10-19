@@ -32,11 +32,14 @@ def _clean(text: str | None) -> str:
 
 @dataclass
 class UnitRef:
+    """A dining unit on NetNutrition: its id (unitOid) and name."""
+
     oid: int
     name: str
 
 
 def parse_units(home_html: str) -> list[UnitRef]:
+    """Every dining unit linked from the NetNutrition home page."""
     units = []
     for a in _soup(home_html).select("a[onclick*='unitsSelectUnit(']"):
         m = _ONCLICK_OID.search(a["onclick"])
@@ -50,6 +53,8 @@ def parse_units(home_html: str) -> list[UnitRef]:
 
 @dataclass
 class MenuRef:
+    """One menu in a unit's list: its id (menuOid), date, and meal name."""
+
     oid: int
     date: date
     meal: str
@@ -57,6 +62,8 @@ class MenuRef:
 
 @dataclass
 class MenuList:
+    """A unit's menu list: its description, its menus, and whether the site said there are none."""
+
     description: str | None
     menus: list[MenuRef]
     no_menus_notice: bool = False  # the site said "There are no menus available..."
@@ -92,6 +99,8 @@ def parse_menu_list(html: str) -> MenuList:
 
 @dataclass
 class ItemRow:
+    """One item on a menu: detail id, name, station (course), serving size, and icon titles."""
+
     detail_oid: int
     name: str
     course: str | None
@@ -100,6 +109,7 @@ class ItemRow:
 
 
 def parse_menu_items(html: str) -> list[ItemRow]:
+    """Every item in a menu's item table, with the station (course) it's listed under."""
     items = []
     course = None
     for tr in _soup(html).select("table tr"):
@@ -133,6 +143,8 @@ def parse_menu_items(html: str) -> list[ItemRow]:
 
 @dataclass
 class Label:
+    """A parsed nutrition label, with values as printed. Nothing is filled in or guessed."""
+
     name: str | None
     serving_size: str | None
     nutrients: dict[str, str]  # "Protein" -> "4g", "Cholesterol" -> "NA"
@@ -144,6 +156,7 @@ class Label:
 
 
 def parse_label(html: str) -> Label:
+    """Parse a nutrition label page. Parts the page doesn't have come back as None or empty."""
     soup = _soup(html)
     name_el = soup.select_one(".cbo_nn_LabelHeader")
     serving_el = soup.select_one(".cbo_nn_LabelBottomBorderLabel")
@@ -200,6 +213,8 @@ def parse_label(html: str) -> Label:
 
 @dataclass
 class HoursEntry:
+    """One day's hours box on a dining.ncsu.edu location page."""
+
     date_label: str  # "Monday, Sep. 28" (the page shows no year)
     raw_text: str  # "7:00am - 10:00am | 11:00am - 1:30pm" or "Closed all day"
     windows: list[tuple[int, int]]  # minutes after midnight
@@ -218,6 +233,10 @@ def _to_minutes(t: str) -> int:
 
 
 def parse_time_ranges(text: str) -> list[tuple[int, int]]:
+    """Ranges like "7:00am - 10:00am" as (open, close) minutes after midnight.
+
+    A close at or before the open time is moved past midnight (e.g. "8:00am - 12:00am").
+    """
     windows = []
     for start, end in _RANGE.findall(text):
         s, e = _to_minutes(start), _to_minutes(end)
