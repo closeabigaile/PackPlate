@@ -60,6 +60,8 @@ FITS, CONFLICTS, INCOMPLETE = "fits", "conflicts", "incomplete"
 
 @dataclass(frozen=True)
 class Profile:
+    """One person's dietary needs: allergens to avoid, required diets, and nutrition goals."""
+
     avoid: frozenset[str] = frozenset()  # allergen keys
     diets: frozenset[str] = frozenset()  # diet keys, all required
     min_protein_g: float | None = None
@@ -69,6 +71,8 @@ class Profile:
 
 @dataclass
 class Result:
+    """One item's verdict for one profile (fits, conflicts, or incomplete), with reasons."""
+
     verdict: str
     reasons: list[str] = field(
         default_factory=list
@@ -151,6 +155,8 @@ def check(item, profile: Profile) -> Result:
 
 @dataclass
 class Counts:
+    """How many items fit, are incomplete, or conflict for one profile."""
+
     fits: int = 0
     incomplete: int = 0
     conflicts: int = 0

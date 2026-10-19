@@ -68,6 +68,12 @@ jobs:
           pytest eval --cov=eval --cov-config=pyproject.toml
           --junitxml="$GITHUB_WORKSPACE/test-results/eval.xml"
 
+      # docs/reference.md and docs/api.md are generated from the code.
+      - name: Generated docs are up to date
+        if: ${{ !cancelled() }}
+        working-directory: proj_2
+        run: python docs/generate.py --check
+
       # Test-count badge: only pushes to dev update it, so feature branches
       # don't overwrite the number. The JSON lives in a gist that shields.io reads.
       - name: Count tests

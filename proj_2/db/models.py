@@ -27,6 +27,8 @@ from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
 
 class Base(DeclarativeBase):
+    """Base class for every table below. Its metadata lists them all, for Alembic."""
+
     pass
 
 

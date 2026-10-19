@@ -22,6 +22,8 @@ WINDOW = timedelta(minutes=int(os.getenv("CROWD_WINDOW_MINUTES", "30")))
 
 @dataclass
 class Crowd:
+    """A location's crowd level from the reports in the window."""
+
     level: str | None  # None = no reports in the window
     report_count: int  # reports in the window
     last_reported_at: datetime | None

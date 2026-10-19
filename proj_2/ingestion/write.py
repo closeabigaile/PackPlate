@@ -23,6 +23,7 @@ from ingestion.parse import HoursEntry, ItemRow, Label, MenuRef, UnitRef
 
 
 def now() -> datetime:
+    """The current time in UTC, for the timestamps ingestion writes."""
     return datetime.now(UTC)
 
 
@@ -37,6 +38,7 @@ def _upsert(db: Session, model, key_cols: list[str], values: dict):
 
 
 def upsert_location(db: Session, unit: UnitRef, description: str | None = None):
+    """Insert or update a location. Its description only changes when one is given."""
     values = {
         "id": unit.oid,
         "name": unit.name,
