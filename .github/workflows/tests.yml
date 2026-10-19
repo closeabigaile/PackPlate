@@ -61,6 +61,13 @@ jobs:
           pytest ingestion --cov=ingestion --cov=db --cov-config=pyproject.toml
           --junitxml="$GITHUB_WORKSPACE/test-results/ingestion.xml"
 
+      - name: M0 eval tests
+        if: ${{ !cancelled() }}
+        working-directory: proj_2
+        run: >-
+          pytest eval --cov=eval --cov-config=pyproject.toml
+          --junitxml="$GITHUB_WORKSPACE/test-results/eval.xml"
+
       # Test-count badge: only pushes to dev update it, so feature branches
       # don't overwrite the number. The JSON lives in a gist that shields.io reads.
       - name: Count tests
@@ -70,7 +77,8 @@ jobs:
         shell: bash
         run: >-
           python .github/scripts/test_badge.py
-          test-results/backend.xml test-results/ingestion.xml | tee -a "$GITHUB_OUTPUT"
+          test-results/backend.xml test-results/ingestion.xml test-results/eval.xml
+          | tee -a "$GITHUB_OUTPUT"
 
       - name: Update test badge
         if: ${{ !cancelled() && github.event_name == 'push' && github.ref == 'refs/heads/dev' }}
