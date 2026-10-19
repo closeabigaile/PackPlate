@@ -33,15 +33,16 @@ class Hits:
     advisory: list[str] = field(default_factory=list)
 
 
-def _pattern(term: str) -> re.Pattern:
+def term_pattern(term: str) -> re.Pattern:
+    """Whole words, any case, optional plural; "half and half" also matches hyphens."""
     words = r"[\s-]+".join(re.escape(w) for w in term.split())
     return re.compile(rf"\b{words}(?:e?s)?\b", re.I)
 
 
 _PATTERNS = {
     key: (
-        [(t, _pattern(t)) for t in spec["terms"]],
-        [_pattern(e) for e in spec["except_"]],
+        [(t, term_pattern(t)) for t in spec["terms"]],
+        [term_pattern(e) for e in spec["except_"]],
     )
     for key, spec in WORDS.items()
 }
