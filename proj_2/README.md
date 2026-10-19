@@ -164,6 +164,24 @@ now. The `menus_changed` stat shows how often menus really change.
 Known source limits: "Contains Nuts" covers peanuts and tree nuts, and
 "Contains Seafood" covers fish and shellfish; the source can't tell them apart.
 
+### Shared database (Supabase)
+
+The scraped data is stored in a shared Supabase Postgres database.
+
+1. Request the connection string from the team.
+2. Before starting the backend, set `DATABASE_URL` to that string:
+
+   ```bash
+   export DATABASE_URL="<connection string>"   # PowerShell: $env:DATABASE_URL = "<connection string>"
+   ```
+
+Notes:
+
+- Tests empty their database, so keep `TEST_DATABASE_URL` pointed at your local
+  Docker database, not Supabase.
+- The scraper is run by one team member, so there's no need to run
+  `ingestion.run` against this database.
+
 ## 🧪 Tests
 
 ```bash
