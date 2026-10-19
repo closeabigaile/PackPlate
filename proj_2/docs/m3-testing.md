@@ -1,10 +1,10 @@
 # M3 — Testing and quality pipeline
 
-**Status (2026-10-18):** CI runs the backend and ingestion tests against
-Postgres, plus Ruff, Black, Prettier, ESLint, and a type check, each with a
-README badge. Pre-commit hooks format code on commit, and CONTRIBUTING.md
-explains the setup. Still open: a coverage badge, the M0 eval in CI, frontend
-and end-to-end tests, and reaching 150 tests.
+**Status (2026-10-18):** CI runs the backend, ingestion, and M0 eval tests
+(222) against Postgres, checks the M0 eval reproduces, and runs Ruff, Black,
+Prettier, ESLint, and a type check, each with a README badge. Pre-commit hooks
+format code on commit, and CONTRIBUTING.md explains the setup. Still open: a
+coverage badge, frontend and end-to-end tests.
 
 ## Goal
 
@@ -22,6 +22,7 @@ The Project 2 rubric marks tests, CI, coverage, and style tools directly, and
 |---|---|---|
 | Backend (`backend/tests`) | 69 | Yes, against Postgres 16 |
 | Ingestion (`ingestion/tests`) | 43, including offline parsing of captured pages | Yes, against Postgres 16 |
+| M0 eval (`eval/tests`) | 110 | Yes, plus a check that the eval's numbers reproduce |
 | Frontend | None yet | Build, ESLint, Prettier, and type check only |
 
 Strengths to keep:
@@ -37,7 +38,9 @@ Strengths to keep:
 1. **CI (GitHub Actions).** On every push and pull request:
    - start a Postgres 16 service and run the backend and ingestion tests
      against it;
-   - run the M0 eval and fail the build if a threshold is missed;
+   - run the M0 eval and fail if it crashes or its numbers change without
+     `eval/results.json` being updated (a missed threshold is reported, not a
+     failure);
    - run the frontend lint, type check, tests, and build.
 
    This needs the team to reverse the earlier "no GitHub Actions yet"
@@ -68,11 +71,11 @@ Strengths to keep:
   its runs
 - [x] Coverage measured with `pytest-cov` and printed in CI
 - [ ] Coverage shown in a live badge (Codecov; needs the repo owner)
-- [ ] CI runs the M0 eval and fails if a threshold is missed (needs M0)
+- [x] CI runs the M0 eval and fails if it crashes or its numbers change
 - [ ] Frontend tests, with coverage, run in CI (needs M4 pages)
 - [ ] At least one end-to-end test of the group flow
-- [ ] At least 150 tests across backend, ingestion, and frontend, covering
-  expected and failure cases (112 now)
+- [x] At least 150 tests, covering expected and failure cases (222: backend
+  69, ingestion 43, M0 eval 110; frontend still has none)
 - [ ] Failing tests tracked as issues and closed by fixes
 - [x] CONTRIBUTING.md explains how to run the tests and add new ones
 - [ ] DOI badge from Zenodo (needs the repo owner and a GitHub release)

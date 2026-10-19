@@ -90,8 +90,16 @@ and use that port here.)
 | Ingestion | `proj_2` | `pytest ingestion` |
 | Backend with coverage | `proj_2/backend` | `pytest --cov=app --cov-config=../pyproject.toml` |
 | Ingestion with coverage | `proj_2` | `pytest ingestion --cov=ingestion --cov=db --cov-config=pyproject.toml` |
+| M0 eval tests (no database) | `proj_2` | `pytest eval` |
+| M0 eval itself | `proj_2` | `python -m eval.m0 --check` |
 
 With the database up, nothing should say `skipped`.
+
+**If your change moves the M0 numbers** (the filter engine, the icon mapping,
+or anything in `proj_2/eval/`), the **M0 eval** check fails until you rerun
+`python -m eval.m0` and commit the new `eval/results.json` with your change.
+If you change the word list or the snapshot, the hand spot-check sheet no
+longer matches: rebuild it and review the changed rows again.
 
 ## Running the checkers
 

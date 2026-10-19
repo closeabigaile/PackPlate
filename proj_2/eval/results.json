@@ -1,0 +1,87 @@
+{
+ "incomplete": {
+  "answers": 35101,
+  "packplate_fits": 0.7256,
+  "packplate_incomplete": 0.0931
+ },
+ "safe": {
+  "baseline": {
+   "confirmed_false_fits": 6,
+   "fits_answers_checked": 7932,
+   "fits_answers_without_ingredients": 379,
+   "menu_items_affected": 14
+  },
+  "confirmed": [
+   {
+    "item": "Broccoli Cheese",
+    "location": "Talley – Jason’s Deli",
+    "note": "seasoning lists cooked chicken fat but tagged vegetarian",
+    "profile": "diet_vegetarian"
+   },
+   {
+    "item": "Toasted Sunflower Seeds",
+    "location": "Clark Dining Hall",
+    "note": "Roasted in oil that may contain peanut oil; no nut icon",
+    "profile": "avoid_nuts"
+   },
+   {
+    "item": "Sunflower Seeds",
+    "location": "University Towers Dining Hall",
+    "note": "Roasted in oil that may contain peanut oil; no nut icon",
+    "profile": "avoid_nuts"
+   },
+   {
+    "item": "Salad Bar",
+    "location": "On the Oval",
+    "note": "Sunflower seeds in oil that may contain peanut oil; no nut icon",
+    "profile": "avoid_nuts"
+   },
+   {
+    "item": "Garlic Bread",
+    "location": "On the Oval",
+    "note": "bread lists sesame seeds \"if present\"; no sesame icon",
+    "profile": "avoid_sesame"
+   },
+   {
+    "item": "Blueberry Pancake",
+    "location": "Fountain Dining Hall",
+    "note": "Contains whey (milk protein); no dairy icon",
+    "profile": "avoid_dairy"
+   }
+  ],
+  "packplate": {
+   "confirmed_false_fits": 6,
+   "fits_answers_checked": 7926,
+   "fits_answers_without_ingredients": 363,
+   "menu_items_affected": 14
+  },
+  "scan": {
+   "flags": 172,
+   "flags_confirmed": 6,
+   "random_unflagged_checked": 30,
+   "random_unflagged_missed": 0
+  }
+ },
+ "thresholds": {
+  "safe_max_confirmed_false_fits": 0,
+  "useful_min_answer_rate": 0.8
+ },
+ "useful": {
+  "baseline": {
+   "answer_rate": 1.0,
+   "answer_rate_with_restrictions": 1.0,
+   "answered": 1000
+  },
+  "groups": 1000,
+  "groups_with_restrictions": 473,
+  "packplate": {
+   "answer_rate": 1.0,
+   "answer_rate_with_restrictions": 1.0,
+   "answered": 1000
+  }
+ },
+ "verdict": {
+  "safe_met": false,
+  "useful_met": true
+ }
+}

@@ -1,0 +1,38 @@
+# Reruns the M0 risk-killer eval and checks it reproduces eval/results.json.
+# Passing means the committed numbers reproduce, not that M0's targets were met
+# (the targets and the result are in the pre-registration issue and results.json).
+# It fails if the eval crashes, the hand spot-check sheet no longer matches the
+# scan, or the numbers change without results.json being updated.
+name: M0 eval
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  m0:
+    name: M0 eval reproduces
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: proj_2
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: |
+            proj_2/requirements-dev.txt
+            proj_2/backend/requirements.txt
+            proj_2/ingestion/requirements.txt
+
+      - name: Install dependencies
+        run: pip install -r requirements-dev.txt
+
+      - name: Run the eval and compare with results.json
+        run: python -m eval.m0 --check
