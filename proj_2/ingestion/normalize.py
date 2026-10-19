@@ -7,6 +7,7 @@ stays unknown (None), and names we don't recognize are kept and flagged, never d
 
 import re
 
+from ingestion.ingredients import matched_terms
 from ingestion.parse import ItemRow, Label
 
 # Every trait NC State publishes (NetNutrition's trait filter list, [data-traitoid]).
@@ -142,6 +143,7 @@ def normalize_label(label: Label) -> dict:
         "ingredients": label.ingredients,
         "contains": label.contains,
         "missing_fields": missing,
+        "ingredient_flags": matched_terms(label.ingredients),
     }
 
 

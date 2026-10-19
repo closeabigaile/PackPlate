@@ -59,6 +59,19 @@ def test_normalize_label_lists_missing_key_fields():
     assert data["missing_fields"] == ["Protein"]
 
 
+def test_normalize_label_flags_possible_allergens_in_ingredients():
+    label = Label(
+        name="Blueberry Pancake",
+        serving_size="1 each",
+        ingredients="Enriched Flour, Blueberries, Sugar, Whey, Salt",
+        contains=["Contains Gluten"],
+        nutrients={},
+        incomplete=[],
+    )
+    flags = normalize.normalize_label(label)["ingredient_flags"]
+    assert flags == {"dairy": ["whey"], "gluten": ["flour"]}
+
+
 def test_normalize_label_flags_absent_key_nutrients():
     label = Label(
         name="X",
