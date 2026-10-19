@@ -35,11 +35,15 @@ LOCK_KEY = (
 
 
 class AlreadyRunning(Exception):
+    """Another ingestion run holds the lock, so this one didn't start."""
+
     pass
 
 
 @dataclass
 class Stats:
+    """Counts for one run, saved in its ingest_runs row."""
+
     units: int = 0
     units_without_menus: list = field(default_factory=list)
     hours_days: int = 0
@@ -74,19 +78,27 @@ class LabelCache:
         self._fresh_after = fresh_after
 
     def fresh(self, key: str) -> list[str] | None:
+        """The stored "Contains:" list for `key` if its label is fresh enough to reuse."""
         hit = self._rows.get(key)
         return hit[1] if hit and hit[0] >= self._fresh_after else None
 
     def any_age(self, key: str) -> list[str] | None:
+        """The stored "Contains:" list for `key`, however old, or None if there isn't one."""
         hit = self._rows.get(key)
         return hit[1] if hit else None
 
     def add(self, stored: dict[str, list[str]]):
+        """Mark labels this run just committed as stored and fresh."""
         t = write.now()
         self._rows.update({key: (t, contains) for key, contains in stored.items()})
 
 
 class Job:
+    """One run's work: locations, then hours, then each unit's menus and labels.
+
+    A failure in one unit or menu is recorded with error() and the job moves on.
+    """
+
     def __init__(
         self,
         db: Session,
@@ -113,10 +125,12 @@ class Job:
         self.labels: LabelCache | None = None
 
     def error(self, message: str):
+        """Log a problem and add it to the run's error list."""
         log.warning("! %s", message)
         self.errors.append(message)
 
     def execute(self):
+        """Scrape the selected units: locations, hours, then each unit's menus."""
         units = parse.parse_units(self.nn.start_session())
         if not units:
             raise FetchError("no units on the NetNutrition home page (layout changed?)")
@@ -146,6 +160,7 @@ class Job:
     # ---------- hours (dining.ncsu.edu) ----------
 
     def ingest_hours(self, units: list[parse.UnitRef]):
+        """Store each unit's hours for the run's days, committing one unit at a time."""
         for unit in units:
             try:
                 hours = self.hours_for(unit)
@@ -159,6 +174,11 @@ class Job:
             self.db.commit()
 
     def hours_for(self, unit: parse.UnitRef) -> dict[date, parse.HoursEntry | None]:
+        """One unit's hours for each of the run's days, from dining.ncsu.edu.
+
+        None for a day means unknown: no hours page, the fetch failed, or the page
+        showed a different date.
+        """
         slug = UNIT_TO_DINING_SLUG.get(unit.oid)
         if slug is None:
             return {day: None for day in self.days}
@@ -193,6 +213,7 @@ class Job:
     # ---------- menus and labels (NetNutrition) ----------
 
     def ingest_unit(self, unit: parse.UnitRef):
+        """Store one unit's description and menu list, then scrape its menus on the run's days."""
         log.info("unit %s %s", unit.oid, unit.name)
         panels = self.nn.select_unit(unit.oid)
         if "menuPanel" not in panels:
@@ -226,6 +247,7 @@ class Job:
                 self.nn.select_unit(unit.oid)
 
     def ingest_menu(self, unit: parse.UnitRef, ref: parse.MenuRef):
+        """Scrape one menu: its items and their labels (reusing fresh stored ones), then store them."""
         panels = self.nn.select_menu(ref.oid)
         if "itemPanel" not in panels:
             raise FetchError("response had no itemPanel")
@@ -279,6 +301,7 @@ class Job:
         log.info("  %s %-9s %3d items (%s)", ref.date, ref.meal, len(rows), outcome)
 
     def can_fetch_label(self) -> bool:
+        """Whether this run may fetch another label: labels are on and --max-labels isn't reached."""
         return self.nutrition and (
             self.max_labels is None or self.stats.labels_fetched < self.max_labels
         )
@@ -413,6 +436,10 @@ def _unit_list(value: str) -> list[int]:
 
 
 def main(argv: list[str] | None = None) -> int:
+    """Command-line entry point: run once and print the result.
+
+    Exit code 0 if the run was ok or partial, 1 if it failed, 2 if it didn't start.
+    """
     p = argparse.ArgumentParser(
         description="Scrape NC State dining menus, nutrition, and hours into Postgres."
     )

@@ -127,6 +127,11 @@ KEY_NUTRIENTS = {
 
 
 def normalize_label(label: Label) -> dict:
+    """A parsed label as nutrition-table values.
+
+    The five key nutrients become numbers (None if not given); the raw nutrient
+    rows, ingredients, "Contains:" names, and missing nutrients are kept as well.
+    """
     values = {
         col: parse_amount(label.nutrients.get(name))
         for col, name in KEY_NUTRIENTS.items()

@@ -4,7 +4,7 @@
 
 Every public module, class, and function in the Python code, with its signature and description, read from the source. The website (`frontend/`) is described in [how.md](how.md) instead.
 
-**161 of 195** modules, classes, and functions have a description.
+**195 of 195** modules, classes, and functions have a description.
 
 - **API** (`backend/app/`)
   - [`app`](#app)
@@ -1026,7 +1026,7 @@ A session factory bound to `engine`. Objects stay usable after commit.
 
 Source: [`ingestion/__init__.py`](../ingestion/__init__.py)
 
-_No description yet._
+The ingestion job: scrapes NC State's dining sites into Postgres. Run: `python -m ingestion.run`.
 
 ## `ingestion.config`
 
@@ -1054,11 +1054,14 @@ select unit -> select menu -> labels for that menu. Never parallelize a session.
 
 ### class `FetchError` (Exception)
 
-_No description yet._
+A request failed, or a page wasn't what the scraper expected.
 
 ### class `NetNutritionClient` (_PoliteClient)
 
-_No description yet._
+Client for NC State's NetNutrition site.
+
+The site is stateful: start_session, then select_unit, then select_menu, then
+nutrition_label for that menu's items, in that order.
 
 #### `start_session`
 
@@ -1074,7 +1077,7 @@ Start a fresh server session; returns the home page HTML (lists every unit).
 def select_unit(self, unit_oid: int) -> dict[str, str]
 ```
 
-_No description yet._
+Select a dining unit. Returns its panels by id; the menu list is "menuPanel".
 
 #### `select_menu`
 
@@ -1082,7 +1085,7 @@ _No description yet._
 def select_menu(self, menu_oid: int) -> dict[str, str]
 ```
 
-_No description yet._
+Select one of the unit's menus. Returns its panels; the items are "itemPanel".
 
 #### `nutrition_label`
 
@@ -1090,11 +1093,11 @@ _No description yet._
 def nutrition_label(self, detail_oid: int) -> str
 ```
 
-_No description yet._
+The nutrition label HTML for one item (detail_oid) on the selected menu.
 
 ### class `DiningSiteClient` (_PoliteClient)
 
-_No description yet._
+Client for dining.ncsu.edu, where each location's hours are published.
 
 #### `location_page`
 
@@ -1154,7 +1157,10 @@ def parse_amount(raw: str | None) -> float | None
 def normalize_label(label: Label) -> dict
 ```
 
-_No description yet._
+A parsed label as nutrition-table values.
+
+The five key nutrients become numbers (None if not given); the raw nutrient
+rows, ingredients, "Contains:" names, and missing nutrients are kept as well.
 
 ### `nutrition_key`
 
@@ -1200,7 +1206,7 @@ Scripts/cbord_nn_ui_repsonsive.js, and dining.ncsu.edu's HTML):
 
 ### class `UnitRef`
 
-_No description yet._
+A dining unit on NetNutrition: its id (unitOid) and name.
 
 Fields:
 
@@ -1213,11 +1219,11 @@ Fields:
 def parse_units(home_html: str) -> list[UnitRef]
 ```
 
-_No description yet._
+Every dining unit linked from the NetNutrition home page.
 
 ### class `MenuRef`
 
-_No description yet._
+One menu in a unit's list: its id (menuOid), date, and meal name.
 
 Fields:
 
@@ -1227,7 +1233,7 @@ Fields:
 
 ### class `MenuList`
 
-_No description yet._
+A unit's menu list: its description, its menus, and whether the site said there are none.
 
 Fields:
 
@@ -1245,7 +1251,7 @@ Raises ValueError if a day header isn't a date like 'Monday, September 28, 2026'
 
 ### class `ItemRow`
 
-_No description yet._
+One item on a menu: detail id, name, station (course), serving size, and icon titles.
 
 Fields:
 
@@ -1261,11 +1267,11 @@ Fields:
 def parse_menu_items(html: str) -> list[ItemRow]
 ```
 
-_No description yet._
+Every item in a menu's item table, with the station (course) it's listed under.
 
 ### class `Label`
 
-_No description yet._
+A parsed nutrition label, with values as printed. Nothing is filled in or guessed.
 
 Fields:
 
@@ -1282,11 +1288,11 @@ Fields:
 def parse_label(html: str) -> Label
 ```
 
-_No description yet._
+Parse a nutrition label page. Parts the page doesn't have come back as None or empty.
 
 ### class `HoursEntry`
 
-_No description yet._
+One day's hours box on a dining.ncsu.edu location page.
 
 Fields:
 
@@ -1301,7 +1307,9 @@ Fields:
 def parse_time_ranges(text: str) -> list[tuple[int, int]]
 ```
 
-_No description yet._
+Ranges like "7:00am - 10:00am" as (open, close) minutes after midnight.
+
+A close at or before the open time is moved past midnight (e.g. "8:00am - 12:00am").
 
 ### `parse_location_hours`
 
@@ -1339,11 +1347,11 @@ recorded as status 'failed'. Only one run at a time (Postgres advisory lock).
 
 ### class `AlreadyRunning` (Exception)
 
-_No description yet._
+Another ingestion run holds the lock, so this one didn't start.
 
 ### class `Stats`
 
-_No description yet._
+Counts for one run, saved in its ingest_runs row.
 
 Fields:
 
@@ -1376,7 +1384,7 @@ treated as stored.
 def fresh(self, key: str) -> list[str] | None
 ```
 
-_No description yet._
+The stored "Contains:" list for `key` if its label is fresh enough to reuse.
 
 #### `any_age`
 
@@ -1384,7 +1392,7 @@ _No description yet._
 def any_age(self, key: str) -> list[str] | None
 ```
 
-_No description yet._
+The stored "Contains:" list for `key`, however old, or None if there isn't one.
 
 #### `add`
 
@@ -1392,11 +1400,13 @@ _No description yet._
 def add(self, stored: dict[str, list[str]])
 ```
 
-_No description yet._
+Mark labels this run just committed as stored and fresh.
 
 ### class `Job`
 
-_No description yet._
+One run's work: locations, then hours, then each unit's menus and labels.
+
+A failure in one unit or menu is recorded with error() and the job moves on.
 
 #### `error`
 
@@ -1404,7 +1414,7 @@ _No description yet._
 def error(self, message: str)
 ```
 
-_No description yet._
+Log a problem and add it to the run's error list.
 
 #### `execute`
 
@@ -1412,7 +1422,7 @@ _No description yet._
 def execute(self)
 ```
 
-_No description yet._
+Scrape the selected units: locations, hours, then each unit's menus.
 
 #### `ingest_hours`
 
@@ -1420,7 +1430,7 @@ _No description yet._
 def ingest_hours(self, units: list[parse.UnitRef])
 ```
 
-_No description yet._
+Store each unit's hours for the run's days, committing one unit at a time.
 
 #### `hours_for`
 
@@ -1428,7 +1438,10 @@ _No description yet._
 def hours_for(self, unit: parse.UnitRef) -> dict[date, parse.HoursEntry | None]
 ```
 
-_No description yet._
+One unit's hours for each of the run's days, from dining.ncsu.edu.
+
+None for a day means unknown: no hours page, the fetch failed, or the page
+showed a different date.
 
 #### `ingest_unit`
 
@@ -1436,7 +1449,7 @@ _No description yet._
 def ingest_unit(self, unit: parse.UnitRef)
 ```
 
-_No description yet._
+Store one unit's description and menu list, then scrape its menus on the run's days.
 
 #### `ingest_menu`
 
@@ -1444,7 +1457,7 @@ _No description yet._
 def ingest_menu(self, unit: parse.UnitRef, ref: parse.MenuRef)
 ```
 
-_No description yet._
+Scrape one menu: its items and their labels (reusing fresh stored ones), then store them.
 
 #### `can_fetch_label`
 
@@ -1452,7 +1465,7 @@ _No description yet._
 def can_fetch_label(self) -> bool
 ```
 
-_No description yet._
+Whether this run may fetch another label: labels are on and --max-labels isn't reached.
 
 ### `run`
 
@@ -1468,7 +1481,9 @@ Run once and return the ingest_runs row. engine/nn/dining/today are for tests.
 def main(argv: list[str] | None=None) -> int
 ```
 
-_No description yet._
+Command-line entry point: run once and print the result.
+
+Exit code 0 if the run was ok or partial, 1 if it failed, 2 if it didn't start.
 
 ## `ingestion.write`
 
@@ -1486,7 +1501,7 @@ Callers own the transaction: nothing here commits.
 def now() -> datetime
 ```
 
-_No description yet._
+The current time in UTC, for the timestamps ingestion writes.
 
 ### `upsert_location`
 
@@ -1494,7 +1509,7 @@ _No description yet._
 def upsert_location(db: Session, unit: UnitRef, description: str | None=None)
 ```
 
-_No description yet._
+Insert or update a location. Its description only changes when one is given.
 
 ### `upsert_hours`
 
