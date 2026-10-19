@@ -107,6 +107,7 @@ def summary(snapshot: dict) -> dict:
 
 
 def main():
+    """Read the snapshot days from the database and write eval/data/snapshot.json."""
     engine = make_engine()
     with make_session_factory(engine)() as db:
         locations = db.scalars(select(Location)).all()

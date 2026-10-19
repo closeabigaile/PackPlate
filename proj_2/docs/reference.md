@@ -4,7 +4,7 @@
 
 Every public module, class, and function in the Python code, with its signature and description, read from the source. The website (`frontend/`) is described in [how.md](how.md) instead.
 
-**139 of 195** modules, classes, and functions have a description.
+**161 of 195** modules, classes, and functions have a description.
 
 - **API** (`backend/app/`)
   - [`app`](#app)
@@ -817,7 +817,7 @@ Helpers around Alembic for code that needs the schema (the job, the tests).
 def alembic_config() -> Config
 ```
 
-_No description yet._
+The Alembic configuration in db/alembic.ini.
 
 ### `upgrade`
 
@@ -825,7 +825,7 @@ _No description yet._
 def upgrade(connection: Connection, revision: str='head')
 ```
 
-_No description yet._
+Migrate the database behind `connection` to `revision` (default: the newest).
 
 ### `check_current`
 
@@ -852,7 +852,7 @@ never zero or safe.
 
 ### class `Base` (DeclarativeBase)
 
-_No description yet._
+Base class for every table below. Its metadata lists them all, for Alembic.
 
 ### class `Location` (Base)
 
@@ -1002,7 +1002,7 @@ SQLAlchemy would map to psycopg2, which we don't install.
 def database_url() -> str
 ```
 
-_No description yet._
+DATABASE_URL in SQLAlchemy form. Raises RuntimeError if it isn't set.
 
 ### `make_engine`
 
@@ -1010,7 +1010,7 @@ _No description yet._
 def make_engine(url: str | None=None) -> Engine
 ```
 
-_No description yet._
+A database engine for `url`, or for DATABASE_URL if no url is given.
 
 ### `make_session_factory`
 
@@ -1018,7 +1018,7 @@ _No description yet._
 def make_session_factory(engine: Engine) -> sessionmaker[Session]
 ```
 
-_No description yet._
+A session factory bound to `engine`. Objects stay usable after commit.
 
 # Scraper: `ingestion/`
 
@@ -1620,7 +1620,7 @@ Counts worth eyeballing after an export.
 def main()
 ```
 
-_No description yet._
+Read the snapshot days from the database and write eval/data/snapshot.json.
 
 ## `eval.m0`
 
@@ -1656,7 +1656,9 @@ The spot-check sheet no longer matches what the snapshot and scan produce.
 def read_sheet(path: Path=SHEET) -> list[dict]
 ```
 
-_No description yet._
+The filled-in spot-check sheet, with decisions lowercased and checked.
+
+Raises StaleSheet if a decision is missing or isn't allowed for its row kind.
 
 ### `check_sheet`
 
@@ -1672,7 +1674,7 @@ The filled sheet must cover exactly the rows the scan produces today.
 def safe(rows: list[dict], pairs: list[dict]) -> dict
 ```
 
-_No description yet._
+The Safe numbers: confirmed false fits per filter, and how the scan did.
 
 ### class `Verdicts`
 
@@ -1684,7 +1686,7 @@ Both filters' verdicts, cached: profiles repeat a lot across people.
 def fits(self, item: dict, profile, which: str) -> bool
 ```
 
-_No description yet._
+Whether `item` fits `profile` under `which` filter: "packplate" or "baseline".
 
 ### `useful`
 
@@ -1692,7 +1694,7 @@ _No description yet._
 def useful(snapshot: dict, config: dict) -> dict
 ```
 
-_No description yet._
+The Useful numbers: how many simulated groups each filter answers.
 
 ### `incomplete_share`
 
@@ -1708,7 +1710,7 @@ Of every item x test profile, the share PackPlate holds back as incomplete.
 def evaluate() -> dict
 ```
 
-_No description yet._
+Run the whole eval on the committed inputs and return the result.
 
 ### `render`
 
@@ -1716,7 +1718,7 @@ _No description yet._
 def render(r: dict) -> str
 ```
 
-_No description yet._
+The result as a short table for the terminal.
 
 ### `to_json`
 
@@ -1724,7 +1726,7 @@ _No description yet._
 def to_json(r: dict) -> str
 ```
 
-_No description yet._
+The result as the exact text written to eval/results.json.
 
 ### `main`
 
@@ -1732,7 +1734,7 @@ _No description yet._
 def main(argv=None) -> int
 ```
 
-_No description yet._
+Command-line entry point. Returns the process exit code (0 or 1).
 
 ## `eval.profiles`
 
@@ -1762,7 +1764,7 @@ Two kinds of hit are kept apart:
 
 ### class `Hits`
 
-_No description yet._
+The words the scan found: in the ingredients, and only in warnings.
 
 Fields:
 
@@ -1799,7 +1801,7 @@ every run.
 
 ### class `Group`
 
-_No description yet._
+One simulated group: when and at which meal they eat, and each person's needs.
 
 Fields:
 
@@ -1813,7 +1815,7 @@ Fields:
 def load_config(path: Path=CONFIG) -> dict
 ```
 
-_No description yet._
+The simulation settings in eval/simulation.json.
 
 ### `person`
 
@@ -1821,7 +1823,7 @@ _No description yet._
 def person(rng: random.Random, config: dict) -> Profile
 ```
 
-_No description yet._
+One simulated person, drawn with the probabilities in `config`.
 
 ### `groups`
 
@@ -1829,7 +1831,7 @@ _No description yet._
 def groups(config: dict) -> list[Group]
 ```
 
-_No description yet._
+All the simulated groups. The same seed always gives the same groups.
 
 ## `eval.snapshot`
 
@@ -1843,7 +1845,7 @@ Load the frozen snapshot and run both filters on it.
 def load(path: Path=SNAPSHOT) -> dict
 ```
 
-_No description yet._
+The frozen snapshot, as written by eval/export_snapshot.py.
 
 ### `packplate_item`
 
@@ -1921,7 +1923,7 @@ Flagged rows are sorted by matched word and context, so identical cases
 def main()
 ```
 
-_No description yet._
+Write eval/data/spot_check.csv, unless a sheet already exists.
 
 ## `eval.wordlist`
 

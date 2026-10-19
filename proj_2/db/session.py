@@ -19,6 +19,7 @@ def sqlalchemy_url(url: str) -> str:
 
 
 def database_url() -> str:
+    """DATABASE_URL in SQLAlchemy form. Raises RuntimeError if it isn't set."""
     url = os.getenv("DATABASE_URL")
     if not url:
         raise RuntimeError("DATABASE_URL is not set (see proj_2/.env.example)")
@@ -26,10 +27,12 @@ def database_url() -> str:
 
 
 def make_engine(url: str | None = None) -> Engine:
+    """A database engine for `url`, or for DATABASE_URL if no url is given."""
     return create_engine(
         sqlalchemy_url(url) if url else database_url(), pool_pre_ping=True
     )
 
 
 def make_session_factory(engine: Engine) -> sessionmaker[Session]:
+    """A session factory bound to `engine`. Objects stay usable after commit."""
     return sessionmaker(bind=engine, expire_on_commit=False)

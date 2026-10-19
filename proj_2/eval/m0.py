@@ -46,6 +46,10 @@ class StaleSheet(Exception):
 
 
 def read_sheet(path: Path = SHEET) -> list[dict]:
+    """The filled-in spot-check sheet, with decisions lowercased and checked.
+
+    Raises StaleSheet if a decision is missing or isn't allowed for its row kind.
+    """
     with path.open(encoding="utf-8-sig", newline="") as f:
         rows = list(csv.DictReader(f))
     for r in rows:
@@ -72,6 +76,7 @@ def check_sheet(filled: list[dict], expected: list[dict]):
 
 
 def safe(rows: list[dict], pairs: list[dict]) -> dict:
+    """The Safe numbers: confirmed false fits per filter, and how the scan did."""
     flagged = [r for r in rows if r["kind"] == "flagged"]
     sample = [r for r in rows if r["kind"] == "sample"]
     confirmed = [r for r in flagged if r["decision"] == "confirm"]
@@ -109,6 +114,7 @@ class Verdicts:
         self.cache = {}
 
     def fits(self, item: dict, profile, which: str) -> bool:
+        """Whether `item` fits `profile` under `which` filter: "packplate" or "baseline"."""
         key = (item["id"], profile, which)
         if key not in self.cache:
             if which == "packplate":
@@ -129,6 +135,7 @@ class _Hours:
 
 
 def useful(snapshot: dict, config: dict) -> dict:
+    """The Useful numbers: how many simulated groups each filter answers."""
     hours = {
         (h["location_id"], date.fromisoformat(h["date"])): _Hours(h)
         for h in snapshot["hours"]
@@ -200,6 +207,7 @@ def incomplete_share(snapshot: dict) -> dict:
 
 
 def evaluate() -> dict:
+    """Run the whole eval on the committed inputs and return the result."""
     snapshot = load()
     pairs = candidates(snapshot)
     filled = read_sheet()
@@ -222,6 +230,7 @@ def evaluate() -> dict:
 
 
 def render(r: dict) -> str:
+    """The result as a short table for the terminal."""
     s, u, v = r["safe"], r["useful"], r["verdict"]
     lines = [
         "M0 risk-killer eval (snapshot 2026-10-12..14, simulated users)",
@@ -252,10 +261,12 @@ def render(r: dict) -> str:
 
 
 def to_json(r: dict) -> str:
+    """The result as the exact text written to eval/results.json."""
     return json.dumps(r, indent=1, sort_keys=True, ensure_ascii=False) + "\n"
 
 
 def main(argv=None) -> int:
+    """Command-line entry point. Returns the process exit code (0 or 1)."""
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--check", action="store_true",
                         help="fail if the result differs from eval/results.json")  # fmt: skip
