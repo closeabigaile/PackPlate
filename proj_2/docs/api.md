@@ -134,6 +134,8 @@ when the database is unreachable.
 
 ### Crowd
 
+A location's current crowd level, worked out from recent student reports.
+
 | Field | Type | Required |
 |---|---|---|
 | `level` | `not_busy` / `moderate` / `crowded` or null | yes |
@@ -142,17 +144,23 @@ when the database is unreachable.
 
 ### CrowdReportIn
 
+A student's report of how busy a location is right now. Extra fields are rejected.
+
 | Field | Type | Required |
 |---|---|---|
 | `level` | `not_busy` / `moderate` / `crowded` | yes |
 
 ### FilterRequest
 
+The body of both filter endpoints: 1 to MAX_PROFILES profiles.
+
 | Field | Type | Required |
 |---|---|---|
 | `profiles` | list of [Profile](#profile) | yes |
 
 ### FilteredItem
+
+A menu item with one result per profile, in request order.
 
 | Field | Type | Required |
 |---|---|---|
@@ -168,6 +176,8 @@ when the database is unreachable.
 
 ### FilteredMenu
 
+A menu whose items are each checked against every profile.
+
 | Field | Type | Required |
 |---|---|---|
 | `id` | integer | yes |
@@ -178,6 +188,8 @@ when the database is unreachable.
 
 ### Freshness
 
+When the scraped data was last updated, and whether it's stale.
+
 | Field | Type | Required |
 |---|---|---|
 | `last_run_finished_at` | string (date-time) or null | yes |
@@ -186,6 +198,8 @@ when the database is unreachable.
 | `stale_after_hours` | integer | yes |
 
 ### GroupLocation
+
+One location's answer for a group: is it open, and does everyone have something that fits.
 
 | Field | Type | Required |
 |---|---|---|
@@ -206,6 +220,8 @@ when the database is unreachable.
 
 ### HoursDay
 
+A location's hours on one date, as published on dining.ncsu.edu.
+
 | Field | Type | Required |
 |---|---|---|
 | `date` | string (date) | yes |
@@ -215,12 +231,16 @@ when the database is unreachable.
 
 ### ItemResult
 
+One item's verdict for one profile, and why it isn't "fits".
+
 | Field | Type | Required |
 |---|---|---|
 | `verdict` | `fits` / `conflicts` / `incomplete` | yes |
 | `reasons` | list of string | yes |
 
 ### LocationDetail
+
+A location's summary plus 7 days of hours (from today) and its menus from today on.
 
 | Field | Type | Required |
 |---|---|---|
@@ -238,6 +258,8 @@ when the database is unreachable.
 
 ### LocationSummary
 
+A location with today's hours, whether it's open, and its crowd level.
+
 | Field | Type | Required |
 |---|---|---|
 | `id` | integer | yes |
@@ -252,6 +274,8 @@ when the database is unreachable.
 
 ### Menu
 
+One meal's menu on one day, with its items.
+
 | Field | Type | Required |
 |---|---|---|
 | `id` | integer | yes |
@@ -261,6 +285,8 @@ when the database is unreachable.
 | `items` | list of [MenuItem](#menuitem) | yes |
 
 ### MenuItem
+
+One dish on a menu, with its allergens, diets, and nutrition label if it has one.
 
 | Field | Type | Required |
 |---|---|---|
@@ -275,6 +301,8 @@ when the database is unreachable.
 
 ### MenuSummary
 
+One meal's menu on one day, without its items.
+
 | Field | Type | Required |
 |---|---|---|
 | `id` | integer | yes |
@@ -283,6 +311,8 @@ when the database is unreachable.
 | `scraped` | boolean | yes |
 
 ### Nutrition
+
+An item's nutrition label from NetNutrition. Values it doesn't give are null, not zero.
 
 | Field | Type | Required |
 |---|---|---|
@@ -299,12 +329,18 @@ when the database is unreachable.
 
 ### Period
 
+One opening period, from opens_at to closes_at (campus time).
+
 | Field | Type | Required |
 |---|---|---|
 | `opens_at` | string (date-time) | yes |
 | `closes_at` | string (date-time) | yes |
 
 ### Profile
+
+One person's dietary needs in a filter request.
+
+Unknown fields, allergens, or diets are rejected (422), never ignored.
 
 | Field | Type | Required |
 |---|---|---|
@@ -316,6 +352,8 @@ when the database is unreachable.
 | `max_sodium_mg` | number or null | no |
 
 ### ProfileCounts
+
+For one profile at one location: how many items fit, are incomplete, or conflict.
 
 | Field | Type | Required |
 |---|---|---|

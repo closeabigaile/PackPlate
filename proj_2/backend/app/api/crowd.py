@@ -25,6 +25,7 @@ _throttle = Throttle(REPORT_COOLDOWN_SECONDS)
 
 
 def get_throttle() -> Throttle:
+    """The shared crowd-report throttle, as a dependency so tests can swap in a fresh one."""
     return _throttle
 
 

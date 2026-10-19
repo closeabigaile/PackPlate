@@ -5,6 +5,7 @@ MEAL_ORDER = ["breakfast", "brunch", "lunch", "dinner", "late night", "daily"]
 
 
 def menu_sort_key(menu):
+    """Sort key for menus: by date, then by meal in MEAL_ORDER, then other meals by name."""
     meal = menu.meal.casefold()
     rank = MEAL_ORDER.index(meal) if meal in MEAL_ORDER else len(MEAL_ORDER)
     return (menu.date, rank, meal, menu.id)

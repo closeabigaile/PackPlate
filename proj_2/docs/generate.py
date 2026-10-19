@@ -242,7 +242,7 @@ def main(argv=None) -> int:
                   file=sys.stderr)  # fmt: skip
         return 1 if stale else 0
     for p, text in files.items():
-        p.write_text(text, encoding="utf-8")
+        p.write_text(text, encoding="utf-8", newline="\n")  # LF on every OS
         print(f"wrote {p.relative_to(PROJ)}")
     return 0
 

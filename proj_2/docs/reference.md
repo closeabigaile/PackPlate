@@ -4,7 +4,7 @@
 
 Every public module, class, and function in the Python code, with its signature and description, read from the source. The website (`frontend/`) is described in [how.md](how.md) instead.
 
-**106 of 195** modules, classes, and functions have a description.
+**139 of 195** modules, classes, and functions have a description.
 
 - **API** (`backend/app/`)
   - [`app`](#app)
@@ -62,13 +62,13 @@ Every public module, class, and function in the Python code, with its signature 
 
 Source: [`backend/app/__init__.py`](../backend/app/__init__.py)
 
-_No description yet._
+PackPlate's HTTP API (FastAPI). Run from proj_2/: `uvicorn app.main:app --app-dir backend`.
 
 ## `app.api`
 
 Source: [`backend/app/api/__init__.py`](../backend/app/api/__init__.py)
 
-_No description yet._
+HTTP routes, one module per feature: locations, meta (freshness), filters, and crowd.
 
 ## `app.api.crowd`
 
@@ -85,7 +85,7 @@ every location is also in GET /locations and /locations/{id} (`crowd`).
 def get_throttle() -> Throttle
 ```
 
-_No description yet._
+The shared crowd-report throttle, as a dependency so tests can swap in a fresh one.
 
 ### `report_crowd`
 
@@ -195,7 +195,7 @@ still starts when DATABASE_URL is unset or the database is down.
 def get_engine()
 ```
 
-_No description yet._
+The database engine, created on first use and then reused.
 
 ### `get_db`
 
@@ -291,7 +291,7 @@ Queries for locations and their hours. Read-only: ingestion writes these tables.
 def list_locations(db: Session) -> list[Location]
 ```
 
-_No description yet._
+Every location, sorted by name.
 
 ### `get_location`
 
@@ -299,7 +299,7 @@ _No description yet._
 def get_location(db: Session, location_id: int) -> Location | None
 ```
 
-_No description yet._
+One location by its NetNutrition unit id, or None if there's no such location.
 
 ### `hours_between`
 
@@ -343,7 +343,7 @@ Every location's menus on `day`, with items and their nutrition labels loaded.
 
 Source: [`backend/app/schemas/__init__.py`](../backend/app/schemas/__init__.py)
 
-_No description yet._
+Pydantic models for the API's requests and responses, one module per feature.
 
 ## `app.schemas.crowd`
 
@@ -353,7 +353,7 @@ Request and response models for crowd reports.
 
 ### class `CrowdReportIn` (BaseModel)
 
-_No description yet._
+A student's report of how busy a location is right now. Extra fields are rejected.
 
 Fields:
 
@@ -361,7 +361,7 @@ Fields:
 
 ### class `Crowd` (BaseModel)
 
-_No description yet._
+A location's current crowd level, worked out from recent student reports.
 
 Fields:
 
@@ -381,7 +381,9 @@ quietly turn every item into "fits".
 
 ### class `Profile` (BaseModel)
 
-_No description yet._
+One person's dietary needs in a filter request.
+
+Unknown fields, allergens, or diets are rejected (422), never ignored.
 
 Fields:
 
@@ -394,7 +396,7 @@ Fields:
 
 ### class `FilterRequest` (BaseModel)
 
-_No description yet._
+The body of both filter endpoints: 1 to MAX_PROFILES profiles.
 
 Fields:
 
@@ -402,7 +404,7 @@ Fields:
 
 ### class `ItemResult` (BaseModel)
 
-_No description yet._
+One item's verdict for one profile, and why it isn't "fits".
 
 Fields:
 
@@ -411,7 +413,7 @@ Fields:
 
 ### class `FilteredItem` (MenuItem)
 
-_No description yet._
+A menu item with one result per profile, in request order.
 
 Fields:
 
@@ -419,7 +421,7 @@ Fields:
 
 ### class `FilteredMenu` (MenuSummary)
 
-_No description yet._
+A menu whose items are each checked against every profile.
 
 Fields:
 
@@ -427,7 +429,7 @@ Fields:
 
 ### class `ProfileCounts` (BaseModel)
 
-_No description yet._
+For one profile at one location: how many items fit, are incomplete, or conflict.
 
 Fields:
 
@@ -438,7 +440,7 @@ Fields:
 
 ### class `GroupLocation` (BaseModel)
 
-_No description yet._
+One location's answer for a group: is it open, and does everyone have something that fits.
 
 Fields:
 
@@ -462,7 +464,7 @@ zero, closed, or safe.
 
 ### class `Period` (BaseModel)
 
-_No description yet._
+One opening period, from opens_at to closes_at (campus time).
 
 Fields:
 
@@ -471,7 +473,7 @@ Fields:
 
 ### class `HoursDay` (BaseModel)
 
-_No description yet._
+A location's hours on one date, as published on dining.ncsu.edu.
 
 Fields:
 
@@ -482,7 +484,7 @@ Fields:
 
 ### class `LocationSummary` (BaseModel)
 
-_No description yet._
+A location with today's hours, whether it's open, and its crowd level.
 
 Fields:
 
@@ -498,7 +500,7 @@ Fields:
 
 ### class `MenuSummary` (BaseModel)
 
-_No description yet._
+One meal's menu on one day, without its items.
 
 Fields:
 
@@ -509,7 +511,7 @@ Fields:
 
 ### class `LocationDetail` (LocationSummary)
 
-_No description yet._
+A location's summary plus 7 days of hours (from today) and its menus from today on.
 
 Fields:
 
@@ -518,7 +520,7 @@ Fields:
 
 ### class `Nutrition` (BaseModel)
 
-_No description yet._
+An item's nutrition label from NetNutrition. Values it doesn't give are null, not zero.
 
 Fields:
 
@@ -535,7 +537,7 @@ Fields:
 
 ### class `MenuItem` (BaseModel)
 
-_No description yet._
+One dish on a menu, with its allergens, diets, and nutrition label if it has one.
 
 Fields:
 
@@ -550,7 +552,7 @@ Fields:
 
 ### class `Menu` (MenuSummary)
 
-_No description yet._
+One meal's menu on one day, with its items.
 
 Fields:
 
@@ -564,7 +566,7 @@ Response models about the data itself.
 
 ### class `Freshness` (BaseModel)
 
-_No description yet._
+When the scraped data was last updated, and whether it's stale.
 
 Fields:
 
@@ -577,7 +579,7 @@ Fields:
 
 Source: [`backend/app/services/__init__.py`](../backend/app/services/__init__.py)
 
-_No description yet._
+Business logic with no database access: hours, menus, freshness, filters, crowd.
 
 ## `app.services.crowd`
 
@@ -596,7 +598,7 @@ reports in the window means the level is unknown (None), not "not busy".
 
 ### class `Crowd`
 
-_No description yet._
+A location's crowd level from the reports in the window.
 
 Fields:
 
@@ -659,7 +661,7 @@ Overall: any conflict -> conflicts, else any incomplete -> incomplete, else fits
 
 ### class `Profile`
 
-_No description yet._
+One person's dietary needs: allergens to avoid, required diets, and nutrition goals.
 
 Fields:
 
@@ -671,7 +673,7 @@ Fields:
 
 ### class `Result`
 
-_No description yet._
+One item's verdict for one profile (fits, conflicts, or incomplete), with reasons.
 
 Fields:
 
@@ -691,7 +693,7 @@ item is anything with .allergens, .diets, .unrecognized_traits (lists) and
 
 ### class `Counts`
 
-_No description yet._
+How many items fit, are incomplete, or conflict for one profile.
 
 Fields:
 
@@ -723,7 +725,7 @@ for a late run).
 def is_stale(last_finished_at: datetime | None, at: datetime) -> bool
 ```
 
-_No description yet._
+True if there's no completed run, or the last one finished over STALE_AFTER_HOURS before `at`.
 
 ## `app.services.hours`
 
@@ -755,7 +757,7 @@ def periods(day: date, windows: list) -> list[tuple[datetime, datetime]]
 
 ### class `OpenState`
 
-_No description yet._
+Whether a location is open at a moment, and when it closes or next opens.
 
 Fields:
 
@@ -786,7 +788,7 @@ Menu ordering. Every menu for a day is shown at once; meals are not filtered by 
 def menu_sort_key(menu)
 ```
 
-_No description yet._
+Sort key for menus: by date, then by meal in MEAL_ORDER, then other meals by name.
 
 # Database: `db/`
 

@@ -9,10 +9,12 @@ from db.models import HoursDay, Location
 
 
 def list_locations(db: Session) -> list[Location]:
+    """Every location, sorted by name."""
     return list(db.scalars(select(Location).order_by(Location.name)))
 
 
 def get_location(db: Session, location_id: int) -> Location | None:
+    """One location by its NetNutrition unit id, or None if there's no such location."""
     return db.get(Location, location_id)
 
 
