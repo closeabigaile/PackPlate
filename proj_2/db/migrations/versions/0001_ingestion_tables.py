@@ -96,7 +96,9 @@ def upgrade():
         sa.Column("unrecognized_traits", postgresql.JSONB(), nullable=False),
         sa.Column("nutrition_key", sa.String(500), nullable=True),
         sa.ForeignKeyConstraint(["menu_id"], ["menus.id"], ondelete="CASCADE"),
-        sa.ForeignKeyConstraint(["nutrition_key"], ["nutrition.key"], ondelete="SET NULL"),
+        sa.ForeignKeyConstraint(
+            ["nutrition_key"], ["nutrition.key"], ondelete="SET NULL"
+        ),
         sa.PrimaryKeyConstraint("id"),
     )
     op.create_index("ix_menu_items_menu_id", "menu_items", ["menu_id"])

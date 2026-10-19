@@ -24,7 +24,9 @@ def test_menu_list_has_dates_and_meals(fixture_html):
 
 
 def test_menu_list_recognizes_the_no_menus_notice():
-    ml = parse.parse_menu_list("<div>There are no menus available for this location.</div>")
+    ml = parse.parse_menu_list(
+        "<div>There are no menus available for this location.</div>"
+    )
     assert ml.menus == [] and ml.no_menus_notice
 
 
@@ -38,7 +40,11 @@ def test_menu_items_keep_course_serving_and_traits(fixture_html):
     items = parse.parse_menu_items(fixture_html("nn_menu_items.html"))
     assert len(items) == 89  # primary + alternate striped rows
     bananas = items[0]
-    assert (bananas.name, bananas.course, bananas.serving_size) == ("Bananas", "Extras", "SERVING")
+    assert (bananas.name, bananas.course, bananas.serving_size) == (
+        "Bananas",
+        "Extras",
+        "SERVING",
+    )
     assert bananas.traits == ["Halal (U)", "Vegan", "Vegetarian"]
     cheddar = next(i for i in items if i.name == "Cheddar Cheese")
     assert cheddar.course == "Deli" and "Contains Dairy" in cheddar.traits
@@ -76,7 +82,10 @@ def test_location_hours_split_meal_periods(fixture_html):
 
 
 def test_location_hours_empty_when_page_has_no_hours_boxes():
-    assert parse.parse_location_hours("<html><body>Checking your browser...</body></html>") == {}
+    assert (
+        parse.parse_location_hours("<html><body>Checking your browser...</body></html>")
+        == {}
+    )
 
 
 def test_time_ranges_handle_midnight_and_closed():

@@ -1,0 +1,9 @@
+# Everything to develop and test proj_2: runtime deps plus the checkers.
+# Versions pinned so local runs, pre-commit, and CI agree.
+-r backend/requirements.txt
+-r ingestion/requirements.txt
+
+pytest-cov==7.1.0
+ruff==0.17.1
+black==26.10.1
+pre-commit==4.7.0
