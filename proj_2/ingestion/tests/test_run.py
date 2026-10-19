@@ -20,13 +20,17 @@ class FakeNetNutrition:
     """Answers like NetNutrition: Fountain's menu list, the same item table for every
     menu, and a label for any item (the Pita label for Pita, a stub for the rest)."""
 
-    def __init__(self, fixture_html, *, drift_name=None, fail_after=None, fail_start=False):
+    def __init__(
+        self, fixture_html, *, drift_name=None, fail_after=None, fail_start=False
+    ):
         self.home = fixture_html("nn_home.html")
         self.menu_list = fixture_html("nn_unit_menu_list.html")
         self.items = fixture_html("nn_menu_items.html")
         self.pita = fixture_html("nn_label_pita.html")
         self.names = {r.detail_oid: r.name for r in parse_menu_items(self.items)}
-        self.drift_name = drift_name  # this item gets the wrong label (server state drift)
+        self.drift_name = (
+            drift_name  # this item gets the wrong label (server state drift)
+        )
         self.fail_after = fail_after  # fail the label request right after this item's
         self.fail_start = fail_start
         self._fail_next = False
@@ -61,7 +65,9 @@ class FakeNetNutrition:
 
 class FakeDiningSite:
     def __init__(self, fixture_html):
-        self.page = fixture_html("dining_location_case.html")  # "today" box says Monday, Sep. 28
+        self.page = fixture_html(
+            "dining_location_case.html"
+        )  # "today" box says Monday, Sep. 28
         self.request_count = 0
 
     def location_page(self, slug, on=None):
@@ -74,13 +80,22 @@ def run_job(pg_engine, fixture_html):
     def _run(nn=None, today=DAY, **kw):
         kw.setdefault("unit_ids", [1])
         kw.setdefault("days", 1)
-        return job.run(engine=pg_engine, nn=nn or FakeNetNutrition(fixture_html),
-                       dining=FakeDiningSite(fixture_html), today=today, **kw)
+        return job.run(
+            engine=pg_engine,
+            nn=nn or FakeNetNutrition(fixture_html),
+            dining=FakeDiningSite(fixture_html),
+            today=today,
+            **kw,
+        )
+
     return _run
 
 
 def unique_label_keys(fixture_html):
-    return {nutrition_key(1, r.name, r.serving_size) for r in parse_menu_items(fixture_html("nn_menu_items.html"))}
+    return {
+        nutrition_key(1, r.name, r.serving_size)
+        for r in parse_menu_items(fixture_html("nn_menu_items.html"))
+    }
 
 
 def test_full_run_writes_menus_items_labels_and_hours(db, run_job, fixture_html):
@@ -90,7 +105,9 @@ def test_full_run_writes_menus_items_labels_and_hours(db, run_job, fixture_html)
 
     assert record.status == "partial"  # the drifted label is an error
     assert stats["menus_listed"] == 28
-    assert stats["menus_scraped"] == stats["menus_new"] == 4  # Monday: Breakfast/Lunch/Dinner/Daily
+    assert (
+        stats["menus_scraped"] == stats["menus_new"] == 4
+    )  # Monday: Breakfast/Lunch/Dinner/Daily
     assert stats["items"] == 4 * 89
     # Each label fetched once, except the drifted one, which is retried on every menu.
     assert stats["labels_fetched"] == len(keys) + 3
@@ -98,10 +115,17 @@ def test_full_run_writes_menus_items_labels_and_hours(db, run_job, fixture_html)
     assert all("label mismatch" in e and "'Bananas'" in e for e in record.errors)
 
     items = db.scalars(select(MenuItem)).all()
-    assert all(i.nutrition_key is None for i in items if i.name == "Bananas")  # guard held
+    assert all(
+        i.nutrition_key is None for i in items if i.name == "Bananas"
+    )  # guard held
     pita = [i for i in items if i.name == "Pita"]
     assert pita and all(i.nutrition_key and "gluten" in i.allergens for i in pita)
-    assert db.scalar(select(Nutrition.protein_g).where(Nutrition.key == pita[0].nutrition_key)) == 4.0
+    assert (
+        db.scalar(
+            select(Nutrition.protein_g).where(Nutrition.key == pita[0].nutrition_key)
+        )
+        == 4.0
+    )
 
     hours = db.get(HoursDay, (1, DAY))
     assert hours.status == "open" and hours.windows == [[420, 600], [660, 810]]
@@ -127,7 +151,9 @@ def test_rolled_back_label_is_not_treated_as_stored(db, run_job, fixture_html):
     pita = [i for i in db.scalars(select(MenuItem)) if i.name == "Pita"]
     assert len(pita) == 3 and all(i.nutrition_key for i in pita)
     assert db.get(Nutrition, pita[0].nutrition_key) is not None
-    assert db.scalars(select(Menu).where(Menu.fetched_at.is_(None), Menu.date == DAY)).all()  # the failed menu
+    assert db.scalars(
+        select(Menu).where(Menu.fetched_at.is_(None), Menu.date == DAY)
+    ).all()  # the failed menu
 
 
 def test_unknown_unit_and_wrong_hours_date_are_reported(db, run_job):

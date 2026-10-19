@@ -1,0 +1,30 @@
+# Formats and lints proj_2 on every commit (proj_1b is left alone).
+# Setup, once per clone: pip install -r proj_2/requirements-dev.txt && pre-commit install
+# Versions match proj_2/requirements-dev.txt and proj_2/frontend/package.json.
+files: ^proj_2/
+
+repos:
+  # Ruff before Black: its fixes (e.g. import order) then get formatted.
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.17.1
+    hooks:
+      - id: ruff-check
+        args: [--fix]
+
+  - repo: https://github.com/psf/black-pre-commit-mirror
+    rev: 26.10.1
+    hooks:
+      - id: black
+
+  # The official Prettier mirror is archived, so pre-commit installs the
+  # pinned Prettier itself.
+  - repo: local
+    hooks:
+      - id: prettier
+        name: prettier
+        language: node
+        additional_dependencies: ["prettier@3.9.10"]
+        entry: prettier --write --ignore-unknown
+        types: [text]
+        files: ^proj_2/frontend/
+        exclude: ^proj_2/frontend/package-lock\.json$

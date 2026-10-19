@@ -12,4 +12,6 @@ STALE_AFTER_HOURS = int(os.getenv("STALE_AFTER_HOURS", "36"))
 
 
 def is_stale(last_finished_at: datetime | None, at: datetime) -> bool:
-    return last_finished_at is None or at - last_finished_at > timedelta(hours=STALE_AFTER_HOURS)
+    return last_finished_at is None or at - last_finished_at > timedelta(
+        hours=STALE_AFTER_HOURS
+    )

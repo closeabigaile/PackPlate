@@ -1,0 +1,40 @@
+# Formatting check for proj_2's Python (settings in proj_2/pyproject.toml).
+name: Black
+
+on:
+  push:
+    paths:
+      - "proj_2/**/*.py"
+      - "proj_2/pyproject.toml"
+      - "proj_2/requirements-dev.txt"
+      - ".github/workflows/black.yml"
+  pull_request:
+    paths:
+      - "proj_2/**/*.py"
+      - "proj_2/pyproject.toml"
+      - "proj_2/requirements-dev.txt"
+      - ".github/workflows/black.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  black:
+    name: Black
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: proj_2
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+
+      # Same pinned version as requirements-dev.txt and the pre-commit hook.
+      - name: Install Black
+        run: pip install "$(grep '^black==' requirements-dev.txt)"
+
+      - name: Check
+        run: black --check --diff .

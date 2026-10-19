@@ -1,0 +1,6 @@
+# Formatting-only commits, skipped by blame so it shows who wrote each line.
+# GitHub reads this file automatically. For local git blame, run once:
+#   git config blame.ignoreRevsFile .git-blame-ignore-revs
+
+# Format proj_2 with Black, Ruff, and Prettier (no behavior changes)
+b190053a8765e8d2b4a261c2451fcf1c42dc0e87

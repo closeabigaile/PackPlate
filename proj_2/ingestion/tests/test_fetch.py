@@ -24,12 +24,15 @@ def responder(*responses):
     def handler(request):
         seen.append(request)
         return queue.pop(0)
+
     handler.seen = seen
     return handler
 
 
 def test_retries_server_errors_with_backoff(sleeps):
-    handler = responder(httpx2.Response(503), httpx2.Response(502), httpx2.Response(200, text="ok"))
+    handler = responder(
+        httpx2.Response(503), httpx2.Response(502), httpx2.Response(200, text="ok")
+    )
     client = client_for(handler)
     assert client.request("GET", "https://example.test/").text == "ok"
     assert client.request_count == 3
@@ -37,7 +40,9 @@ def test_retries_server_errors_with_backoff(sleeps):
 
 
 def test_honors_retry_after(sleeps):
-    handler = responder(httpx2.Response(429, headers={"Retry-After": "7"}), httpx2.Response(200))
+    handler = responder(
+        httpx2.Response(429, headers={"Retry-After": "7"}), httpx2.Response(200)
+    )
     client_for(handler).request("GET", "https://example.test/")
     assert 7.0 in sleeps
 
@@ -57,11 +62,20 @@ def test_gives_up_after_three_attempts(sleeps):
 
 
 def test_delay_has_a_floor():
-    assert fetch.NetNutritionClient(delay=0.0, http=httpx2.Client()).delay == fetch.MIN_DELAY_SECONDS
+    assert (
+        fetch.NetNutritionClient(delay=0.0, http=httpx2.Client()).delay
+        == fetch.MIN_DELAY_SECONDS
+    )
 
 
 def test_panels_are_keyed_by_id_and_form_is_posted(sleeps):
-    payload = {"success": True, "panels": [{"id": "menuPanel", "html": "<p>menus</p>"}, {"id": "x", "html": ""}]}
+    payload = {
+        "success": True,
+        "panels": [
+            {"id": "menuPanel", "html": "<p>menus</p>"},
+            {"id": "x", "html": ""},
+        ],
+    }
     handler = responder(httpx2.Response(200, json=payload))
     assert client_for(handler).select_unit(1) == {"menuPanel": "<p>menus</p>"}
     request = handler.seen[0]
