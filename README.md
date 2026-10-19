@@ -8,6 +8,7 @@
 [![Prettier](https://github.com/morgansimon425/PackPlate/actions/workflows/prettier.yml/badge.svg?branch=dev)](https://github.com/morgansimon425/PackPlate/actions/workflows/prettier.yml?query=branch%3Adev)
 [![ESLint](https://github.com/morgansimon425/PackPlate/actions/workflows/eslint.yml/badge.svg?branch=dev)](https://github.com/morgansimon425/PackPlate/actions/workflows/eslint.yml?query=branch%3Adev)
 [![Typecheck](https://github.com/morgansimon425/PackPlate/actions/workflows/typecheck.yml/badge.svg?branch=dev)](https://github.com/morgansimon425/PackPlate/actions/workflows/typecheck.yml?query=branch%3Adev)
+[![M0 eval](https://github.com/morgansimon425/PackPlate/actions/workflows/m0.yml/badge.svg?branch=dev)](https://github.com/morgansimon425/PackPlate/actions/workflows/m0.yml?query=branch%3Adev)
 
 A website that helps NC State students decide where to eat on campus. It puts
 dining hours, menus, and nutrition information from every campus dining
@@ -16,6 +17,32 @@ like allergies, vegetarian, halal, or a protein target. Students can enter
 constraints for several people at once, so a group with different diets can
 find a location where everyone has something to eat. Students can also report
 how busy each location is.
+
+## 🎯 M0: risk-killer eval
+
+**The claim**, posted in [issue #11](https://github.com/morgansimon425/PackPlate/issues/11)
+before the first run: a group of friends with different diets can find
+somewhere on campus where everyone can eat, using NC State's own data, without
+PackPlate ever telling someone a dish is safe when it isn't.
+
+| Target | Result | |
+|---|---|---|
+| **Safe:** 0 confirmed false fits | **6** in 7,926 "fits" answers checked | ❌ missed |
+| **Useful:** at least 80% of simulated groups answered | **100%** of 1,000 groups | ✅ met |
+
+- **Safe:** every "fits" answer's ingredient list was scanned, and a person
+  read every flag. The 6 real ones come from NC State's own data missing an
+  allergen icon, e.g. cooked chicken fat in a soup tagged Vegetarian, and whey
+  in a pancake with no dairy icon. NetNutrition's own icon-only filter makes
+  the same 6 mistakes.
+- **Useful:** simulated groups of 2–5 people, with restriction rates from
+  published studies. These are **simulated users, not real ones**.
+- **Data:** a frozen snapshot of Oct 12–14, 2026, committed to the repo.
+- **Reproduce:** `cd proj_2 && python -m eval.m0`. The **M0 eval** badge
+  means the committed numbers reproduce, not that the targets were met.
+- **Details:** [the plan](proj_2/docs/m0-eval.md),
+  [the result](proj_2/eval/results.json), and the review decision in
+  [issue #11](https://github.com/morgansimon425/PackPlate/issues/11).
 
 ## 📁 Structure
 

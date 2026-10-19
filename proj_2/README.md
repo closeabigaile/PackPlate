@@ -171,5 +171,7 @@ Known source limits: "Contains Nuts" covers peanuts and tree nuts, and
 ```bash
 cd backend && pytest          # API; DB tests need TEST_DATABASE_URL
 cd .. && pytest ingestion     # pipeline (run from proj_2/); DB tests need TEST_DATABASE_URL
+pytest eval                   # M0 eval (run from proj_2/); no database needed
+python -m eval.m0             # rerun M0 and write eval/results.json (--check: compare instead)
 cd frontend && npm run lint   # frontend
 ```

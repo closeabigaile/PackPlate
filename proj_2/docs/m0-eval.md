@@ -1,7 +1,8 @@
 # M0 — Risk-killer eval
 
-**Status (2026-10-18):** thresholds and snapshot days pre-registered in a
-GitHub issue; eval not built yet. The full scrape it
+**Status (2026-10-18):** built and run (see Result). Safe missed, Useful met.
+The review decision still has to be recorded in the pre-registration issue
+(#11). The full scrape it
 needs now exists in the shared database (2026-10-11, issue #3): every item has
 a nutrition label, but 2,418 of 6,239 items list no allergen info, which is the
 usefulness risk this eval measures.
@@ -105,18 +106,38 @@ once with dining.ncsu.edu and NetNutrition, once with PackPlate. Record each
 person's restrictions, the time taken, and whether the chosen location
 actually worked for everyone.
 
+## Result
+
+`python -m eval.m0` from `proj_2/` (full numbers in `eval/results.json`):
+
+| | PackPlate | Icon-only baseline |
+|---|---|---|
+| "Fits" answers checked against ingredients | 7,926 | 7,932 |
+| Confirmed false fits (target: 0) | **6** | 6 |
+| Simulated groups answered (target: 80%) | **100%** | 100% |
+
+- **Safe: missed.** The scan raised 172 flags; a person confirmed 6 and found
+  0 misses in 30 random unflagged answers. All 6 are allergens or animal
+  products NC State's icons leave out, so the baseline makes the same 6.
+- **Useful: met.** Every simulated group had an open location with something
+  for everyone. "Something" can be one side dish, which makes this metric
+  generous.
+- PackPlate held back 9.3% of answers as `incomplete`, but on these days that
+  cost no answered groups and prevented no false fits: icons and labels never
+  disagreed.
+
 ## Checklist
 
 - [x] Thresholds and snapshot days posted in a GitHub issue before the first
   run
 - [x] Full scrape run, all units with labels on (2026-10-11, ingest run #2 in
   the shared database)
-- [ ] Trimmed snapshot (2026-10-12 to 10-14) exported and committed
-- [ ] Ingredient scan and its word list committed
-- [ ] Every flagged item reviewed by hand, plus 30 random unflagged items;
+- [x] Trimmed snapshot (2026-10-12 to 10-14) exported and committed
+- [x] Ingredient scan and its word list committed
+- [x] Every flagged item reviewed by hand, plus 30 random unflagged items;
   decisions committed as a CSV
-- [ ] Simulated group scenarios with a fixed seed, and restriction frequencies
+- [x] Simulated group scenarios with a fixed seed, and restriction frequencies
   from a cited source in a config file
-- [ ] `eval/m0.py` runs from a clean checkout with one command
-- [ ] The eval runs in CI and fails only on a crash or a changed result
+- [x] `eval/m0.py` runs from a clean checkout with one command
+- [x] The eval runs in CI and fails only on a crash or a changed result
 - [ ] Results and the review decision recorded in the issue
