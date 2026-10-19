@@ -60,6 +60,9 @@ class Nutrition(BaseModel):
     ingredients: str | None
     contains: list[str]  # the label's "Contains:" names, as printed
     missing_fields: list[str]  # nutrients the label doesn't give
+    # Possible allergens the ingredients mention, e.g. {"dairy": ["whey"]}. Never
+    # confirmed: shown as "check the label", never as "contains".
+    ingredient_flags: dict[str, list[str]]
     fetched_at: datetime
 
 
