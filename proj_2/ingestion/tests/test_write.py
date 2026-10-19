@@ -81,6 +81,7 @@ def test_items_merge_icon_traits_with_label_contains(db, fixture_html):
     nut = db.get(Nutrition, key)
     assert nut.protein_g == 4.0 and nut.location_id == 1
     assert nut.missing_fields == ["Cholesterol", "Potassium"]
+    assert "gluten" in nut.ingredient_flags  # stored from the label's ingredient text
     assert db.get(Menu, 10).fetched_at is not None
 
 

@@ -47,6 +47,14 @@ DIET_EXCLUDES = {
     "vegetarian": {"pork", "seafood"},
 }
 
+# Ingredient-flag keys (ingestion/ingredients.py) that cast doubt on a diet tag.
+# A flag is only a possibility, so it makes a result incomplete, never conflicts.
+DIET_DOUBTED_BY = {
+    "halal": {"pork"},
+    "vegan": {"meat", "pork", "seafood", "dairy", "egg", "honey"},
+    "vegetarian": {"meat", "pork", "seafood"},
+}
+
 FITS, CONFLICTS, INCOMPLETE = "fits", "conflicts", "incomplete"
 
 
@@ -79,12 +87,14 @@ def check(item, profile: Profile) -> Result:
     """One item against one profile.
 
     item is anything with .allergens, .diets, .unrecognized_traits (lists) and
-    .nutrition (None, or something with .protein_g, .calories, .sodium_mg).
+    .nutrition (None, or something with .protein_g, .calories, .sodium_mg and
+    optionally .ingredient_flags, e.g. {"dairy": ["whey"]}).
     """
     conflicts: list[str] = []
     incomplete: list[str] = []
     allergens = set(item.allergens)
     label = item.nutrition
+    flags = (getattr(label, "ingredient_flags", None) or {}) if label else {}
 
     if profile.avoid:
         found = sorted(profile.avoid & allergens)
@@ -96,9 +106,19 @@ def check(item, profile: Profile) -> Result:
             ]
             if label is None:
                 incomplete.append("no nutrition label: allergens come from icons only")
+            incomplete += [
+                f"ingredients mention {', '.join(flags[a])}: may contain {a}"
+                for a in sorted(profile.avoid & set(flags))
+            ]
 
     for diet in sorted(profile.diets):
         if DIET_SATISFIED_BY[diet] & set(item.diets):
+            doubted = sorted(DIET_DOUBTED_BY[diet] & set(flags))
+            if doubted:
+                words = sorted({w for k in doubted for w in flags[k]})
+                incomplete.append(
+                    f"tagged {diet}, but ingredients mention {', '.join(words)}"
+                )
             continue
         ruled_out = sorted(DIET_EXCLUDES[diet] & allergens)
         if ruled_out:

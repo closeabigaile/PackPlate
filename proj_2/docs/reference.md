@@ -4,7 +4,7 @@
 
 Every public module, class, and function in the Python code, with its signature and description, read from the source. The website (`frontend/`) is described in [how.md](how.md) instead.
 
-**195 of 195** modules, classes, and functions have a description.
+**204 of 204** modules, classes, and functions have a description.
 
 - **API** (`backend/app/`)
   - [`app`](#app)
@@ -38,8 +38,11 @@ Every public module, class, and function in the Python code, with its signature 
   - [`db.session`](#dbsession)
 - **Scraper** (`ingestion/`)
   - [`ingestion`](#ingestion)
+  - [`ingestion.backfill_flags`](#ingestionbackfill_flags)
   - [`ingestion.config`](#ingestionconfig)
+  - [`ingestion.discrepancy_report`](#ingestiondiscrepancy_report)
   - [`ingestion.fetch`](#ingestionfetch)
+  - [`ingestion.ingredients`](#ingestioningredients)
   - [`ingestion.normalize`](#ingestionnormalize)
   - [`ingestion.parse`](#ingestionparse)
   - [`ingestion.run`](#ingestionrun)
@@ -533,6 +536,7 @@ Fields:
 - `ingredients: str | None`
 - `contains: list[str]`
 - `missing_fields: list[str]`
+- `ingredient_flags: dict[str, list[str]]`
 - `fetched_at: datetime`
 
 ### class `MenuItem` (BaseModel)
@@ -689,7 +693,8 @@ def check(item, profile: Profile) -> Result
 One item against one profile.
 
 item is anything with .allergens, .diets, .unrecognized_traits (lists) and
-.nutrition (None, or something with .protein_g, .calories, .sodium_mg).
+.nutrition (None, or something with .protein_g, .calories, .sodium_mg and
+optionally .ingredient_flags, e.g. {"dairy": ["whey"]}).
 
 ### class `Counts`
 
@@ -921,6 +926,7 @@ Fields:
 - `ingredients: Mapped[str | None]`
 - `contains: Mapped[list]`
 - `missing_fields: Mapped[list]`
+- `ingredient_flags: Mapped[dict]`
 - `fetched_at: Mapped[datetime]`
 
 ### class `MenuItem` (Base)
@@ -1028,11 +1034,79 @@ Source: [`ingestion/__init__.py`](../ingestion/__init__.py)
 
 The ingestion job: scrapes NC State's dining sites into Postgres. Run: `python -m ingestion.run`.
 
+## `ingestion.backfill_flags`
+
+Source: [`ingestion/backfill_flags.py`](../ingestion/backfill_flags.py)
+
+```text
+Recompute nutrition.ingredient_flags from the ingredient text already stored.
+
+Labels are only re-fetched every LABEL_MAX_AGE_DAYS, so labels saved before the
+column existed (or before a word-list change) keep old flags until then. This
+recomputes them from the stored text. No requests to NC State.
+
+Usage (from proj_2/, with DATABASE_URL set and migrations applied):
+    python -m ingestion.backfill_flags           preview: how many labels would change
+    python -m ingestion.backfill_flags --write   save the new flags
+
+Takes the ingestion lock, so it never runs during a scrape.
+```
+
+### `backfill`
+
+```python
+def backfill(engine: Engine, write: bool) -> dict
+```
+
+Returns {"labels": checked, "changed": would change or did change}.
+
+### `main`
+
+```python
+def main(argv: list[str] | None=None) -> int
+```
+
+Command-line entry point: preview or save the flags and print how many changed.
+
 ## `ingestion.config`
 
 Source: [`ingestion/config.py`](../ingestion/config.py)
 
 Ingestion settings. Overridable ones come from environment variables.
+
+## `ingestion.discrepancy_report`
+
+Source: [`ingestion/discrepancy_report.py`](../ingestion/discrepancy_report.py)
+
+```text
+Discrepancy report: labels whose ingredients name an allergen NC State's label leaves out.
+
+Read-only. One row per label (dishes share labels), for items on menus between
+--start and --end, as CSV for NC State Dining to check:
+- an allergen the ingredients mention that isn't in the item's allergens, or
+- an item tagged vegetarian/vegan whose ingredients mention something that diet
+  rules out.
+A row is a possible label gap, not a confirmed one: a person should check it.
+
+Usage (from proj_2/, with DATABASE_URL set):
+    python -m ingestion.discrepancy_report --start 2026-10-19 --end 2026-10-25 > report.csv
+```
+
+### `rows`
+
+```python
+def rows(db: Session, start: date, end: date) -> list[dict]
+```
+
+One row per possible label gap on menus from start to end, by location and item.
+
+### `main`
+
+```python
+def main(argv: list[str] | None=None) -> int
+```
+
+Command-line entry point: print the report as CSV (default: the next 7 days).
 
 ## `ingestion.fetch`
 
@@ -1106,6 +1180,47 @@ def location_page(self, slug: str, on: date | None=None) -> str
 ```
 
 A dining.ncsu.edu location page; ?date= fills its "pick a date" hours box.
+
+## `ingestion.ingredients`
+
+Source: [`ingestion/ingredients.py`](../ingestion/ingredients.py)
+
+Possible allergens: what an item's ingredient text mentions.
+
+NC State's icons and "Contains:" line sometimes leave out an allergen the
+ingredients name (M0 eval, issue #15). This scan finds those words so the filter
+can mark the item "incomplete" instead of "fits". A hit is only a possibility,
+never a confirmed allergen: it is stored apart from NC State's allergens.
+
+Deterministic: the same text always gives the same sorted keys. Matching is
+whole words, any case, with an optional plural "s"/"es".
+
+Sources for each key are noted next to its words. Cross-contact warnings ("may
+contain", "made in a facility that also processes ...") are not ingredients and
+are ignored. Halal is not scanned beyond pork: there is no single standard for
+it (certifiers differ on alcohol and gelatin sources).
+
+The words started from eval/wordlist.py but are kept here on purpose, so the M0
+eval stays an independent check of this scan.
+
+### `matched_terms`
+
+```python
+def matched_terms(ingredients: str | None) -> dict[str, list[str]]
+```
+
+Each key the ingredient text mentions, with the listed words that matched.
+
+{"dairy": ["whey"]} lets the app say "ingredients mention whey". Keys and
+words are sorted; {} if nothing matched or there is no text.
+
+### `possible_allergens`
+
+```python
+def possible_allergens(ingredients: str | None) -> list[str]
+```
+
+Keys the ingredient text mentions, sorted. [] if none or no text.
 
 ## `ingestion.normalize`
 

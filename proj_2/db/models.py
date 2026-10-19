@@ -126,6 +126,9 @@ class Nutrition(Base):
     missing_fields: Mapped[list] = mapped_column(
         JSONB, default=list
     )  # flagged Incomplete or unparseable
+    ingredient_flags: Mapped[dict] = mapped_column(
+        JSONB, default=dict
+    )  # possible allergens the ingredients mention, {"dairy": ["whey"]}; never confirmed
     fetched_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
 
 

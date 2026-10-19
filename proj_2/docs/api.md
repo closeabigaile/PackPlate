@@ -325,6 +325,7 @@ An item's nutrition label from NetNutrition. Values it doesn't give are null, no
 | `ingredients` | string or null | yes |
 | `contains` | list of string | yes |
 | `missing_fields` | list of string | yes |
+| `ingredient_flags` | object | yes |
 | `fetched_at` | string (date-time) | yes |
 
 ### Period
