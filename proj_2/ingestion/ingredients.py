@@ -146,19 +146,30 @@ def _pattern(term: str) -> re.Pattern:
     return re.compile(rf"\b{words}(?:e?s)?\b", re.I)
 
 
-_TERMS = {key: [_pattern(t) for t in terms] for key, terms in WORDS.items()}
+_TERMS = {key: [(t, _pattern(t)) for t in terms] for key, terms in WORDS.items()}
 _EXCEPT = [(_pattern(e), _RESTORE.get(e, "")) for e in EXCEPT]
 
 
-def possible_allergens(ingredients: str | None) -> list[str]:
-    """Keys the ingredient text mentions, sorted. [] if none or no text."""
+def matched_terms(ingredients: str | None) -> dict[str, list[str]]:
+    """Each key the ingredient text mentions, with the listed words that matched.
+
+    {"dairy": ["whey"]} lets the app say "ingredients mention whey". Keys and
+    words are sorted; {} if nothing matched or there is no text.
+    """
     if not ingredients:
-        return []
+        return {}
     text = _ADVISORY.sub(" ", ingredients)
     text = _IMITATION.sub(r" \1 ", text)
     for pattern, keep in _EXCEPT:
         text = pattern.sub(f" {keep} ", text)
     text = _FREE_OF.sub(" ", text)
-    return sorted(
-        key for key, patterns in _TERMS.items() if any(p.search(text) for p in patterns)
-    )
+    found = {
+        key: sorted(term for term, p in terms if p.search(text))
+        for key, terms in sorted(_TERMS.items())
+    }
+    return {key: words for key, words in found.items() if words}
+
+
+def possible_allergens(ingredients: str | None) -> list[str]:
+    """Keys the ingredient text mentions, sorted. [] if none or no text."""
+    return list(matched_terms(ingredients))

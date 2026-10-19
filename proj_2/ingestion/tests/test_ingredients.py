@@ -1,4 +1,4 @@
-from ingestion.ingredients import WORDS, possible_allergens
+from ingestion.ingredients import WORDS, matched_terms, possible_allergens
 from ingestion.normalize import ALLERGEN_KEYS
 
 
@@ -10,6 +10,15 @@ def test_same_text_always_gives_the_same_sorted_keys():
     text = "Wheat Flour, Milk, Sesame Seeds, Peanuts"
     assert possible_allergens(text) == possible_allergens(text)
     assert possible_allergens(text) == ["dairy", "gluten", "nuts", "sesame"]
+
+
+def test_matched_terms_names_the_words_that_matched():
+    assert matched_terms("Enriched Flour, Blueberries, Whey, Butter") == {
+        "dairy": ["butter", "whey"],
+        "gluten": ["flour"],
+    }
+    assert matched_terms("Water, Salt") == {}
+    assert matched_terms(None) == {}
 
 
 def test_m0_false_fits_are_caught():
