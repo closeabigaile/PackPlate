@@ -95,6 +95,8 @@ EXCEPT = [
     # pork look-alikes
     "turkey bacon", "beef bacon", "turkey ham", "turkey pepperoni", "beef pepperoni",
     "turkey salami", "chicken chorizo",
+    # seafood look-alikes: oyster crackers are plain crackers
+    "oyster cracker",
     # eggs from other fowl are egg, not meat
     "duck egg", "goose egg", "quail egg", "turkey egg",
     # highly refined soybean oil is exempt (21 U.S.C. 321(qq)(2)(A)); assumed refined

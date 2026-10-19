@@ -71,6 +71,13 @@ def test_nc_state_vegan_mozzarella_is_not_dairy():
     assert possible_allergens("Parmesan-Style Cheese (Milk, Salt)") == ["dairy"]
 
 
+def test_oyster_crackers_are_not_seafood():
+    # Real text from NC State's "Ranch Oyster Crackers", shortened.
+    text = "Oyster Crackers (Whole Grain Wheat Flour, Soybean Oil, Salt)"
+    assert possible_allergens(text) == ["gluten"]
+    assert possible_allergens("Smoked Oysters, Crackers") == ["seafood"]
+
+
 def test_plant_based_rule_only_skips_the_next_word():
     assert possible_allergens("Vegan Pesto with Cheese") == ["dairy"]
     # Real allergens inside an imitation are still flagged.
