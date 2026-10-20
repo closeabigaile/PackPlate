@@ -704,6 +704,14 @@ select {
   color: var(--muted);
 }
 
+/* A part of a station ("Flashpoint" > "Entrées"), under its station's name. */
+.subcourse-title {
+  margin: 0.5rem 0 0.25rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--ink);
+}
+
 .item-list {
   list-style: none;
   display: grid;

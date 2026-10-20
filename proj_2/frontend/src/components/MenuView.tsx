@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { ALLERGENS, allergenLabel, dietLabel } from "@/lib/diet";
 import { formatNumber } from "@/lib/format";
-import { stationLabel, stationRank } from "@/lib/stations";
+import { splitLabel, stationLabel, stationRank } from "@/lib/stations";
 import { reasonSummary, shortReason } from "@/lib/verdicts";
 import type { ItemResult, MenuItem, MenuSummary, Nutrition } from "@/lib/types";
 import { StateMessage } from "./StateMessage";
@@ -306,18 +306,25 @@ function MenuBody({
           {hidden === 1 ? "it doesn’t" : "they don’t"} fit your profile.
         </p>
       ) : null}
-      {sections.map(([course, dishes]) =>
-        dishes.length === 0 ? null : (
-          <div key={course}>
-            <h5 className="course-title">{course}</h5>
-            <ul className="item-list">
-              {dishes.map((sizes) => (
-                <Item key={sizes[0].id} sizes={sizes} />
-              ))}
-            </ul>
-          </div>
-        ),
-      )}
+      {sections
+        .filter(([, dishes]) => dishes.length > 0)
+        .map(([course, dishes], i, visible) => {
+          const [station, sub] = splitLabel(course);
+          // A station's name is shown once, above its first subsection.
+          const newStation =
+            i === 0 || splitLabel(visible[i - 1][0])[0] !== station;
+          return (
+            <div key={course}>
+              {newStation ? <h5 className="course-title">{station}</h5> : null}
+              {sub ? <h6 className="subcourse-title">{sub}</h6> : null}
+              <ul className="item-list">
+                {dishes.map((sizes) => (
+                  <Item key={sizes[0].id} sizes={sizes} />
+                ))}
+              </ul>
+            </div>
+          );
+        })}
     </>
   );
 }
