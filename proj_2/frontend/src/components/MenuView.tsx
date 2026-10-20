@@ -1,6 +1,10 @@
+"use client";
+
+import { useState } from "react";
 import { ALLERGENS, allergenLabel, dietLabel } from "@/lib/diet";
 import { formatNumber } from "@/lib/format";
 import { stationLabel, stationRank } from "@/lib/stations";
+import { reasonSummary, shortReason } from "@/lib/verdicts";
 import type { ItemResult, MenuItem, MenuSummary, Nutrition } from "@/lib/types";
 import { StateMessage } from "./StateMessage";
 import { VerdictBadge } from "./Badges";
@@ -56,18 +60,44 @@ function possibleAllergens(item: ViewItem): [string, string[]][] {
   ).map((a) => [a.key, flags[a.key]]);
 }
 
-function Item({ item }: { item: ViewItem }) {
+const VERDICT_ORDER = { fits: 0, incomplete: 1, conflicts: 2 } as const;
+
+function rank(item: ViewItem): number {
+  const verdict = item.results?.[0]?.verdict;
+  return verdict ? VERDICT_ORDER[verdict] : 0;
+}
+
+// "Serving (16oz)" -> "16 oz"; the full serving text if there's no size in it.
+function sizeLabel(item: ViewItem, index: number): string {
+  const inner = item.serving_size?.match(/\(([^)]*)\)\s*$/)?.[1]?.trim();
+  const text = inner || item.serving_size || `Size ${index + 1}`;
+  return text.replace(/(\d)([a-z])/i, "$1 $2");
+}
+
+// One listing per dish. NC State lists each size of a dish (16 oz, 24 oz) as a
+// separate item with its own label; `sizes` holds them all. The details show
+// the chosen size; with a profile, the listing opens on the best-fitting size
+// and warns about any size that fits worse.
+function Item({ sizes }: { sizes: ViewItem[] }) {
+  const best = sizes.reduce((b, s, i) => (rank(s) < rank(sizes[b]) ? i : b), 0);
+  const [chosen, setChosen] = useState(best);
+  const item = sizes[chosen];
   const result = item.results?.[0];
   const tone = result ? `item item-${result.verdict}` : "item";
   const possible = possibleAllergens(item);
   const removed = Object.entries(item.diets_removed ?? {});
+  const worse = sizes
+    .map((s, i) => ({ s, i }))
+    .filter(({ s }) => s.results && rank(s) > rank(sizes[best]));
 
   return (
     <li className={tone}>
       <details>
         <summary>
           <span className="item-name">{item.name}</span>
-          {result ? <VerdictBadge verdict={result.verdict} /> : null}
+          {result ? (
+            <VerdictBadge verdict={result.verdict} reasons={result.reasons} />
+          ) : null}
           {item.diets.map((diet) => (
             <span key={diet} className="pill pill-diet">
               {dietLabel(diet)}
@@ -76,9 +106,47 @@ function Item({ item }: { item: ViewItem }) {
           {possible.length > 0 ? (
             <span className="pill pill-warn">Check label</span>
           ) : null}
+          {worse.length > 0 ? (
+            <span className="pill pill-warn">
+              {sizeLabel(worse[0].s, worse[0].i)}:{" "}
+              {reasonSummary(worse[0].s.results?.[0]?.reasons ?? [])}
+            </span>
+          ) : null}
         </summary>
 
         <div className="item-detail">
+          {sizes.length > 1 ? (
+            <div className="chips" role="radiogroup" aria-label="Size">
+              {sizes.map((s, i) => (
+                <label key={s.id} className="chip">
+                  <input
+                    type="radio"
+                    name={`size-${sizes[0].id}`}
+                    checked={i === chosen}
+                    onChange={() => setChosen(i)}
+                  />
+                  <span>{sizeLabel(s, i)}</span>
+                </label>
+              ))}
+            </div>
+          ) : null}
+
+          {worse.length > 0 ? (
+            <div className="banner banner-warn">
+              Sizes differ for your profile:
+              <ul>
+                {worse.map(({ s, i }) => (
+                  <li key={s.id}>
+                    {sizeLabel(s, i)}:{" "}
+                    {(s.results?.[0]?.reasons ?? [])
+                      .map(shortReason)
+                      .join(", ")}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
+
           {result && result.reasons.length > 0 ? (
             <ul className="reasons">
               {result.reasons.map((reason) => (
@@ -144,18 +212,23 @@ function Item({ item }: { item: ViewItem }) {
   );
 }
 
-// Items grouped under clean section names (lib/stations.ts), in menu order.
-function groupByCourse(items: ViewItem[]): [string, ViewItem[]][] {
-  const groups = new Map<string, ViewItem[]>();
+// Items grouped under clean section names (lib/stations.ts), in menu order,
+// with the sizes of each dish (same name in the same section) kept together.
+function groupByCourse(items: ViewItem[]): [string, ViewItem[][]][] {
+  const groups = new Map<string, Map<string, ViewItem[]>>();
   for (const item of items) {
     const label = stationLabel(item.course);
-    const existing = groups.get(label);
-    if (existing) existing.push(item);
-    else groups.set(label, [item]);
+    const dishes = groups.get(label) ?? new Map<string, ViewItem[]>();
+    groups.set(label, dishes);
+    const key = item.name.trim().toLowerCase();
+    dishes.set(key, [...(dishes.get(key) ?? []), item]);
   }
-  return [...groups.entries()].sort(
-    ([a], [b]) => stationRank(a) - stationRank(b),
-  );
+  return [...groups.entries()]
+    .map(([label, dishes]): [string, ViewItem[][]] => [
+      label,
+      [...dishes.values()],
+    ])
+    .sort(([a], [b]) => stationRank(a) - stationRank(b));
 }
 
 export function MenuView({
@@ -176,12 +249,29 @@ export function MenuView({
   return (
     <div className="stack">
       {shown.map((menu) => {
-        const visible = hideConflicts
-          ? menu.items.filter(
-              (item) => item.results?.[0]?.verdict !== "conflicts",
-            )
-          : menu.items;
-        const hidden = menu.items.length - visible.length;
+        const sections = groupByCourse(menu.items).map(
+          ([course, dishes]): [string, ViewItem[][]] => [
+            course,
+            // With a profile: fits first, then needs a check, then doesn't
+            // fit (by each dish's best size; ties keep NC State's order). A
+            // dish is hidden only when none of its sizes fit.
+            dishes
+              .filter(
+                (sizes) =>
+                  !hideConflicts ||
+                  sizes.some((s) => s.results?.[0]?.verdict !== "conflicts"),
+              )
+              .sort(
+                (a, b) => Math.min(...a.map(rank)) - Math.min(...b.map(rank)),
+              ),
+          ],
+        );
+        const total = groupByCourse(menu.items).reduce(
+          (n, [, dishes]) => n + dishes.length,
+          0,
+        );
+        const shownDishes = sections.reduce((n, [, d]) => n + d.length, 0);
+        const hidden = total - shownDishes;
 
         return (
           <section key={menu.id} aria-label={menu.meal}>
@@ -204,11 +294,12 @@ export function MenuView({
                     profile.
                   </p>
                 ) : null}
-                {groupByCourse(visible).map(([course, items]) => {
+                {sections.map(([course, dishes]) => {
+                  if (dishes.length === 0) return null;
                   const list = (
                     <ul className="item-list">
-                      {items.map((item) => (
-                        <Item key={item.id} item={item} />
+                      {dishes.map((sizes) => (
+                        <Item key={sizes[0].id} sizes={sizes} />
                       ))}
                     </ul>
                   );
