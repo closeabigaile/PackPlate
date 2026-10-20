@@ -170,14 +170,36 @@ as published.
 
 **Sources and etiquette.** Menus and nutrition come from NC State's NetNutrition
 (`netmenu2.cbord.com`), hours from `dining.ncsu.edu`. The job is deliberately
-slow (1 request/s, sequential, identifying User-Agent, labels cached). **Do not schedule it until NC State
-Dining has given permission**; run it by hand. The intended schedule once
-allowed is once a day at 4am Eastern, re-scraping all 7 days (a cached run is
-roughly 10 minutes; the first run, which fills the label cache, takes longer).
-The `menus_changed` stat shows how often menus really change.
+slow (1 request/s, sequential, identifying User-Agent, labels cached). NC State
+Dining has allowed scraping **at most once or twice a day**. The `menus_changed`
+stat shows how often menus really change.
+
+**Daily schedule.** `.github/workflows/scrape.yml` runs the job once a day at
+4am Eastern Standard Time (5am during daylight saving time; GitHub schedules in
+UTC) and opens a GitHub issue if a run fails, data goes stale, or diet tags
+are waiting for review. It needs the repo secret `SUPABASE_URL` and only runs
+from `main`; until then, run the job by hand.
 
 Known source limits: "Contains Nuts" covers peanuts and tree nuts, and
 "Contains Seafood" covers fish and shellfish; the source can't tell them apart.
+
+### Shared database (Supabase)
+
+The scraped data is stored in a shared Supabase Postgres database.
+
+1. Request the connection string from the team.
+2. Before starting the backend, set `DATABASE_URL` to that string:
+
+   ```bash
+   export DATABASE_URL="<connection string>"   # PowerShell: $env:DATABASE_URL = "<connection string>"
+   ```
+
+Notes:
+
+- Tests empty their database, so keep `TEST_DATABASE_URL` pointed at your local
+  Docker database, not Supabase.
+- The scraper is run by one team member, so there's no need to run
+  `ingestion.run` against this database.
 
 ## 🧪 Tests
 
