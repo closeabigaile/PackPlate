@@ -235,4 +235,4 @@ this check accepts.
 - [x] All 50 rows judged by hand; decisions committed in the sheet
 - [x] `eval_loop2/m0.py` runs from a clean checkout with one command
 - [x] Its own CI job and badge, separate from loop 1
-- [ ] Results recorded in #26
+- [x] Results recorded in #26
