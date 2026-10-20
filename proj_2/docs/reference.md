@@ -4,7 +4,7 @@
 
 Every public module, class, and function in the Python code, with its signature and description, read from the source. The website (`frontend/`) is described in [how.md](how.md) instead.
 
-**205 of 205** modules, classes, and functions have a description.
+**211 of 211** modules, classes, and functions have a description.
 
 - **API** (`backend/app/`)
   - [`app`](#app)
@@ -43,6 +43,7 @@ Every public module, class, and function in the Python code, with its signature 
   - [`ingestion.discrepancy_report`](#ingestiondiscrepancy_report)
   - [`ingestion.fetch`](#ingestionfetch)
   - [`ingestion.ingredients`](#ingestioningredients)
+  - [`ingestion.label_reviews`](#ingestionlabel_reviews)
   - [`ingestion.normalize`](#ingestionnormalize)
   - [`ingestion.parse`](#ingestionparse)
   - [`ingestion.run`](#ingestionrun)
@@ -1249,6 +1250,56 @@ def possible_allergens(ingredients: str | None) -> list[str]
 
 Keys the ingredient text mentions, sorted. [] if none or no text.
 
+## `ingestion.label_reviews`
+
+Source: [`ingestion/label_reviews.py`](../ingestion/label_reviews.py)
+
+Label reviews: find diet tags that an item's own ingredients contradict (#18).
+
+After each scrape, every item tagged vegan, vegetarian, or halal is checked
+against its label's ingredients. A contradiction becomes a `pending` row in
+label_reviews for a person to approve or reject. One row per dish and
+ingredient text: a repeat scrape adds nothing, and new ingredient text needs a
+new decision.
+
+The diet rules follow the sources in ingestion/ingredients.py (Vegetarian
+Society, Vegan Society; pork for halal) and match DIET_DOUBTED_BY in
+backend/app/services/filter_engine.py.
+
+### `dish_name`
+
+```python
+def dish_name(name: str) -> str
+```
+
+How a dish is matched across menus: its name, lowercased, spaces collapsed.
+
+### `ingredients_hash`
+
+```python
+def ingredients_hash(ingredients: str | None) -> str
+```
+
+Fingerprint of the ingredient text a decision is made on (sha256 hex).
+
+### `contradictions`
+
+```python
+def contradictions(diets: list[str], ingredients: str | None) -> dict[str, list[str]]
+```
+
+Diet tags the ingredients contradict, with the words why: {"vegan": ["chicken"]}.
+
+### `record`
+
+```python
+def record(db: Session, start: date, end: date, now: datetime) -> tuple[int, int]
+```
+
+Add pending reviews for contradicted items on scraped menus from start to end.
+
+Returns (new reviews added, reviews pending in total). The caller commits.
+
 ## `ingestion.normalize`
 
 Source: [`ingestion/normalize.py`](../ingestion/normalize.py)
@@ -1511,6 +1562,8 @@ Fields:
 - `labels_reused: int`
 - `labels_stale_reused: int`
 - `label_mismatches: int`
+- `label_reviews_new: int`
+- `label_reviews_pending: int`
 - `requests: int`
 
 ### class `LabelCache`
@@ -1565,6 +1618,14 @@ def execute(self)
 ```
 
 Scrape the selected units: locations, hours, then each unit's menus.
+
+#### `record_label_reviews`
+
+```python
+def record_label_reviews(self)
+```
+
+Queue diet tags that the scraped ingredients contradict, for review (#18).
 
 #### `ingest_hours`
 
