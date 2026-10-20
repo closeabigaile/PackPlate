@@ -88,10 +88,8 @@ EXCEPT = [
     "cream of tartar", "coconut cream",
     # the dairy-free shred inside NC State's "Vegan Mozzarella" (no milk in it)
     "mozzarella style shred",
-    # flours not made from a gluten-containing grain
-    "rice flour", "corn flour", "potato flour", "almond flour", "coconut flour",
-    "chickpea flour", "tapioca flour", "cassava flour", "oat flour", "sorghum flour",
-    "buckwheat flour", "gluten free flour", "gluten friendly",
+    # "gluten free flour": removed here, before "gluten free" is dropped below
+    "gluten free flour", "gluten friendly",
     # pork look-alikes
     "turkey bacon", "beef bacon", "turkey ham", "turkey pepperoni", "beef pepperoni",
     "turkey salami", "chicken chorizo",
@@ -106,7 +104,7 @@ EXCEPT = [
 # Look-alikes that still contain a different allergen: replaced by that word.
 _RESTORE = {
     "peanut butter": "peanut", "almond butter": "almond", "cashew butter": "cashew",
-    "nut butter": "nut", "almond milk": "almond", "almond flour": "almond",
+    "nut butter": "nut", "almond milk": "almond",
     "soy milk": "soy", "soymilk": "soy", "duck egg": "egg", "goose egg": "egg",
     "quail egg": "egg", "turkey egg": "egg",
 }  # fmt: skip
@@ -117,6 +115,42 @@ _ADVISORY = re.compile(
     re.I,
 )
 _FREE_OF = re.compile(r"\b[a-z]+[- ]free\b|\bnon-?dairy\b", re.I)
+
+# Highly refined soybean oil is exempt (see EXCEPT), but labels don't always say
+# "soybean oil". "Soybean" also names the oil when it's in a list that ends in
+# "oil" ("Soybean and/or Canola Oil") or inside an oil's brackets ("Vegetable Oil
+# (Soybean, Canola)"). Other soy in those brackets ("soy lecithin") still counts.
+_SOYBEAN_IN_OIL_LIST = re.compile(
+    r"\bsoybeans?\b(?=(?:\s*(?:,|and/or|and|or)\s*[a-z]+)*\s+oils?\b)", re.I
+)
+_OIL_BRACKET = re.compile(r"\boils?\s*\(([^()]*)\)", re.I)
+_BARE_SOYBEAN = re.compile(
+    r"\bsoybeans?\b(?!\s+(?:lecithin|protein|flour|sauce))", re.I
+)
+
+
+# Plain "flour" is wheat flour (21 CFR 137.105), but a flour named after another
+# source isn't ("Rice Flour", "Mustard Flour"). The source word is kept, so
+# "Soy Flour" still counts as soy and "Almond Flour" as nuts.
+NON_GLUTEN_FLOURS = [
+    "rice", "corn", "masa", "potato", "almond", "coconut", "chickpea", "garbanzo",
+    "tapioca", "cassava", "oat", "sorghum", "buckwheat", "millet", "quinoa",
+    "amaranth", "teff", "mustard", "soy", "soybean", "pea", "lentil", "bean",
+    "citrus", "flaxseed", "sunflower",
+]  # fmt: skip
+_NON_GLUTEN_FLOUR = re.compile(
+    r"\b(" + "|".join(NON_GLUTEN_FLOURS) + r")[\s-]+flours?\b", re.I
+)
+
+
+def _drop_soybean_oil(text: str) -> str:
+    """Remove "soybean" where it names an exempt oil, keeping all other soy."""
+    text = _OIL_BRACKET.sub(
+        lambda m: m.group(0).replace(m.group(1), _BARE_SOYBEAN.sub(" ", m.group(1))),
+        text,
+    )
+    return _SOYBEAN_IN_OIL_LIST.sub(" ", text)
+
 
 # Plant-based modifiers and the plant-based brands that appear in NC State's
 # ingredient text. An animal-product word directly after one ("Vegan Mozzarella",
@@ -160,6 +194,8 @@ def matched_terms(ingredients: str | None) -> dict[str, list[str]]:
         return {}
     text = _ADVISORY.sub(" ", ingredients)
     text = _IMITATION.sub(r" \1 ", text)
+    text = _drop_soybean_oil(text)
+    text = _NON_GLUTEN_FLOUR.sub(r"\1", text)
     for pattern, keep in _EXCEPT:
         text = pattern.sub(f" {keep} ", text)
     text = _FREE_OF.sub(" ", text)
