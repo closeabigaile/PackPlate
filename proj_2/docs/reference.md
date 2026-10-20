@@ -4,7 +4,7 @@
 
 Every public module, class, and function in the Python code, with its signature and description, read from the source. The website (`frontend/`) is described in [how.md](how.md) instead.
 
-**211 of 211** modules, classes, and functions have a description.
+**215 of 215** modules, classes, and functions have a description.
 
 - **API** (`backend/app/`)
   - [`app`](#app)
@@ -46,6 +46,7 @@ Every public module, class, and function in the Python code, with its signature 
   - [`ingestion.label_reviews`](#ingestionlabel_reviews)
   - [`ingestion.normalize`](#ingestionnormalize)
   - [`ingestion.parse`](#ingestionparse)
+  - [`ingestion.review_labels`](#ingestionreview_labels)
   - [`ingestion.run`](#ingestionrun)
   - [`ingestion.write`](#ingestionwrite)
 - **M0 eval** (`eval/`)
@@ -1520,6 +1521,46 @@ def hours_label_matches(label: str, day: date) -> bool
 ```
 
 The hours box says 'Monday, Sep. 28' with no year; check weekday and day of month.
+
+## `ingestion.review_labels`
+
+Source: [`ingestion/review_labels.py`](../ingestion/review_labels.py)
+
+```text
+Review contradicted diet tags: list pending reviews, then approve or reject each (#18).
+
+Approving removes the review's tags from that dish in the API; rejecting keeps
+NC State's tags. Every decision records who made it, when, and why.
+
+Usage (from proj_2/, with DATABASE_URL set and migrations applied):
+    python -m ingestion.review_labels
+    python -m ingestion.review_labels --approve 1 --by "Morgan" --reason "lists chicken"
+    python -m ingestion.review_labels --reject 2 --by "Morgan" --reason "plant-based"
+```
+
+### `pending`
+
+```python
+def pending(db: Session) -> list[dict]
+```
+
+Pending reviews, oldest first, with the ingredient text each one is about.
+
+### `decide`
+
+```python
+def decide(db: Session, review_id: int, status: str, by: str, reason: str, at: datetime) -> LabelReview
+```
+
+Approve or reject one pending review. The caller commits.
+
+### `main`
+
+```python
+def main(argv: list[str] | None=None) -> int
+```
+
+Command-line entry point: list pending reviews, or record one decision.
 
 ## `ingestion.run`
 
