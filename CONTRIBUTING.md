@@ -139,6 +139,26 @@ Test the failure cases, not just the happy path: missing data, bad input
 (422), unknown IDs (404), and anything that should come out `incomplete`
 rather than `fits`.
 
+## Keeping the docs up to date
+
+[`proj_2/docs/reference.md`](proj_2/docs/reference.md) and
+[`proj_2/docs/api.md`](proj_2/docs/api.md) are generated from the code: every
+public module, class, and function needs a docstring, and the API's routes
+describe themselves. After changing a docstring, a function signature, or an
+API route, run this from `proj_2/` and commit the result:
+
+```bash
+python docs/generate.py
+```
+
+CI fails if the generated files are out of date. Write new docstrings the
+same way as the existing ones: one sentence saying what it does or returns,
+plus anything a caller must know (what `None` means, what it raises).
+
+The hand-written pages are [why.md](proj_2/docs/why.md) and
+[how.md](proj_2/docs/how.md). If you change something a worked example in
+`how.md` shows, rerun the example and update it.
+
 ## When a test fails
 
 1. Open a GitHub issue: what failed, the error, and how to reproduce it.

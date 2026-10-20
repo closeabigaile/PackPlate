@@ -9,6 +9,7 @@ from app.schemas.filters import Allergen, Diet
 from app.services.filter_engine import (
     ALLERGEN_KEYS,
     CONFLICTS,
+    DIET_DOUBTED_BY,
     DIET_EXCLUDES,
     DIET_KEYS,
     DIET_SATISFIED_BY,
@@ -25,6 +26,7 @@ class Label:
     protein_g: float | None = 20
     calories: float | None = 300
     sodium_mg: float | None = 400
+    ingredient_flags: dict = field(default_factory=dict)
 
 
 @dataclass
@@ -198,6 +200,63 @@ def test_rule_tables_cover_every_diet():
 def test_request_schema_accepts_exactly_the_engine_keys():
     assert set(typing.get_args(Allergen)) == set(ALLERGEN_KEYS)
     assert set(typing.get_args(Diet)) == set(DIET_KEYS)
+
+
+DAIRY = Profile(avoid=frozenset({"dairy"}))
+
+
+def test_avoided_allergen_in_ingredients_is_incomplete_not_fits():
+    # M0 false fit: whey in the pancakes, no dairy icon.
+    item = Item(
+        allergens=["gluten"],
+        nutrition=Label(ingredient_flags={"dairy": ["whey"], "gluten": ["flour"]}),
+    )
+    result = check(item, DAIRY)
+    assert result.verdict == INCOMPLETE
+    assert result.reasons == ["ingredients mention whey: may contain dairy"]
+
+
+def test_ingredient_flag_never_makes_a_conflict_on_its_own():
+    item = Item(nutrition=Label(ingredient_flags={"dairy": ["whey"]}))
+    assert check(item, DAIRY).verdict != CONFLICTS
+
+
+def test_confirmed_allergen_still_conflicts():
+    item = Item(
+        allergens=["dairy"], nutrition=Label(ingredient_flags={"dairy": ["whey"]})
+    )
+    result = check(item, DAIRY)
+    assert (result.verdict, result.reasons) == (CONFLICTS, ["contains dairy"])
+
+
+def test_flag_for_an_allergen_the_profile_allows_still_fits():
+    item = Item(nutrition=Label(ingredient_flags={"gluten": ["flour"]}))
+    assert check(item, DAIRY).verdict == FITS
+
+
+def test_tagged_vegetarian_with_meat_in_ingredients_is_incomplete():
+    # M0 false fit: chicken fat in a soup tagged Vegetarian.
+    item = Item(
+        diets=["vegetarian"],
+        nutrition=Label(ingredient_flags={"dairy": ["cheese"], "meat": ["chicken"]}),
+    )
+    result = check(item, Profile(diets=frozenset({"vegetarian"})))
+    assert result.verdict == INCOMPLETE
+    assert result.reasons == ["tagged vegetarian, but ingredients mention chicken"]
+
+
+def test_tagged_vegan_with_honey_in_ingredients_is_incomplete():
+    item = Item(diets=["vegan"], nutrition=Label(ingredient_flags={"honey": ["honey"]}))
+    result = check(item, Profile(diets=frozenset({"vegan"})))
+    assert result.reasons == ["tagged vegan, but ingredients mention honey"]
+
+
+def test_diet_doubt_keys_match_what_ingestion_scans():
+    pytest.importorskip("bs4")  # ingestion's own dependency
+    from ingestion.ingredients import WORDS
+
+    for diet, keys in DIET_DOUBTED_BY.items():
+        assert keys <= set(WORDS), diet
 
 
 def test_engine_keys_match_what_ingestion_writes():

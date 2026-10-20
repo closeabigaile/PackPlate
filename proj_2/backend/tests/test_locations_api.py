@@ -99,9 +99,10 @@ def test_all_menus_for_a_day_with_items_and_nutrition(client, seed):
         carbs_g=34,
         sodium_mg=320,
         serving_size="1 each",
-        ingredients="flour, water",
+        ingredients="flour, water, whey",
         contains=["Contains Gluten"],
         missing_fields=["Potassium"],
+        ingredient_flags={"dairy": ["whey"], "gluten": ["flour"]},
     )
     seed.item(
         12,
@@ -126,6 +127,11 @@ def test_all_menus_for_a_day_with_items_and_nutrition(client, seed):
     assert pita["nutrition"]["protein_g"] == 6
     assert pita["nutrition"]["contains"] == ["Contains Gluten"]
     assert pita["nutrition"]["missing_fields"] == ["Potassium"]
+    # Possible allergens from the ingredients, kept apart from NC State's allergens.
+    assert pita["nutrition"]["ingredient_flags"] == {
+        "dairy": ["whey"],
+        "gluten": ["flour"],
+    }
 
     mystery = breakfast["items"][1]
     assert mystery["nutrition"] is None  # no label: allergens are icons only

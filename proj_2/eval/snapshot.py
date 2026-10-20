@@ -11,6 +11,7 @@ SNAPSHOT = Path(__file__).parent / "data" / "snapshot.json"
 
 
 def load(path: Path = SNAPSHOT) -> dict:
+    """The frozen snapshot, as written by eval/export_snapshot.py."""
     return json.loads(path.read_text(encoding="utf-8"))
 
 

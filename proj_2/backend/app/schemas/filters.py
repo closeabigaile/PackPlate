@@ -21,6 +21,11 @@ MAX_PROFILES = 10
 
 
 class Profile(BaseModel):
+    """One person's dietary needs in a filter request.
+
+    Unknown fields, allergens, or diets are rejected (422), never ignored.
+    """
+
     model_config = ConfigDict(extra="forbid")
 
     name: str | None = Field(None, max_length=50)  # echoed back, e.g. "Sam"
@@ -32,11 +37,15 @@ class Profile(BaseModel):
 
 
 class FilterRequest(BaseModel):
+    """The body of both filter endpoints: 1 to MAX_PROFILES profiles."""
+
     model_config = ConfigDict(extra="forbid")
     profiles: list[Profile] = Field(min_length=1, max_length=MAX_PROFILES)
 
 
 class ItemResult(BaseModel):
+    """One item's verdict for one profile, and why it isn't "fits"."""
+
     verdict: Verdict
     reasons: list[
         str
@@ -44,14 +53,20 @@ class ItemResult(BaseModel):
 
 
 class FilteredItem(MenuItem):
+    """A menu item with one result per profile, in request order."""
+
     results: list[ItemResult]  # one per profile, in request order
 
 
 class FilteredMenu(MenuSummary):
+    """A menu whose items are each checked against every profile."""
+
     items: list[FilteredItem]
 
 
 class ProfileCounts(BaseModel):
+    """For one profile at one location: how many items fit, are incomplete, or conflict."""
+
     name: str | None
     fits: int
     incomplete: int
@@ -59,6 +74,8 @@ class ProfileCounts(BaseModel):
 
 
 class GroupLocation(BaseModel):
+    """One location's answer for a group: is it open, and does everyone have something that fits."""
+
     id: int
     name: str
     is_open: bool | None  # at `at`; null = hours unknown

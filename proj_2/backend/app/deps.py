@@ -11,6 +11,7 @@ from db.session import make_engine, make_session_factory
 
 @lru_cache
 def get_engine():
+    """The database engine, created on first use and then reused."""
     return make_engine()
 
 

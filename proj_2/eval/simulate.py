@@ -22,16 +22,20 @@ CONFIG = Path(__file__).parent / "simulation.json"
 
 @dataclass(frozen=True)
 class Group:
+    """One simulated group: when and at which meal they eat, and each person's needs."""
+
     at: datetime  # campus time
     meal: str  # the meal menu served at `at`: Breakfast / Lunch / Dinner
     people: tuple[Profile, ...]
 
 
 def load_config(path: Path = CONFIG) -> dict:
+    """The simulation settings in eval/simulation.json."""
     return json.loads(path.read_text(encoding="utf-8"))
 
 
 def person(rng: random.Random, config: dict) -> Profile:
+    """One simulated person, drawn with the probabilities in `config`."""
     avoid = frozenset(
         key for key, spec in sorted(config["avoid"].items()) if rng.random() < spec["p"]
     )
@@ -47,6 +51,7 @@ def person(rng: random.Random, config: dict) -> Profile:
 
 
 def groups(config: dict) -> list[Group]:
+    """All the simulated groups. The same seed always gives the same groups."""
     rng = random.Random(config["seed"])
     low, high = config["group_size"]
     slots = [

@@ -12,10 +12,12 @@ ALEMBIC_INI = Path(__file__).parent / "alembic.ini"
 
 
 def alembic_config() -> Config:
+    """The Alembic configuration in db/alembic.ini."""
     return Config(str(ALEMBIC_INI))
 
 
 def upgrade(connection: Connection, revision: str = "head"):
+    """Migrate the database behind `connection` to `revision` (default: the newest)."""
     cfg = alembic_config()
     cfg.attributes["connection"] = connection
     command.upgrade(cfg, revision)

@@ -27,6 +27,8 @@ from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
 
 class Base(DeclarativeBase):
+    """Base class for every table below. Its metadata lists them all, for Alembic."""
+
     pass
 
 
@@ -124,6 +126,9 @@ class Nutrition(Base):
     missing_fields: Mapped[list] = mapped_column(
         JSONB, default=list
     )  # flagged Incomplete or unparseable
+    ingredient_flags: Mapped[dict] = mapped_column(
+        JSONB, default=dict
+    )  # possible allergens the ingredients mention, {"dairy": ["whey"]}; never confirmed
     fetched_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
 
 

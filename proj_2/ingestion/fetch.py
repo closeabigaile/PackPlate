@@ -30,6 +30,8 @@ RETRY_STATUSES = {429, 500, 502, 503, 504}
 
 
 class FetchError(Exception):
+    """A request failed, or a page wasn't what the scraper expected."""
+
     pass
 
 
@@ -93,6 +95,12 @@ class _PoliteClient:
 
 
 class NetNutritionClient(_PoliteClient):
+    """Client for NC State's NetNutrition site.
+
+    The site is stateful: start_session, then select_unit, then select_menu, then
+    nutrition_label for that menu's items, in that order.
+    """
+
     base = NETNUTRITION_BASE
 
     def start_session(self) -> str:
@@ -119,18 +127,23 @@ class NetNutritionClient(_PoliteClient):
         return {p["id"]: p["html"] for p in payload.get("panels", []) if p.get("html")}
 
     def select_unit(self, unit_oid: int) -> dict[str, str]:
+        """Select a dining unit. Returns its panels by id; the menu list is "menuPanel"."""
         return self._panels("Unit", "SelectUnitFromUnitsList", {"unitOid": unit_oid})
 
     def select_menu(self, menu_oid: int) -> dict[str, str]:
+        """Select one of the unit's menus. Returns its panels; the items are "itemPanel"."""
         return self._panels("Menu", "SelectMenu", {"menuOid": menu_oid})
 
     def nutrition_label(self, detail_oid: int) -> str:
+        """The nutrition label HTML for one item (detail_oid) on the selected menu."""
         return self._action(
             "NutritionDetail", "ShowItemNutritionLabel", {"detailOid": detail_oid}
         ).text
 
 
 class DiningSiteClient(_PoliteClient):
+    """Client for dining.ncsu.edu, where each location's hours are published."""
+
     def location_page(self, slug: str, on: date | None = None) -> str:
         """A dining.ncsu.edu location page; ?date= fills its "pick a date" hours box."""
         params = {"date": on.isoformat()} if on else None

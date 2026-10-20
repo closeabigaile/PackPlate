@@ -29,6 +29,8 @@ _FREE_OF = re.compile(r"\b[a-z]+[- ]free\b|\bnon-?dairy\b", re.I)
 
 @dataclass
 class Hits:
+    """The words the scan found: in the ingredients, and only in warnings."""
+
     terms: list[str] = field(default_factory=list)
     advisory: list[str] = field(default_factory=list)
 
