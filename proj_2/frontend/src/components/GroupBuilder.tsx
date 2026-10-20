@@ -70,7 +70,7 @@ function ResultCard({
                 {counts.name?.trim() || labels[index] || `Person ${index + 1}`}
               </strong>
               {": "}
-              {counts.fits} fit · {counts.incomplete} can’t confirm ·{" "}
+              {counts.fits} fit · {counts.incomplete} need a check ·{" "}
               {counts.conflicts} don’t fit
               {counts.fits === 0 ? " — nothing here fits" : ""}
             </li>
