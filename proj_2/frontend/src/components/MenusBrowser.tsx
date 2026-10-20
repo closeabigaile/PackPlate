@@ -173,6 +173,18 @@ function LocationPanel({
       </h3>
       {open ? (
         <div id={panelId} className="accordion-body">
+          {location.dining_url ? (
+            <div className="row-links">
+              <a
+                href={location.dining_url}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Dining page <span aria-hidden="true">↗</span>
+                <span className="visually-hidden"> (opens in a new tab)</span>
+              </a>
+            </div>
+          ) : null}
           <LocationMenus
             location={location}
             profile={profile}

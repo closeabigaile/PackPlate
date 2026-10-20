@@ -40,7 +40,8 @@ export function LocationRow({ location }: { location: LocationSummary }) {
             target="_blank"
             rel="noopener noreferrer"
           >
-            Dining page (opens in a new tab)
+            Dining page <span aria-hidden="true">↗</span>
+            <span className="visually-hidden"> (opens in a new tab)</span>
           </a>
         ) : null}
       </div>
