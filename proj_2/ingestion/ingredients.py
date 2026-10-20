@@ -88,10 +88,8 @@ EXCEPT = [
     "cream of tartar", "coconut cream",
     # the dairy-free shred inside NC State's "Vegan Mozzarella" (no milk in it)
     "mozzarella style shred",
-    # flours not made from a gluten-containing grain
-    "rice flour", "corn flour", "potato flour", "almond flour", "coconut flour",
-    "chickpea flour", "tapioca flour", "cassava flour", "oat flour", "sorghum flour",
-    "buckwheat flour", "gluten free flour", "gluten friendly",
+    # "gluten free flour": removed here, before "gluten free" is dropped below
+    "gluten free flour", "gluten friendly",
     # pork look-alikes
     "turkey bacon", "beef bacon", "turkey ham", "turkey pepperoni", "beef pepperoni",
     "turkey salami", "chicken chorizo",
@@ -106,7 +104,7 @@ EXCEPT = [
 # Look-alikes that still contain a different allergen: replaced by that word.
 _RESTORE = {
     "peanut butter": "peanut", "almond butter": "almond", "cashew butter": "cashew",
-    "nut butter": "nut", "almond milk": "almond", "almond flour": "almond",
+    "nut butter": "nut", "almond milk": "almond",
     "soy milk": "soy", "soymilk": "soy", "duck egg": "egg", "goose egg": "egg",
     "quail egg": "egg", "turkey egg": "egg",
 }  # fmt: skip
@@ -128,6 +126,20 @@ _SOYBEAN_IN_OIL_LIST = re.compile(
 _OIL_BRACKET = re.compile(r"\boils?\s*\(([^()]*)\)", re.I)
 _BARE_SOYBEAN = re.compile(
     r"\bsoybeans?\b(?!\s+(?:lecithin|protein|flour|sauce))", re.I
+)
+
+
+# Plain "flour" is wheat flour (21 CFR 137.105), but a flour named after another
+# source isn't ("Rice Flour", "Mustard Flour"). The source word is kept, so
+# "Soy Flour" still counts as soy and "Almond Flour" as nuts.
+NON_GLUTEN_FLOURS = [
+    "rice", "corn", "masa", "potato", "almond", "coconut", "chickpea", "garbanzo",
+    "tapioca", "cassava", "oat", "sorghum", "buckwheat", "millet", "quinoa",
+    "amaranth", "teff", "mustard", "soy", "soybean", "pea", "lentil", "bean",
+    "citrus", "flaxseed", "sunflower",
+]  # fmt: skip
+_NON_GLUTEN_FLOUR = re.compile(
+    r"\b(" + "|".join(NON_GLUTEN_FLOURS) + r")[\s-]+flours?\b", re.I
 )
 
 
@@ -183,6 +195,7 @@ def matched_terms(ingredients: str | None) -> dict[str, list[str]]:
     text = _ADVISORY.sub(" ", ingredients)
     text = _IMITATION.sub(r" \1 ", text)
     text = _drop_soybean_oil(text)
+    text = _NON_GLUTEN_FLOUR.sub(r"\1", text)
     for pattern, keep in _EXCEPT:
         text = pattern.sub(f" {keep} ", text)
     text = _FREE_OF.sub(" ", text)

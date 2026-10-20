@@ -113,6 +113,22 @@ def test_other_soy_next_to_soybean_oil_still_counts():
     assert possible_allergens(text) == ["nuts"]
 
 
+def test_flours_from_other_sources_are_not_gluten():
+    # Real wordings from NC State's labels.
+    text = (
+        "Mustard Flour, Corn Masa Flour, Brown Rice Flour, Sorghum Flour, Millet Flour"
+    )
+    assert possible_allergens(text) == []
+    # The source still counts when it's an allergen itself.
+    assert possible_allergens("Soy Flour, Water") == ["soy"]
+    assert possible_allergens("Almond Flour, Sugar") == ["nuts"]
+
+
+def test_plain_and_wheat_flour_are_still_gluten():
+    assert possible_allergens("Bleached Flour, Sugar") == ["gluten"]
+    assert possible_allergens("Enriched Wheat Flour, Rice Flour") == ["gluten"]
+
+
 def test_peanut_butter_is_still_a_nut():
     assert possible_allergens("Peanut Butter, Celery") == ["nuts"]
 
