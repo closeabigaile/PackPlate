@@ -1,6 +1,6 @@
 import { allergenLabel, dietLabel } from "@/lib/diet";
 import { formatNumber } from "@/lib/format";
-import { startsCollapsed, stationLabel, stationRank } from "@/lib/stations";
+import { stationLabel, stationRank } from "@/lib/stations";
 import type { ItemResult, MenuItem, MenuSummary, Nutrition } from "@/lib/types";
 import { StateMessage } from "./StateMessage";
 import { VerdictBadge } from "./Badges";
@@ -177,14 +177,7 @@ export function MenuView({
                       ))}
                     </ul>
                   );
-                  return startsCollapsed(course) ? (
-                    <details key={course}>
-                      <summary className="course-title">
-                        {course} ({items.length})
-                      </summary>
-                      {list}
-                    </details>
-                  ) : (
+                  return (
                     <div key={course}>
                       <h5 className="course-title">{course}</h5>
                       {list}

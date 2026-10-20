@@ -51,8 +51,3 @@ export function stationLabel(course: string | null): string {
 export function stationRank(label: string): number {
   return RANK[label] ?? STATION_RANK;
 }
-
-/** Sections that start collapsed (mostly add-ons). */
-export function startsCollapsed(label: string): boolean {
-  return label === TOPPINGS;
-}
