@@ -27,6 +27,9 @@ class Label:
     calories: float | None = 300
     sodium_mg: float | None = 400
     ingredient_flags: dict = field(default_factory=dict)
+    serving_size: str | None = "1 each"
+    missing_fields: list = field(default_factory=list)
+    ingredients: str | None = None
 
 
 @dataclass
@@ -35,6 +38,7 @@ class Item:
     diets: list = field(default_factory=list)
     unrecognized_traits: list = field(default_factory=list)
     nutrition: Label | None = field(default_factory=Label)
+    name: str = "Dish"
 
 
 NUTS = Profile(avoid=frozenset({"nuts"}))
@@ -266,3 +270,34 @@ def test_engine_keys_match_what_ingestion_writes():
 
     assert set(ALLERGEN_KEYS) == set(WRITTEN_ALLERGENS)
     assert set(DIET_KEYS) == set(WRITTEN_DIETS) - {"sustainable"}
+
+
+def test_untrustworthy_label_is_incomplete_for_goals_only():
+    calories = Profile(max_calories=500)
+    # A prepared food listed per 1 gram (NC State's bagel), and a label whose
+    # calories NC State itself flags as incomplete (a soup-and-sandwich combo).
+    per_gram = Item(
+        nutrition=Label(
+            calories=0, serving_size="Gram (1g)", ingredients="Flour, Raisins"
+        )
+    )
+    flagged = Item(nutrition=Label(calories=260, missing_fields=["Calories"]))
+    soup = Item(name="Soup Du Jour", nutrition=Label(calories=0, ingredients=""))
+    for item in (per_gram, flagged, soup):
+        result = check(item, calories)
+        assert (result.verdict, result.reasons) == (
+            INCOMPLETE,
+            ["nutrition info unavailable"],
+        )
+    # Truly zero foods keep their zeros: plain items per gram, small vegetables.
+    pepper = Item(nutrition=Label(calories=0, serving_size="Gram (1g)"))
+    lettuce = Item(nutrition=Label(calories=0, protein_g=0, sodium_mg=0))
+    assert check(pepper, calories).verdict == FITS
+    assert check(lettuce, calories).verdict == FITS
+    # A dish of the day with a real recipe listed keeps its label.
+    real_soup = Item(
+        name="Soup of the Day", nutrition=Label(calories=70, ingredients="Water, Beans")
+    )
+    assert check(real_soup, calories).verdict == FITS
+    # Allergen checks don't use the numbers.
+    assert check(per_gram, NUTS).verdict == FITS

@@ -18,11 +18,15 @@ Diets the profile requires
                                                                         doesn't prove either way
 Goals (min protein, max calories, max sodium)
     no label, or the label doesn't give that nutrient       incomplete
+    a placeholder label (a prepared food per 1 gram, or a   incomplete
+      dish of the day with no ingredients), or NC State
+      flags that nutrient as incomplete
     outside the limit                                       conflicts
 
 Overall: any conflict -> conflicts, else any incomplete -> incomplete, else fits.
 """
 
+import re
 from dataclasses import dataclass, field
 
 # Keys ingestion/normalize.py writes to menu_items.allergens and .diets. A test
@@ -83,6 +87,28 @@ def _num(value: float) -> str:
     return f"{value:g}"
 
 
+_PER_GRAM = re.compile(r"\(\s*1\s*g\s*\)", re.I)
+_OF_THE_DAY = re.compile(r"\b(du jour|of the day)\b", re.I)
+
+
+def is_placeholder(label, name: str = "") -> bool:
+    """A label whose numbers can't be used for goals.
+
+    - A prepared food listed per 1 gram ("Gram (1g)": a bagel at 0 calories).
+      A plain item per gram (black pepper, lettuce: one ingredient or none)
+      really is about zero, so it's left alone.
+    - A dish of the day ("Soup Du Jour") with no ingredients listed: the recipe
+      changes daily, so its label is a stand-in.
+    Small vegetable portions that read all zeros are real and left alone.
+    """
+    ingredients = getattr(label, "ingredients", None) or ""
+    if _OF_THE_DAY.search(name) and not ingredients.strip():
+        return True
+    if not _PER_GRAM.search(getattr(label, "serving_size", None) or ""):
+        return False
+    return "," in ingredients
+
+
 def check(item, profile: Profile) -> Result:
     """One item against one profile.
 
@@ -131,11 +157,18 @@ def check(item, profile: Profile) -> Result:
         ("calories", "", profile.max_calories, "calories", "above"),
         ("sodium", "mg", profile.max_sodium_mg, "sodium_mg", "above"),
     ]
+    placeholder = label is not None and is_placeholder(label, getattr(item, "name", ""))
+    flagged = set(getattr(label, "missing_fields", None) or []) if label else set()
     for name, unit, limit, column, bad_side in goals:
         if limit is None:
             continue
         value = getattr(label, column) if label is not None else None
-        if value is None:
+        # NC State's own label flags this nutrient as incomplete, or the whole
+        # label is a placeholder: its number can't be trusted.
+        if placeholder or name.capitalize() in flagged:
+            if "nutrition info unavailable" not in incomplete:
+                incomplete.append("nutrition info unavailable")
+        elif value is None:
             incomplete.append(
                 f"{name} not published"
                 if label is not None

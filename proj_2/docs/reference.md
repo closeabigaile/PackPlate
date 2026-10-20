@@ -4,7 +4,7 @@
 
 Every public module, class, and function in the Python code, with its signature and description, read from the source. The website (`frontend/`) is described in [how.md](how.md) instead.
 
-**222 of 222** modules, classes, and functions have a description.
+**223 of 223** modules, classes, and functions have a description.
 
 - **API** (`backend/app/`)
   - [`app`](#app)
@@ -681,6 +681,9 @@ Diets the profile requires
                                                                         doesn't prove either way
 Goals (min protein, max calories, max sodium)
     no label, or the label doesn't give that nutrient       incomplete
+    a placeholder label (a prepared food per 1 gram, or a   incomplete
+      dish of the day with no ingredients), or NC State
+      flags that nutrient as incomplete
     outside the limit                                       conflicts
 
 Overall: any conflict -> conflicts, else any incomplete -> incomplete, else fits.
@@ -706,6 +709,23 @@ Fields:
 
 - `verdict: str`
 - `reasons: list[str]`
+
+### `is_placeholder`
+
+```python
+def is_placeholder(label, name: str='') -> bool
+```
+
+```text
+A label whose numbers can't be used for goals.
+
+- A prepared food listed per 1 gram ("Gram (1g)": a bagel at 0 calories).
+  A plain item per gram (black pepper, lettuce: one ingredient or none)
+  really is about zero, so it's left alone.
+- A dish of the day ("Soup Du Jour") with no ingredients listed: the recipe
+  changes daily, so its label is a stand-in.
+Small vegetable portions that read all zeros are real and left alone.
+```
 
 ### `check`
 
