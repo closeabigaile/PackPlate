@@ -11,6 +11,7 @@ from sqlalchemy.orm import Session
 
 from app.deps import get_db
 from app.repositories import crowd_reports as crowd_repo
+from app.repositories import label_reviews as reviews_repo
 from app.repositories import locations as locations_repo
 from app.repositories import menus as menus_repo
 from app.schemas.locations import (
@@ -23,6 +24,7 @@ from app.schemas.locations import (
 )
 from app.services.crowd import WINDOW, aggregate
 from app.services.hours import campus_time, open_state, periods
+from app.services.label_reviews import reviewed_items
 from app.services.menus import menu_sort_key
 
 DINING_LOCATION_URL = "https://dining.ncsu.edu/location/{slug}/"
@@ -122,12 +124,13 @@ def get_menus(
     _get_location_or_404(db, location_id)
     day = on or campus_time().date()
     menus = sorted(menus_repo.menus_on(db, location_id, day), key=menu_sort_key)
+    approved = reviews_repo.approved(db)
     return [
         {
             **_menu_summary(menu),
             "items": [
                 MenuItem.model_validate(item, from_attributes=True)
-                for item in sorted(menu.items, key=lambda i: i.id)
+                for item in reviewed_items(menu, approved)
             ],
         }
         for menu in menus

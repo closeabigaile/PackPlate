@@ -86,7 +86,10 @@ class MenuItem(BaseModel):
     course: str | None  # station, e.g. "Grill Stations"
     serving_size: str | None
     allergens: list[str]  # icon traits plus the label's "Contains:" list
-    diets: list[str]
+    diets: list[str]  # NC State's diet tags, minus any removed after review
+    # Tags removed because a reviewer confirmed the ingredients contradict them,
+    # with the reason, e.g. {"vegan": "ingredients list chicken"}.
+    diets_removed: dict[str, str] = {}
     unrecognized_traits: list[str]  # names we have no key for: treat as data incomplete
     nutrition: Nutrition | None  # null = no label, so allergens come from icons only
 
