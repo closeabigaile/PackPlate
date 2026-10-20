@@ -1,6 +1,7 @@
 """Scrape alerts: what the team should hear about after a scheduled run (#3).
 
-Reads the latest ingest_runs rows and returns alerts as {"title", "body"}:
+Reads the latest ingest_runs rows and returns alerts as {"title", "body"}.
+Titles are fixed, so the workflow can update one open issue per kind of alert:
 - the latest run failed, or finished with errors (body: the run's errors);
 - no run has completed in STALE_AFTER_HOURS, so menus are going stale;
 - diet tags are waiting for review (body: a count only, never dish names, since
@@ -72,8 +73,9 @@ def alerts(db: Session, at: datetime) -> list[dict]:
     if pending:
         out.append(
             {
-                "title": f"{pending} diet tag{'s' * (pending != 1)} waiting for review",
-                "body": "Run `python -m ingestion.review_labels` to see and decide them.",
+                "title": "Diet tags waiting for review",
+                "body": f"{pending} diet tag{'s' * (pending != 1)} waiting. Run "
+                "`python -m ingestion.review_labels` to see and decide them.",
             }
         )
     return out

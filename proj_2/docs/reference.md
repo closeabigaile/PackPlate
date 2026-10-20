@@ -1608,7 +1608,8 @@ Source: [`ingestion/scrape_alerts.py`](../ingestion/scrape_alerts.py)
 ```text
 Scrape alerts: what the team should hear about after a scheduled run (#3).
 
-Reads the latest ingest_runs rows and returns alerts as {"title", "body"}:
+Reads the latest ingest_runs rows and returns alerts as {"title", "body"}.
+Titles are fixed, so the workflow can update one open issue per kind of alert:
 - the latest run failed, or finished with errors (body: the run's errors);
 - no run has completed in STALE_AFTER_HOURS, so menus are going stale;
 - diet tags are waiting for review (body: a count only, never dish names, since

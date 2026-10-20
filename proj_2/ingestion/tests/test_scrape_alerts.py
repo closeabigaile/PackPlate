@@ -46,7 +46,8 @@ def test_partial_run_alerts_but_data_is_fresh(db):
 def test_review_alert_is_a_count_only(db):
     add_run(db, "ok", stats={"label_reviews_pending": 2})
     [alert] = alerts(db, NOW)
-    assert alert["title"] == "2 diet tags waiting for review"
+    assert alert["title"] == "Diet tags waiting for review"
+    assert alert["body"].startswith("2 diet tags waiting.")
     assert "review_labels" in alert["body"]
 
 
