@@ -1,5 +1,6 @@
 import { allergenLabel, dietLabel } from "@/lib/diet";
 import { formatNumber } from "@/lib/format";
+import { stationLabel, stationRank } from "@/lib/stations";
 import type { ItemResult, MenuItem, MenuSummary, Nutrition } from "@/lib/types";
 import { StateMessage } from "./StateMessage";
 import { VerdictBadge } from "./Badges";
@@ -108,15 +109,18 @@ function Item({ item }: { item: ViewItem }) {
   );
 }
 
+// Items grouped under clean section names (lib/stations.ts), in menu order.
 function groupByCourse(items: ViewItem[]): [string, ViewItem[]][] {
   const groups = new Map<string, ViewItem[]>();
   for (const item of items) {
-    const course = item.course ?? "Other";
-    const existing = groups.get(course);
+    const label = stationLabel(item.course);
+    const existing = groups.get(label);
     if (existing) existing.push(item);
-    else groups.set(course, [item]);
+    else groups.set(label, [item]);
   }
-  return [...groups.entries()];
+  return [...groups.entries()].sort(
+    ([a], [b]) => stationRank(a) - stationRank(b),
+  );
 }
 
 export function MenuView({
@@ -126,7 +130,9 @@ export function MenuView({
   menus: ViewMenu[];
   hideConflicts?: boolean;
 }) {
-  if (menus.length === 0) {
+  // Meals NC State lists with no items aren't shown.
+  const shown = menus.filter((menu) => !menu.scraped || menu.items.length > 0);
+  if (shown.length === 0) {
     return (
       <StateMessage kind="empty">No menu is listed for this day.</StateMessage>
     );
@@ -134,7 +140,7 @@ export function MenuView({
 
   return (
     <div className="stack">
-      {menus.map((menu) => {
+      {shown.map((menu) => {
         const visible = hideConflicts
           ? menu.items.filter(
               (item) => item.results?.[0]?.verdict !== "conflicts",
@@ -144,7 +150,9 @@ export function MenuView({
 
         return (
           <section key={menu.id} aria-label={menu.meal}>
-            <h4 className="meal-title">{menu.meal}</h4>
+            <h4 className="meal-title">
+              {shown.length === 1 ? "All Day" : menu.meal}
+            </h4>
 
             {!menu.scraped ? (
               <p className="banner banner-warn">
@@ -161,16 +169,21 @@ export function MenuView({
                     profile.
                   </p>
                 ) : null}
-                {groupByCourse(visible).map(([course, items]) => (
-                  <div key={course}>
-                    <h5 className="course-title">{course}</h5>
+                {groupByCourse(visible).map(([course, items]) => {
+                  const list = (
                     <ul className="item-list">
                       {items.map((item) => (
                         <Item key={item.id} item={item} />
                       ))}
                     </ul>
-                  </div>
-                ))}
+                  );
+                  return (
+                    <div key={course}>
+                      <h5 className="course-title">{course}</h5>
+                      {list}
+                    </div>
+                  );
+                })}
               </>
             )}
           </section>
