@@ -4,7 +4,7 @@
 
 Every public module, class, and function in the Python code, with its signature and description, read from the source. The website (`frontend/`) is described in [how.md](how.md) instead.
 
-**227 of 227** modules, classes, and functions have a description.
+**259 of 259** modules, classes, and functions have a description.
 
 - **API** (`backend/app/`)
   - [`app`](#app)
@@ -52,7 +52,7 @@ Every public module, class, and function in the Python code, with its signature 
   - [`ingestion.run`](#ingestionrun)
   - [`ingestion.scrape_alerts`](#ingestionscrape_alerts)
   - [`ingestion.write`](#ingestionwrite)
-- **M0 eval** (`eval/`)
+- **M0 loop 1** (`eval/`)
   - [`eval`](#eval)
   - [`eval.baseline`](#evalbaseline)
   - [`eval.export_snapshot`](#evalexport_snapshot)
@@ -63,6 +63,14 @@ Every public module, class, and function in the Python code, with its signature 
   - [`eval.snapshot`](#evalsnapshot)
   - [`eval.spot_check`](#evalspot_check)
   - [`eval.wordlist`](#evalwordlist)
+- **M0 loop 2** (`eval_loop2/`)
+  - [`eval_loop2`](#eval_loop2)
+  - [`eval_loop2.export_snapshot`](#eval_loop2export_snapshot)
+  - [`eval_loop2.m0`](#eval_loop2m0)
+  - [`eval_loop2.profiles`](#eval_loop2profiles)
+  - [`eval_loop2.sample`](#eval_loop2sample)
+  - [`eval_loop2.simulate`](#eval_loop2simulate)
+  - [`eval_loop2.snapshot`](#eval_loop2snapshot)
 
 # API: `backend/app/`
 
@@ -1937,7 +1945,7 @@ Replace a menu's items. Returns 'new', 'changed', or 'same' versus the last scra
 contains_by_key maps nutrition keys to the "Contains:" list of a stored label;
 items whose key is absent get no nutrition link and only their icon allergens.
 
-# M0 eval: `eval/`
+# M0 loop 1: `eval/`
 
 ## `eval`
 
@@ -2343,3 +2351,325 @@ Deliberately left out, and listed as limits in the results:
   matters for halal is disputed.
 - Meat that isn't pork can't be shown to be non-halal from ingredients.
 ```
+
+# M0 loop 2: `eval_loop2/`
+
+## `eval_loop2`
+
+Source: [`eval_loop2/__init__.py`](../eval_loop2/__init__.py)
+
+M0 eval, loop 2 (pre-registered in #26): PackPlate after the ingredient flags.
+
+Kept fully separate from loop 1 (eval/): it never imports it, so either loop
+can be removed without touching the other. Small pieces that loop 1 also has
+(the test profiles, the group simulator) are copied here on purpose.
+
+Like loop 1, it runs PackPlate's real filter engine from backend/app, so
+backend/ goes on the import path here.
+
+## `eval_loop2.export_snapshot`
+
+Source: [`eval_loop2/export_snapshot.py`](../eval_loop2/export_snapshot.py)
+
+```text
+Export loop 2's frozen snapshot from the database.
+
+The days are fixed in #26: Tue Oct 20, Wed Oct 21, and Thu Oct 22, 2026, the
+first three weekdays after #17 merged. Run once, from proj_2/, with
+DATABASE_URL set:
+
+    python -m eval_loop2.export_snapshot
+
+It only reads, and it won't overwrite the snapshot once it exists. Loop 2 tests
+PackPlate as students get it, so besides menus and hours it keeps every label
+field the filter reads (ingredient flags as stored, missing nutrients, serving
+size) and the approved label reviews the API applies.
+```
+
+### `to_snapshot`
+
+```python
+def to_snapshot(locations, hours, menus, reviews, days) -> dict
+```
+
+Plain, sorted data from database rows (or anything with the same fields).
+
+Labels are stored once and items point to them by key. Menus that were
+listed but never scraped (no items) are left out. Hours include the day
+before the first day, because late hours can run past midnight.
+
+### `summary`
+
+```python
+def summary(snapshot: dict) -> dict
+```
+
+Counts worth eyeballing after an export.
+
+### `main`
+
+```python
+def main() -> int
+```
+
+Read loop 2's days from the database and write its snapshot, unless it exists.
+
+## `eval_loop2.m0`
+
+Source: [`eval_loop2/m0.py`](../eval_loop2/m0.py)
+
+```text
+M0 loop 2 (#26): is today's PackPlate safe and useful? One command, from proj_2/:
+
+    python -m eval_loop2.m0            # compute, print, and write eval_loop2/results.json
+    python -m eval_loop2.m0 --check    # recompute and fail if it differs from results.json
+
+Inputs, all committed in eval_loop2/: the frozen Oct 20-22 snapshot, the hand
+check of 50 random `fits` answers, and the simulation settings. Thresholds were
+posted in #26 before the snapshot was exported. A missed threshold is reported,
+not an error: only a crash, a stale or invalid sheet, or (with --check) a
+changed result fails.
+
+Safe: a person read the ingredients of 50 random `fits` answers (without seeing
+PackPlate's flags or reasons) and marked each ok, missed, or unclear. Target:
+0 missed. Unclear answers count neither way.
+
+Useful: a simulated group is answered if some location is open at the group's
+time and every person has at least one `fits` item on that meal's menu (or an
+all-day menu), using today's PackPlate. Unknown hours count as closed.
+```
+
+### class `StaleSheet` (Exception)
+
+The hand-check sheet doesn't match what the snapshot and draw produce.
+
+### `read_sheet`
+
+```python
+def read_sheet(path: Path=SHEET) -> list[dict]
+```
+
+The filled-in sheet, with decisions lowercased and checked.
+
+Raises StaleSheet if a decision is missing or isn't ok, missed, or unclear.
+
+### `check_sheet`
+
+```python
+def check_sheet(filled: list[dict], expected: list[dict])
+```
+
+The sheet must hold exactly the 50 answers the pre-registered draw gives.
+
+### `upper_bound`
+
+```python
+def upper_bound(misses: int, checked: int, confidence: float=0.95) -> float
+```
+
+One-sided upper confidence bound on the miss rate (exact binomial).
+
+### `safe`
+
+```python
+def safe(rows: list[dict], pool_size: int, left_out: int) -> dict
+```
+
+The Safe numbers from the hand check.
+
+### `useful`
+
+```python
+def useful(snapshot: dict, config: dict) -> dict
+```
+
+The Useful numbers: how many simulated groups today's PackPlate answers.
+
+### `incomplete_share`
+
+```python
+def incomplete_share(snapshot: dict) -> dict
+```
+
+Of every item x test profile, how today's PackPlate answers.
+
+### `evaluate`
+
+```python
+def evaluate() -> dict
+```
+
+Run the whole loop 2 eval on the committed inputs and return the result.
+
+### `render`
+
+```python
+def render(r: dict) -> str
+```
+
+The result as a short summary for the terminal.
+
+### `to_json`
+
+```python
+def to_json(r: dict) -> str
+```
+
+The result as the exact text written to eval_loop2/results.json.
+
+### `main`
+
+```python
+def main(argv=None) -> int
+```
+
+Command-line entry point. Returns the process exit code (0 or 1).
+
+## `eval_loop2.profiles`
+
+Source: [`eval_loop2/profiles.py`](../eval_loop2/profiles.py)
+
+The eleven test profiles: one per allergen PackPlate knows and one per diet.
+
+The same profiles as loop 1 (#11), as #26 says. Copied rather than imported, so
+loop 2 never depends on loop 1's code.
+
+## `eval_loop2.sample`
+
+Source: [`eval_loop2/sample.py`](../eval_loop2/sample.py)
+
+```text
+Build loop 2's hand-check sheet: 50 random `fits` answers from today's PackPlate.
+
+As pre-registered in #26: every dish x test profile on the loop 2 days is run
+through today's filter; each `fits` answer (one per recipe per profile) can be
+drawn; 50 are drawn with seed 2026. Dishes with no ingredient text can't be
+checked, so they're left out of the draw and counted.
+
+The sheet shows only what a person needs to judge the answer (the profile, the
+dish, and its full ingredient list), not PackPlate's flags, icons, or reasons,
+so the check isn't biased by them. Run once, from proj_2/:
+
+    python -m eval_loop2.sample
+
+It writes eval_loop2/data/sample.csv and refuses to overwrite it once it exists.
+The `decision` column takes "ok", "missed" (the ingredients name something the
+profile avoids), or "unclear" (the label can't tell).
+```
+
+### `fits_answers`
+
+```python
+def fits_answers(snapshot: dict) -> tuple[list[dict], int]
+```
+
+Every `fits` answer that can be checked, one per recipe per profile.
+
+Returns the answers, sorted, and how many `fits` answers had no ingredient
+text (left out, since nobody can check them).
+
+### `draw`
+
+```python
+def draw(answers: list[dict], size: int=SAMPLE_SIZE, seed: int=SEED) -> list[dict]
+```
+
+A fixed random sample, ordered by profile then dish for easier reading.
+
+### `main`
+
+```python
+def main() -> int
+```
+
+Write eval_loop2/data/sample.csv, unless a sheet already exists.
+
+## `eval_loop2.simulate`
+
+Source: [`eval_loop2/simulate.py`](../eval_loop2/simulate.py)
+
+Simulated groups for M0 loop 2's "Useful" claim. Simulated users, not real ones.
+
+A copy of loop 1's eval/simulate.py, kept here so loop 2 never depends on loop 1.
+
+Each group is 2-5 people at one of the snapshot's mealtimes. Each person
+independently gets each allergy (and halal) with the probability in
+eval_loop2/simulation.json, and one diet: vegan, vegetarian, or none. Most people end up
+with no restriction at all, as in real life. A fixed seed makes the same groups
+every run.
+
+### class `Group`
+
+One simulated group: when and at which meal they eat, and each person's needs.
+
+Fields:
+
+- `at: datetime`
+- `meal: str`
+- `people: tuple[Profile, ...]`
+
+### `load_config`
+
+```python
+def load_config(path: Path=CONFIG) -> dict
+```
+
+The simulation settings in eval_loop2/simulation.json.
+
+### `person`
+
+```python
+def person(rng: random.Random, config: dict) -> Profile
+```
+
+One simulated person, drawn with the probabilities in `config`.
+
+### `groups`
+
+```python
+def groups(config: dict) -> list[Group]
+```
+
+All the simulated groups. The same seed always gives the same groups.
+
+## `eval_loop2.snapshot`
+
+Source: [`eval_loop2/snapshot.py`](../eval_loop2/snapshot.py)
+
+Load loop 2's frozen snapshot and run today's PackPlate filter on it.
+
+"Today's PackPlate" means what the API does: approved label reviews are applied
+with the backend's own `reviewed()`, and the filter reads the stored ingredient
+flags along with NC State's icons and labels.
+
+### `load`
+
+```python
+def load(path: Path=SNAPSHOT) -> dict
+```
+
+The frozen snapshot, as written by eval_loop2/export_snapshot.py.
+
+### `approved_reviews`
+
+```python
+def approved_reviews(snapshot: dict) -> dict
+```
+
+The snapshot's approved reviews, keyed the way `reviewed()` looks them up.
+
+### `packplate_item`
+
+```python
+def packplate_item(item: dict, location_id: int, snapshot: dict, approved: dict)
+```
+
+A snapshot item as the API hands it to the filter, with reviews applied.
+
+### `verdict`
+
+```python
+def verdict(item: dict, location_id: int, snapshot: dict, approved: dict, profile)
+```
+
+Today's PackPlate verdict for one snapshot item and one profile.

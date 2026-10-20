@@ -53,3 +53,4 @@ changed, and how the result was checked.
 | 08 | [Review queue for contradicted diet tags](artifacts/08-label-reviews.md) | Morgan Simon | 2026-10-19 |
 | 09 | [Shared database and daily scrape](artifacts/09-shared-db-schedule.md) | Morgan Simon | 2026-10-19 |
 | 10 | [Menu display and nutrition info unavailable](artifacts/10-menu-display.md) | Morgan Simon | 2026-10-20 |
+| 11 | [M0 loop 2: re-testing after the fixes](artifacts/11-m0-loop-2.md) | Ethan Goodman | 2026-10-20 |

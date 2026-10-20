@@ -68,6 +68,13 @@ jobs:
           pytest eval --cov=eval --cov-config=pyproject.toml
           --junitxml="$GITHUB_WORKSPACE/test-results/eval.xml"
 
+      - name: M0 loop 2 tests
+        if: ${{ !cancelled() }}
+        working-directory: proj_2
+        run: >-
+          pytest eval_loop2 --cov=eval_loop2 --cov-config=pyproject.toml
+          --junitxml="$GITHUB_WORKSPACE/test-results/eval_loop2.xml"
+
       # docs/reference.md and docs/api.md are generated from the code.
       - name: Generated docs are up to date
         if: ${{ !cancelled() }}
@@ -84,6 +91,7 @@ jobs:
         run: >-
           python .github/scripts/test_badge.py
           test-results/backend.xml test-results/ingestion.xml test-results/eval.xml
+          test-results/eval_loop2.xml
           | tee -a "$GITHUB_OUTPUT"
 
       - name: Update test badge

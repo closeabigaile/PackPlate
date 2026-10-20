@@ -1,11 +1,14 @@
 # M0 — Risk-killer eval
 
 **Status (2026-10-18):** built and run (see Result). Safe missed, Useful met.
-The review decision still has to be recorded in the pre-registration issue
-(#11). The full scrape it
-needs now exists in the shared database (2026-10-11, issue #3): every item has
-a nutrition label, but 2,418 of 6,239 items list no allergen info, which is the
+The review decision is recorded in the pre-registration issue (#11). The full
+scrape it needs now exists in the shared database (2026-10-11, issue #3):
+every item has a nutrition label, but 2,418 of 6,239 items list no allergen info, which is the
 usefulness risk this eval measures.
+
+**Loop 2 (2026-10-20):** after the fixes loop 1 led to, a second, separate
+eval re-tested today's PackPlate on new days. Safe met, Useful met. See
+[Loop 2](#loop-2-after-the-fixes).
 
 ## The risk
 
@@ -140,4 +143,96 @@ actually worked for everyone.
   from a cited source in a config file
 - [x] `eval/m0.py` runs from a clean checkout with one command
 - [x] The eval runs in CI and fails only on a crash or a changed result
-- [ ] Results and the review decision recorded in the issue
+- [x] Results and the review decision recorded in the issue
+
+## Loop 2: after the fixes
+
+Loop 1 missed Safe: all 6 false fits were allergens or animal products NC
+State's icons leave out. In response, PackPlate now reads each dish's
+ingredient list and flags what the icons miss (#17, false alarms fixed in #20),
+the team can correct a dish's tags by hand (#19), and the menu warns that
+labels can be wrong (#23). Loop 2 checks whether today's PackPlate is safe and
+useful, on days loop 1 never saw. It was pre-registered in #26 and lives in
+`eval_loop2/`, which shares no code with loop 1's `eval/`, so either loop can
+be removed without breaking the other.
+
+### Why a hand check, not a word list
+
+The new ingredient scanner (#17) was built from loop 1's word list and tuned on
+loop 1's misfires, so scanning with that list again would check the scanner
+against itself. Instead, a person reads the ingredients.
+
+| Claim | Metric | Threshold |
+|---|---|---|
+| Safe | Of 50 random `fits` answers, how many name something the profile avoids, by a person reading the full ingredient list | 0 missed |
+| Useful | Answer rate of simulated groups, same rules and settings as loop 1 | ≥ 80% |
+
+### The instrument
+
+1. **Frozen snapshot** of Tue–Thu, 2026-10-20 to 10-22, exported from the
+   shared database after #17 merged, with the stored ingredient flags and
+   approved label reviews (there were none). `eval_loop2/data/snapshot.json`.
+2. **Sample.** Every dish × test profile is run through today's filter, as the
+   API runs it. Each `fits` answer with ingredient text, one per recipe and
+   profile, can be drawn: 7,774 in all. 50 were drawn with seed 2026.
+   `eval_loop2/sample.py` writes `eval_loop2/data/sample.csv`.
+3. **Hand check.** The sheet shows the profile, the dish, and its ingredients,
+   not PackPlate's flags or reasons. Each row is marked `ok`, `missed`, or
+   `unclear` (the label can't tell).
+4. **Simulated groups.** A copy of loop 1's simulator and settings (seed 510,
+   1,000 groups of 2–5), with only the days changed.
+5. **Eval script.** `python -m eval_loop2.m0` writes
+   `eval_loop2/results.json`. Its own CI job (`m0_loop2.yml`) fails only on a
+   crash, a sheet that no longer matches the draw, or a changed result.
+
+**Natural flavors.** Agreed before any row was judged, and posted in #26: a
+"natural flavors" ingredient is `unclear` for pork, halal, vegan, and
+vegetarian profiles, since the label doesn't say where it comes from. For
+dairy, egg, gluten, nuts, seafood, sesame, and soy it's `ok`: US law requires
+those allergens to be named even inside flavorings (FALCPA, and the FASTER Act
+for sesame). For gluten that law covers wheat but not barley or rye, a gap
+this check accepts.
+
+### Result
+
+| | Loop 2 |
+|---|---|
+| `fits` answers that could be drawn | 7,774 (294 more had no ingredient text) |
+| Hand check of 50 | 45 ok, **0 missed**, 5 unclear |
+| Miss rate, 95% upper bound | 6.4% (over the 45 decided answers) |
+| Simulated groups answered (target: 80%) | **90.2%** (88.8% of groups with a restriction) |
+| Answers held back as `incomplete` | 9.6% |
+
+- **Safe: met.** No sampled answer named something the profile avoids. All 5
+  unclear answers were "natural flavors" for a pork, halal, vegan, or
+  vegetarian profile.
+- **Useful: met,** but lower than loop 1's 100%. The days and the filter both
+  changed between loops, so this can't say how much of the drop the new flags
+  caused.
+
+### Limits
+
+- 0 in 50 doesn't mean 0: the miss rate is at most 6.4% at 95% confidence.
+  Loop 1 scanned every `fits` answer; loop 2 samples 50, so the two Safe
+  numbers measure different things.
+- If all 5 unclear answers were really misses, Safe would be missed. Their
+  labels can't settle it.
+- The 294 `fits` answers with no ingredient text can't be checked by anyone.
+- One person did the hand check; it isn't double-checked.
+- The snapshot days were already in the database while #20 tuned the scanner,
+  so the scanner may have been tuned on some of these dishes. The hand check
+  doesn't depend on the scanner, so it still checks the result.
+- The natural-flavors rule was agreed before any row was judged but posted in
+  #26 at 2:34 pm, one minute after the sheet was first saved (2:33 pm).
+- The same limits as loop 1 apply: NC State's text, not the kitchen; "nuts"
+  and "seafood" are as broad as the source; simulated users aren't real.
+
+### Checklist
+
+- [x] Thresholds, days, sample size, and seed posted in #26 before the run
+- [x] Snapshot exported and committed
+- [x] Sample drawn with the posted seed and committed
+- [x] All 50 rows judged by hand; decisions committed in the sheet
+- [x] `eval_loop2/m0.py` runs from a clean checkout with one command
+- [x] Its own CI job and badge, separate from loop 1
+- [x] Results recorded in #26

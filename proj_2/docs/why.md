@@ -74,6 +74,21 @@ lists inside PackPlate itself and flag what the icons leave out
 NetNutrition's filter only reads the icons, and the eval can measure whether
 reading the ingredients works.
 
+**So we fixed it and tested again.** PackPlate now reads every ingredient list
+and flags what the icons leave out, the team can correct a dish's tags by hand,
+and the menu warns that labels can be wrong. A second, separate test
+([issue #26](https://github.com/morgansimon425/PackPlate/issues/26)) checked
+today's PackPlate on new days. This time a person read the ingredients of 50
+random `fits` answers, so the test doesn't rely on PackPlate's own scanner:
+
+| Target | Result |
+|---|---|
+| **Safe:** 0 of 50 random `fits` answers contain something the person avoids | ✅ **0** missed (5 couldn't be told from the label) |
+| **Useful:** at least 80% of simulated groups have somewhere everyone can eat | ✅ **90.2%** of 1,000 groups |
+
+0 in 50 doesn't prove PackPlate is never wrong; it means a mistake rate of at
+most 6.4%, with 95% confidence.
+
 ## Sources
 
 - The problem, audience, and stakeholders: the
@@ -81,5 +96,5 @@ reading the ingredients works.
   Mission Statement, Stakeholders).
 - What PackPlate does: the code, described in the
   [code reference](reference.md) and the [HTTP API](api.md).
-- The evidence: [the M0 plan](m0-eval.md) and
-  [its results](../eval/results.json).
+- The evidence: [the M0 plan](m0-eval.md) and its results, for
+  [loop 1](../eval/results.json) and [loop 2](../eval_loop2/results.json).
