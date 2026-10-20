@@ -95,6 +95,24 @@ def test_plant_based_rule_only_skips_the_next_word():
     ) == ["gluten", "soy"]
 
 
+def test_soybean_oil_is_exempt_however_it_is_written():
+    # Real wordings from NC State's labels.
+    assert possible_allergens("French Fries, Soybean and/or Canola Oil, Salt") == []
+    assert possible_allergens("Vegetable Oil (Soybean and/or Canola), Salt") == []
+    assert (
+        possible_allergens("Oil (contains one or more of: canola, palm, soybean)") == []
+    )
+
+
+def test_other_soy_next_to_soybean_oil_still_counts():
+    text = "Margarine (Oil (Soybean Oil, Hydrogenated Soybean Oil, Salt, Soy Lecithin))"
+    assert possible_allergens(text) == ["soy"]
+    assert possible_allergens("Tofu, Soybean and/or Canola Oil") == ["soy"]
+    # M0 case: the oil bracket can still name a real allergen.
+    text = "Vegetable Oil (Peanut, Cottonseed, Soybean and/or Sunflower Seed)"
+    assert possible_allergens(text) == ["nuts"]
+
+
 def test_peanut_butter_is_still_a_nut():
     assert possible_allergens("Peanut Butter, Celery") == ["nuts"]
 

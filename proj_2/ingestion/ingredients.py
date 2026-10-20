@@ -118,6 +118,28 @@ _ADVISORY = re.compile(
 )
 _FREE_OF = re.compile(r"\b[a-z]+[- ]free\b|\bnon-?dairy\b", re.I)
 
+# Highly refined soybean oil is exempt (see EXCEPT), but labels don't always say
+# "soybean oil". "Soybean" also names the oil when it's in a list that ends in
+# "oil" ("Soybean and/or Canola Oil") or inside an oil's brackets ("Vegetable Oil
+# (Soybean, Canola)"). Other soy in those brackets ("soy lecithin") still counts.
+_SOYBEAN_IN_OIL_LIST = re.compile(
+    r"\bsoybeans?\b(?=(?:\s*(?:,|and/or|and|or)\s*[a-z]+)*\s+oils?\b)", re.I
+)
+_OIL_BRACKET = re.compile(r"\boils?\s*\(([^()]*)\)", re.I)
+_BARE_SOYBEAN = re.compile(
+    r"\bsoybeans?\b(?!\s+(?:lecithin|protein|flour|sauce))", re.I
+)
+
+
+def _drop_soybean_oil(text: str) -> str:
+    """Remove "soybean" where it names an exempt oil, keeping all other soy."""
+    text = _OIL_BRACKET.sub(
+        lambda m: m.group(0).replace(m.group(1), _BARE_SOYBEAN.sub(" ", m.group(1))),
+        text,
+    )
+    return _SOYBEAN_IN_OIL_LIST.sub(" ", text)
+
+
 # Plant-based modifiers and the plant-based brands that appear in NC State's
 # ingredient text. An animal-product word directly after one ("Vegan Mozzarella",
 # "Plant-Based Beef", "Impossible Sausage") names an imitation, so it is skipped.
@@ -160,6 +182,7 @@ def matched_terms(ingredients: str | None) -> dict[str, list[str]]:
         return {}
     text = _ADVISORY.sub(" ", ingredients)
     text = _IMITATION.sub(r" \1 ", text)
+    text = _drop_soybean_oil(text)
     for pattern, keep in _EXCEPT:
         text = pattern.sub(f" {keep} ", text)
     text = _FREE_OF.sub(" ", text)
