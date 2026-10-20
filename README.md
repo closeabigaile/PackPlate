@@ -8,7 +8,8 @@
 [![Prettier](https://github.com/morgansimon425/PackPlate/actions/workflows/prettier.yml/badge.svg?branch=dev)](https://github.com/morgansimon425/PackPlate/actions/workflows/prettier.yml?query=branch%3Adev)
 [![ESLint](https://github.com/morgansimon425/PackPlate/actions/workflows/eslint.yml/badge.svg?branch=dev)](https://github.com/morgansimon425/PackPlate/actions/workflows/eslint.yml?query=branch%3Adev)
 [![Typecheck](https://github.com/morgansimon425/PackPlate/actions/workflows/typecheck.yml/badge.svg?branch=dev)](https://github.com/morgansimon425/PackPlate/actions/workflows/typecheck.yml?query=branch%3Adev)
-[![M0 eval](https://github.com/morgansimon425/PackPlate/actions/workflows/m0.yml/badge.svg?branch=dev)](https://github.com/morgansimon425/PackPlate/actions/workflows/m0.yml?query=branch%3Adev)
+[![M0 loop 1](https://github.com/morgansimon425/PackPlate/actions/workflows/m0.yml/badge.svg?branch=dev)](https://github.com/morgansimon425/PackPlate/actions/workflows/m0.yml?query=branch%3Adev)
+[![M0 loop 2](https://github.com/morgansimon425/PackPlate/actions/workflows/m0_loop2.yml/badge.svg?branch=dev)](https://github.com/morgansimon425/PackPlate/actions/workflows/m0_loop2.yml?query=branch%3Adev)
 
 A website that helps NC State students decide where to eat on campus. It puts
 dining hours, menus, and nutrition information from every campus dining

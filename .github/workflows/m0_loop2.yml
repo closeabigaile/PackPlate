@@ -1,0 +1,39 @@
+# Reruns M0 loop 2 (#26) and checks it reproduces eval_loop2/results.json.
+# Passing means the committed numbers reproduce, not that the targets were met
+# (the targets are in #26; the result is in results.json).
+# It fails if the eval crashes, the hand-check sheet no longer matches the
+# snapshot and the draw, or the numbers change without results.json being updated.
+# Kept separate from m0.yml (loop 1) so either loop can be removed on its own.
+name: M0 loop 2
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  m0_loop2:
+    name: M0 loop 2 reproduces
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: proj_2
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: |
+            proj_2/requirements-dev.txt
+            proj_2/backend/requirements.txt
+            proj_2/ingestion/requirements.txt
+
+      - name: Install dependencies
+        run: pip install -r requirements-dev.txt
+
+      - name: Run loop 2 and compare with results.json
+        run: python -m eval_loop2.m0 --check
