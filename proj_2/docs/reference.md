@@ -4,7 +4,7 @@
 
 Every public module, class, and function in the Python code, with its signature and description, read from the source. The website (`frontend/`) is described in [how.md](how.md) instead.
 
-**207 of 207** modules, classes, and functions have a description.
+**225 of 225** modules, classes, and functions have a description.
 
 - **API** (`backend/app/`)
   - [`app`](#app)
@@ -18,6 +18,7 @@ Every public module, class, and function in the Python code, with its signature 
   - [`app.repositories`](#apprepositories)
   - [`app.repositories.crowd_reports`](#apprepositoriescrowd_reports)
   - [`app.repositories.ingest_runs`](#apprepositoriesingest_runs)
+  - [`app.repositories.label_reviews`](#apprepositorieslabel_reviews)
   - [`app.repositories.locations`](#apprepositorieslocations)
   - [`app.repositories.menus`](#apprepositoriesmenus)
   - [`app.schemas`](#appschemas)
@@ -30,6 +31,7 @@ Every public module, class, and function in the Python code, with its signature 
   - [`app.services.filter_engine`](#appservicesfilter_engine)
   - [`app.services.freshness`](#appservicesfreshness)
   - [`app.services.hours`](#appserviceshours)
+  - [`app.services.label_reviews`](#appserviceslabel_reviews)
   - [`app.services.menus`](#appservicesmenus)
 - **Database** (`db/`)
   - [`db`](#db)
@@ -43,8 +45,10 @@ Every public module, class, and function in the Python code, with its signature 
   - [`ingestion.discrepancy_report`](#ingestiondiscrepancy_report)
   - [`ingestion.fetch`](#ingestionfetch)
   - [`ingestion.ingredients`](#ingestioningredients)
+  - [`ingestion.label_reviews`](#ingestionlabel_reviews)
   - [`ingestion.normalize`](#ingestionnormalize)
   - [`ingestion.parse`](#ingestionparse)
+  - [`ingestion.review_labels`](#ingestionreview_labels)
   - [`ingestion.run`](#ingestionrun)
   - [`ingestion.scrape_alerts`](#ingestionscrape_alerts)
   - [`ingestion.write`](#ingestionwrite)
@@ -282,6 +286,20 @@ def latest_completed(db: Session) -> IngestRun | None
 ```
 
 The most recent run that finished with data: status "ok" or "partial".
+
+## `app.repositories.label_reviews`
+
+Source: [`backend/app/repositories/label_reviews.py`](../backend/app/repositories/label_reviews.py)
+
+Queries for approved label reviews (#18). Read-only: ingestion writes them.
+
+### `approved`
+
+```python
+def approved(db: Session) -> dict[tuple[int, str, str], tuple[list[str], str]]
+```
+
+Approved reviews: (location_id, dish, ingredients_hash) -> (tags to remove, reason).
 
 ## `app.repositories.locations`
 
@@ -552,6 +570,7 @@ Fields:
 - `serving_size: str | None`
 - `allergens: list[str]`
 - `diets: list[str]`
+- `diets_removed: dict[str, str]`
 - `unrecognized_traits: list[str]`
 - `nutrition: Nutrition | None`
 
@@ -782,6 +801,53 @@ Whether a location is open at `at`.
 today / yesterday are HoursDay rows (anything with .date, .status,
 .windows) for at's date and the day before, or None if not stored.
 
+## `app.services.label_reviews`
+
+Source: [`backend/app/services/label_reviews.py`](../backend/app/services/label_reviews.py)
+
+Apply approved label reviews (#18): remove diet tags a person confirmed are contradicted.
+
+NC State's data in the database is never changed. Each menu item is returned as
+a view with the approved tags taken out of `diets` and the reasons in
+`diets_removed`, e.g. {"vegan": "ingredients list chicken"}. A decision only
+applies to the exact ingredient text it was made on, so if NC State changes the
+ingredients, the tags come back until someone reviews the new text.
+
+dish_name and ingredients_hash must match ingestion/label_reviews.py (a test
+checks this).
+
+### `dish_name`
+
+```python
+def dish_name(name: str) -> str
+```
+
+How a dish is matched across menus: its name, lowercased, spaces collapsed.
+
+### `ingredients_hash`
+
+```python
+def ingredients_hash(ingredients: str | None) -> str
+```
+
+Fingerprint of the ingredient text a decision was made on (sha256 hex).
+
+### `reviewed`
+
+```python
+def reviewed(item, location_id: int, approved: Approved) -> SimpleNamespace
+```
+
+A read-only view of `item` with any approved diet tags removed.
+
+### `reviewed_items`
+
+```python
+def reviewed_items(menu, approved: Approved) -> list[SimpleNamespace]
+```
+
+A menu's items in id order, each with approved reviews applied.
+
 ## `app.services.menus`
 
 Source: [`backend/app/services/menus.py`](../backend/app/services/menus.py)
@@ -849,7 +915,8 @@ Source: [`db/models.py`](../db/models.py)
 Tables.
 
 Single writer per table (proj_1b report, Figure 1):
-    ingestion/  writes locations, hours_days, menus, menu_items, nutrition, ingest_runs
+    ingestion/  writes locations, hours_days, menus, menu_items, nutrition, ingest_runs,
+                label_reviews
     backend/    reads those; writes only crowd_reports
 
 Unknown stays unknown: a NULL nutrient or a missing label means "not published",
@@ -985,6 +1052,32 @@ Fields:
 - `location_id: Mapped[int]`
 - `level: Mapped[str]`
 - `created_at: Mapped[datetime]`
+
+### class `LabelReview` (Base)
+
+A diet tag that NC State's own ingredients contradict, for a person to decide.
+Writer: ingestion (the scraper adds pending rows; the review command decides).
+
+A dish is a location plus its name (NetNutrition gives it a new item id on
+every menu). ingredients_hash pins the decision to the ingredient text it was
+made on: if NC State changes the ingredients, a new review is needed.
+Approved rows tell the API to remove `tags` from the dish; NC State's own
+data in menu_items is never changed.
+
+Fields:
+
+- `id: Mapped[int]`
+- `location_id: Mapped[int]`
+- `dish: Mapped[str]`
+- `item_name: Mapped[str]`
+- `tags: Mapped[list]`
+- `words: Mapped[list]`
+- `ingredients_hash: Mapped[str]`
+- `status: Mapped[str]`
+- `first_seen_at: Mapped[datetime]`
+- `decided_at: Mapped[datetime | None]`
+- `decided_by: Mapped[str | None]`
+- `reason: Mapped[str | None]`
 
 ## `db.session`
 
@@ -1223,6 +1316,56 @@ def possible_allergens(ingredients: str | None) -> list[str]
 
 Keys the ingredient text mentions, sorted. [] if none or no text.
 
+## `ingestion.label_reviews`
+
+Source: [`ingestion/label_reviews.py`](../ingestion/label_reviews.py)
+
+Label reviews: find diet tags that an item's own ingredients contradict (#18).
+
+After each scrape, every item tagged vegan, vegetarian, or halal is checked
+against its label's ingredients. A contradiction becomes a `pending` row in
+label_reviews for a person to approve or reject. One row per dish and
+ingredient text: a repeat scrape adds nothing, and new ingredient text needs a
+new decision.
+
+The diet rules follow the sources in ingestion/ingredients.py (Vegetarian
+Society, Vegan Society; pork for halal) and match DIET_DOUBTED_BY in
+backend/app/services/filter_engine.py.
+
+### `dish_name`
+
+```python
+def dish_name(name: str) -> str
+```
+
+How a dish is matched across menus: its name, lowercased, spaces collapsed.
+
+### `ingredients_hash`
+
+```python
+def ingredients_hash(ingredients: str | None) -> str
+```
+
+Fingerprint of the ingredient text a decision is made on (sha256 hex).
+
+### `contradictions`
+
+```python
+def contradictions(diets: list[str], ingredients: str | None) -> dict[str, list[str]]
+```
+
+Diet tags the ingredients contradict, with the words why: {"vegan": ["chicken"]}.
+
+### `record`
+
+```python
+def record(db: Session, start: date, end: date, now: datetime) -> tuple[int, int]
+```
+
+Add pending reviews for contradicted items on scraped menus from start to end.
+
+Returns (new reviews added, reviews pending in total). The caller commits.
+
 ## `ingestion.normalize`
 
 Source: [`ingestion/normalize.py`](../ingestion/normalize.py)
@@ -1444,6 +1587,46 @@ def hours_label_matches(label: str, day: date) -> bool
 
 The hours box says 'Monday, Sep. 28' with no year; check weekday and day of month.
 
+## `ingestion.review_labels`
+
+Source: [`ingestion/review_labels.py`](../ingestion/review_labels.py)
+
+```text
+Review contradicted diet tags: list pending reviews, then approve or reject each (#18).
+
+Approving removes the review's tags from that dish in the API; rejecting keeps
+NC State's tags. Every decision records who made it, when, and why.
+
+Usage (from proj_2/, with DATABASE_URL set and migrations applied):
+    python -m ingestion.review_labels
+    python -m ingestion.review_labels --approve 1 --by "Morgan" --reason "lists chicken"
+    python -m ingestion.review_labels --reject 2 --by "Morgan" --reason "plant-based"
+```
+
+### `pending`
+
+```python
+def pending(db: Session) -> list[dict]
+```
+
+Pending reviews, oldest first, with the ingredient text each one is about.
+
+### `decide`
+
+```python
+def decide(db: Session, review_id: int, status: str, by: str, reason: str, at: datetime) -> LabelReview
+```
+
+Approve or reject one pending review. The caller commits.
+
+### `main`
+
+```python
+def main(argv: list[str] | None=None) -> int
+```
+
+Command-line entry point: list pending reviews, or record one decision.
+
 ## `ingestion.run`
 
 Source: [`ingestion/run.py`](../ingestion/run.py)
@@ -1485,6 +1668,8 @@ Fields:
 - `labels_reused: int`
 - `labels_stale_reused: int`
 - `label_mismatches: int`
+- `label_reviews_new: int`
+- `label_reviews_pending: int`
 - `requests: int`
 
 ### class `LabelCache`
@@ -1539,6 +1724,14 @@ def execute(self)
 ```
 
 Scrape the selected units: locations, hours, then each unit's menus.
+
+#### `record_label_reviews`
+
+```python
+def record_label_reviews(self)
+```
+
+Queue diet tags that the scraped ingredients contradict, for review (#18).
 
 #### `ingest_hours`
 

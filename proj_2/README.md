@@ -155,6 +155,19 @@ Every run writes an `ingest_runs` row (status `ok` / `partial` / `failed`, stats
 errors) and prints a summary. A problem in one location or menu is recorded and
 the job moves on. Only one run can happen at a time.
 
+**Reviewing diet tags.** When an item's ingredients contradict its diet tag (for
+example, tagged vegetarian but listing chicken), the run queues it for review and
+the summary shows `label_reviews_pending`. To decide:
+
+```bash
+python -m ingestion.review_labels                                   # list pending reviews
+python -m ingestion.review_labels --approve 1 --by NAME --reason "..." # remove the tags
+python -m ingestion.review_labels --reject 1 --by NAME --reason "..."  # keep them
+```
+
+Approved tags are removed from the API's menus and filters; NC State's data is kept
+as published.
+
 **Sources and etiquette.** Menus and nutrition come from NC State's NetNutrition
 (`netmenu2.cbord.com`), hours from `dining.ncsu.edu`. The job is deliberately
 slow (1 request/s, sequential, identifying User-Agent, labels cached). NC State

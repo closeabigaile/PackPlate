@@ -22,7 +22,7 @@ from sqlalchemy.orm import Session
 from db.migrate import check_current
 from db.models import IngestRun, Nutrition
 from db.session import make_engine, make_session_factory
-from ingestion import parse, write
+from ingestion import label_reviews, parse, write
 from ingestion.config import CAMPUS_TZ, DEFAULT_DAYS, LABEL_MAX_AGE_DAYS, MAX_DAYS
 from ingestion.fetch import DiningSiteClient, FetchError, NetNutritionClient
 from ingestion.normalize import UNIT_TO_DINING_SLUG, nutrition_key, same_dish
@@ -58,6 +58,8 @@ class Stats:
     labels_reused: int = 0  # stored and younger than LABEL_MAX_AGE_DAYS
     labels_stale_reused: int = 0  # older, but this run couldn't fetch a new one
     label_mismatches: int = 0
+    label_reviews_new: int = 0  # contradicted diet tags found this run
+    label_reviews_pending: int = 0  # waiting for a person to decide
     requests: int = 0
 
 
@@ -156,6 +158,22 @@ class Job:
                     self.nn.start_session()
                 except Exception as e2:
                     self.error(f"session reset failed: {e2}")
+
+        self.record_label_reviews()
+
+    def record_label_reviews(self):
+        """Queue diet tags that the scraped ingredients contradict, for review (#18)."""
+        try:
+            new, pending = label_reviews.record(
+                self.db, self.days[0], self.days[-1], write.now()
+            )
+            self.db.commit()
+        except Exception as e:
+            self.db.rollback()
+            self.error(f"label reviews: {e}")
+            return
+        self.stats.label_reviews_new = new
+        self.stats.label_reviews_pending = pending
 
     # ---------- hours (dining.ncsu.edu) ----------
 

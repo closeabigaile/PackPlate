@@ -1,7 +1,8 @@
 """Tables.
 
 Single writer per table (proj_1b report, Figure 1):
-    ingestion/  writes locations, hours_days, menus, menu_items, nutrition, ingest_runs
+    ingestion/  writes locations, hours_days, menus, menu_items, nutrition, ingest_runs,
+                label_reviews
     backend/    reads those; writes only crowd_reports
 
 Unknown stays unknown: a NULL nutrient or a missing label means "not published",
@@ -214,3 +215,45 @@ class CrowdReport(Base):
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
     )
+
+
+class LabelReview(Base):
+    """A diet tag that NC State's own ingredients contradict, for a person to decide.
+    Writer: ingestion (the scraper adds pending rows; the review command decides).
+
+    A dish is a location plus its name (NetNutrition gives it a new item id on
+    every menu). ingredients_hash pins the decision to the ingredient text it was
+    made on: if NC State changes the ingredients, a new review is needed.
+    Approved rows tell the API to remove `tags` from the dish; NC State's own
+    data in menu_items is never changed.
+    """
+
+    __tablename__ = "label_reviews"
+    __table_args__ = (
+        CheckConstraint(
+            "status IN ('pending', 'approved', 'rejected')",
+            name="ck_label_reviews_status",
+        ),
+        Index(
+            "uq_label_reviews_dish_ingredients",
+            "location_id",
+            "dish",
+            "ingredients_hash",
+            unique=True,
+        ),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    location_id: Mapped[int] = mapped_column(
+        ForeignKey("locations.id", ondelete="CASCADE")
+    )
+    dish: Mapped[str] = mapped_column(String(300))  # item name, lowercased
+    item_name: Mapped[str] = mapped_column(String(300))  # as NC State shows it
+    tags: Mapped[list] = mapped_column(JSONB)  # contradicted diet tags, ["vegan"]
+    words: Mapped[list] = mapped_column(JSONB)  # ingredient words, ["chicken"]
+    ingredients_hash: Mapped[str] = mapped_column(String(64))  # sha256 of the text
+    status: Mapped[str] = mapped_column(String(10), default="pending")
+    first_seen_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    decided_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    decided_by: Mapped[str | None] = mapped_column(String(100))
+    reason: Mapped[str | None] = mapped_column(Text)
