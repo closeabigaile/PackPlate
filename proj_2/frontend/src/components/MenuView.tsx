@@ -231,6 +231,97 @@ function groupByCourse(items: ViewItem[]): [string, ViewItem[][]][] {
     .sort(([a], [b]) => stationRank(a) - stationRank(b));
 }
 
+// Meal tabs in the order a day runs; NC State's "Daily" menu is served all day.
+const MEAL_ORDER = ["Breakfast", "Brunch", "Lunch", "Dinner", "Daily"];
+
+function mealOrder(meal: string): number {
+  const i = MEAL_ORDER.indexOf(meal);
+  return i === -1 ? MEAL_ORDER.length : i;
+}
+
+function mealName(meal: string): string {
+  return meal === "Daily" ? "All Day" : meal;
+}
+
+// For today's menus, the meal that's on now or next (by campus time); for other
+// days, the first meal. Only picks which tab opens first.
+function defaultMeal(menus: ViewMenu[]): string {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "America/New_York",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: "h23",
+  }).formatToParts(new Date());
+  const get = (type: string) => parts.find((p) => p.type === type)?.value;
+  const today = `${get("year")}-${get("month")}-${get("day")}`;
+  const minutes = Number(get("hour")) * 60 + Number(get("minute"));
+  if (menus[0].date !== today) return menus[0].meal;
+  const now = minutes < 630 ? "Breakfast" : minutes < 960 ? "Lunch" : "Dinner";
+  return menus.some((m) => m.meal === now) ? now : menus[0].meal;
+}
+
+function MenuBody({
+  menu,
+  hideConflicts,
+}: {
+  menu: ViewMenu;
+  hideConflicts: boolean;
+}) {
+  if (!menu.scraped) {
+    return (
+      <p className="banner banner-warn">
+        This menu is listed, but its items haven’t been loaded yet.
+      </p>
+    );
+  }
+  const sections = groupByCourse(menu.items).map(
+    ([course, dishes]): [string, ViewItem[][]] => [
+      course,
+      // With a profile: fits first, then needs a check, then doesn't fit (by
+      // each dish's best size; ties keep NC State's order). A dish is hidden
+      // only when none of its sizes fit.
+      dishes
+        .filter(
+          (sizes) =>
+            !hideConflicts ||
+            sizes.some((s) => s.results?.[0]?.verdict !== "conflicts"),
+        )
+        .sort((a, b) => Math.min(...a.map(rank)) - Math.min(...b.map(rank))),
+    ],
+  );
+  const total = groupByCourse(menu.items).reduce(
+    (n, [, dishes]) => n + dishes.length,
+    0,
+  );
+  const hidden = total - sections.reduce((n, [, d]) => n + d.length, 0);
+
+  return (
+    <>
+      {hidden > 0 ? (
+        <p className="help">
+          {hidden} item{hidden === 1 ? "" : "s"} hidden because{" "}
+          {hidden === 1 ? "it doesn’t" : "they don’t"} fit your profile.
+        </p>
+      ) : null}
+      {sections.map(([course, dishes]) =>
+        dishes.length === 0 ? null : (
+          <div key={course}>
+            <h5 className="course-title">{course}</h5>
+            <ul className="item-list">
+              {dishes.map((sizes) => (
+                <Item key={sizes[0].id} sizes={sizes} />
+              ))}
+            </ul>
+          </div>
+        ),
+      )}
+    </>
+  );
+}
+
 export function MenuView({
   menus,
   hideConflicts = false,
@@ -238,83 +329,45 @@ export function MenuView({
   menus: ViewMenu[];
   hideConflicts?: boolean;
 }) {
+  const [chosen, setChosen] = useState<string | null>(null);
   // Meals NC State lists with no items aren't shown.
-  const shown = menus.filter((menu) => !menu.scraped || menu.items.length > 0);
+  const shown = menus
+    .filter((menu) => !menu.scraped || menu.items.length > 0)
+    .sort((a, b) => mealOrder(a.meal) - mealOrder(b.meal));
   if (shown.length === 0) {
     return (
       <StateMessage kind="empty">No menu is listed for this day.</StateMessage>
     );
   }
 
+  const meal = shown.some((m) => m.meal === chosen)
+    ? chosen
+    : defaultMeal(shown);
+  const menu = shown.find((m) => m.meal === meal) ?? shown[0];
+
   return (
     <div className="stack">
-      {shown.map((menu) => {
-        const sections = groupByCourse(menu.items).map(
-          ([course, dishes]): [string, ViewItem[][]] => [
-            course,
-            // With a profile: fits first, then needs a check, then doesn't
-            // fit (by each dish's best size; ties keep NC State's order). A
-            // dish is hidden only when none of its sizes fit.
-            dishes
-              .filter(
-                (sizes) =>
-                  !hideConflicts ||
-                  sizes.some((s) => s.results?.[0]?.verdict !== "conflicts"),
-              )
-              .sort(
-                (a, b) => Math.min(...a.map(rank)) - Math.min(...b.map(rank)),
-              ),
-          ],
-        );
-        const total = groupByCourse(menu.items).reduce(
-          (n, [, dishes]) => n + dishes.length,
-          0,
-        );
-        const shownDishes = sections.reduce((n, [, d]) => n + d.length, 0);
-        const hidden = total - shownDishes;
-
-        return (
-          <section key={menu.id} aria-label={menu.meal}>
-            <h4 className="meal-title">
-              {shown.length === 1 ? "All Day" : menu.meal}
-            </h4>
-
-            {!menu.scraped ? (
-              <p className="banner banner-warn">
-                This menu is listed, but its items haven’t been loaded yet.
-              </p>
-            ) : menu.items.length === 0 ? (
-              <p className="meta">No items on this menu.</p>
-            ) : (
-              <>
-                {hidden > 0 ? (
-                  <p className="help">
-                    {hidden} item{hidden === 1 ? "" : "s"} hidden because{" "}
-                    {hidden === 1 ? "it doesn’t" : "they don’t"} fit your
-                    profile.
-                  </p>
-                ) : null}
-                {sections.map(([course, dishes]) => {
-                  if (dishes.length === 0) return null;
-                  const list = (
-                    <ul className="item-list">
-                      {dishes.map((sizes) => (
-                        <Item key={sizes[0].id} sizes={sizes} />
-                      ))}
-                    </ul>
-                  );
-                  return (
-                    <div key={course}>
-                      <h5 className="course-title">{course}</h5>
-                      {list}
-                    </div>
-                  );
-                })}
-              </>
-            )}
-          </section>
-        );
-      })}
+      {shown.length > 1 ? (
+        <div className="meal-tabs" role="tablist" aria-label="Meal">
+          {shown.map((m) => (
+            <button
+              key={m.id}
+              type="button"
+              role="tab"
+              aria-selected={m.id === menu.id}
+              className="meal-tab"
+              onClick={() => setChosen(m.meal)}
+            >
+              {mealName(m.meal)}
+            </button>
+          ))}
+        </div>
+      ) : (
+        <h4 className="meal-title">All Day</h4>
+      )}
+      <section aria-label={mealName(menu.meal)}>
+        <MenuBody menu={menu} hideConflicts={hideConflicts} />
+      </section>
     </div>
   );
 }
