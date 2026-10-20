@@ -4,7 +4,7 @@
 
 Every public module, class, and function in the Python code, with its signature and description, read from the source. The website (`frontend/`) is described in [how.md](how.md) instead.
 
-**204 of 204** modules, classes, and functions have a description.
+**207 of 207** modules, classes, and functions have a description.
 
 - **API** (`backend/app/`)
   - [`app`](#app)
@@ -46,6 +46,7 @@ Every public module, class, and function in the Python code, with its signature 
   - [`ingestion.normalize`](#ingestionnormalize)
   - [`ingestion.parse`](#ingestionparse)
   - [`ingestion.run`](#ingestionrun)
+  - [`ingestion.scrape_alerts`](#ingestionscrape_alerts)
   - [`ingestion.write`](#ingestionwrite)
 - **M0 eval** (`eval/`)
   - [`eval`](#eval)
@@ -1599,6 +1600,39 @@ def main(argv: list[str] | None=None) -> int
 Command-line entry point: run once and print the result.
 
 Exit code 0 if the run was ok or partial, 1 if it failed, 2 if it didn't start.
+
+## `ingestion.scrape_alerts`
+
+Source: [`ingestion/scrape_alerts.py`](../ingestion/scrape_alerts.py)
+
+```text
+Scrape alerts: what the team should hear about after a scheduled run (#3).
+
+Reads the latest ingest_runs rows and returns alerts as {"title", "body"}:
+- the latest run failed, or finished with errors (body: the run's errors);
+- no run has completed in STALE_AFTER_HOURS, so menus are going stale;
+- diet tags are waiting for review (body: a count only, never dish names, since
+  alerts become public GitHub issues; details stay in `ingestion.review_labels`).
+
+Usage (from proj_2/, with DATABASE_URL set):
+    python -m ingestion.scrape_alerts     prints the alerts as JSON
+```
+
+### `alerts`
+
+```python
+def alerts(db: Session, at: datetime) -> list[dict]
+```
+
+Alerts for the team, most important first. [] when all is well.
+
+### `main`
+
+```python
+def main(argv: list[str] | None=None) -> int
+```
+
+Command-line entry point: print the current alerts as a JSON list.
 
 ## `ingestion.write`
 
