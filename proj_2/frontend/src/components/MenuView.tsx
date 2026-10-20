@@ -198,7 +198,18 @@ function Item({ sizes }: { sizes: ViewItem[] }) {
             </p>
           ) : null}
 
-          {item.nutrition ? (
+          {item.nutrition && item.nutrition_unavailable ? (
+            <div>
+              <p className="banner banner-warn">
+                Nutrition info unavailable for this item.
+              </p>
+              {item.nutrition.ingredients ? (
+                <p className="help">
+                  Ingredients: {item.nutrition.ingredients}
+                </p>
+              ) : null}
+            </div>
+          ) : item.nutrition ? (
             <NutritionTable nutrition={item.nutrition} />
           ) : (
             <p className="banner banner-warn">
