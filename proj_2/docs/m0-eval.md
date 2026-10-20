@@ -223,7 +223,7 @@ this check accepts.
   so the scanner may have been tuned on some of these dishes. The hand check
   doesn't depend on the scanner, so it still checks the result.
 - The natural-flavors rule was agreed before any row was judged but posted in
-  #26 at 2:34 pm, three minutes after the sheet was first saved (2:31 pm).
+  #26 at 2:34 pm, one minute after the sheet was first saved (2:33 pm).
 - The same limits as loop 1 apply: NC State's text, not the kitchen; "nuts"
   and "seafood" are as broad as the source; simulated users aren't real.
 
