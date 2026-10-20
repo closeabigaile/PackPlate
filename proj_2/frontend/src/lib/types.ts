@@ -74,6 +74,9 @@ export interface Nutrition {
   ingredients: string | null;
   contains: string[];
   missing_fields: string[];
+  // Possible allergens the ingredients mention, e.g. { dairy: ["whey"] }.
+  // Never confirmed: shown as "check the label", not as "contains".
+  ingredient_flags: Record<string, string[]>;
   fetched_at: string;
 }
 
@@ -83,7 +86,9 @@ export interface MenuItem {
   course: string | null;
   serving_size: string | null;
   allergens: string[];
-  diets: string[];
+  diets: string[]; // NC State's tags, minus any removed after review
+  // Tags removed because a reviewer confirmed the ingredients contradict them.
+  diets_removed?: Record<string, string>;
   unrecognized_traits: string[];
   nutrition: Nutrition | null; // null = no label, allergens come from icons only
 }
