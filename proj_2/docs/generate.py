@@ -24,7 +24,8 @@ PACKAGES = [
     ("API", "backend/app", "app"),
     ("Database", "db", "db"),
     ("Scraper", "ingestion", "ingestion"),
-    ("M0 eval", "eval", "eval"),
+    ("M0 loop 1", "eval", "eval"),
+    ("M0 loop 2", "eval_loop2", "eval_loop2"),
 ]
 SKIP_DIRS = {"tests", "migrations", "__pycache__"}
 MISSING = "_No description yet._"
@@ -121,6 +122,8 @@ def reference() -> str:
     ref = Reference()
     toc = []
     for title, src, dotted in PACKAGES:
+        if not (PROJ / src).is_dir():
+            continue  # e.g. an eval loop that was removed
         found = modules(src, dotted)
         ref.out += [f"# {title}: `{src}/`", ""]
         toc.append(f"- **{title}** (`{src}/`)")

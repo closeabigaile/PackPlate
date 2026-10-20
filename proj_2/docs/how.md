@@ -186,6 +186,15 @@ python -m eval.m0 --check    # compare with the committed results instead
 It needs no database: it reads the frozen snapshot in `eval/data/`. The
 plan, method, and limits are in [m0-eval.md](m0-eval.md).
 
+Loop 2, the re-test after the fixes, is separate and runs the same way:
+
+```bash
+python -m eval_loop2.m0            # print the results and write eval_loop2/results.json
+python -m eval_loop2.m0 --check    # compare with the committed results instead
+```
+
+It reads its own snapshot and hand-check sheet in `eval_loop2/data/`.
+
 ### Change a filter rule safely
 
 The rules that decide `fits`, `conflicts`, and `incomplete` are at the top of
@@ -197,7 +206,10 @@ allergy is told, so after changing one:
 2. **Rerun M0.** `python -m eval.m0 --check` (back in `proj_2/`) fails if your
    change moved the M0 numbers. If that's intended, run `python -m eval.m0`
    and commit the new `eval/results.json` with your change, so the results
-   always match the code.
+   always match the code. Do the same for loop 2 with `eval_loop2.m0` and
+   `eval_loop2/results.json`. If a change moves loop 2's sample, its
+   `--check` refuses the old hand-check sheet: the 50 rows have to be drawn
+   and judged again.
 3. **Update the docs** if you changed a docstring or the API (below).
 
 ### Run the scraper
