@@ -89,6 +89,8 @@ export interface MenuItem {
   diets: string[]; // NC State's tags, minus any removed after review
   // Tags removed because a reviewer confirmed the ingredients contradict them.
   diets_removed?: Record<string, string>;
+  // NC State's label is incomplete: show "Nutrition info unavailable", not its numbers.
+  nutrition_unavailable?: boolean;
   unrecognized_traits: string[];
   nutrition: Nutrition | null; // null = no label, allergens come from icons only
 }

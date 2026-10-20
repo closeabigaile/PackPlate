@@ -4,7 +4,7 @@
 
 Every public module, class, and function in the Python code, with its signature and description, read from the source. The website (`frontend/`) is described in [how.md](how.md) instead.
 
-**225 of 225** modules, classes, and functions have a description.
+**227 of 227** modules, classes, and functions have a description.
 
 - **API** (`backend/app/`)
   - [`app`](#app)
@@ -313,7 +313,11 @@ Queries for locations and their hours. Read-only: ingestion writes these tables.
 def list_locations(db: Session) -> list[Location]
 ```
 
-Every location, sorted by name.
+Locations that have ever had a menu with items, sorted by name.
+
+NetNutrition lists some cafés that never publish menus (or only long-stale
+ones). They're left out of every page. Their hours are still scraped, and a
+location appears as soon as one of its menus has items.
 
 ### `get_location`
 
@@ -571,6 +575,7 @@ Fields:
 - `allergens: list[str]`
 - `diets: list[str]`
 - `diets_removed: dict[str, str]`
+- `nutrition_unavailable: bool`
 - `unrecognized_traits: list[str]`
 - `nutrition: Nutrition | None`
 
@@ -678,6 +683,9 @@ Diets the profile requires
                                                                         doesn't prove either way
 Goals (min protein, max calories, max sodium)
     no label, or the label doesn't give that nutrient       incomplete
+    a placeholder label (a prepared food per 1 gram, or a   incomplete
+      dish of the day with no ingredients), or NC State
+      flags that nutrient as incomplete
     outside the limit                                       conflicts
 
 Overall: any conflict -> conflicts, else any incomplete -> incomplete, else fits.
@@ -703,6 +711,35 @@ Fields:
 
 - `verdict: str`
 - `reasons: list[str]`
+
+### `is_placeholder`
+
+```python
+def is_placeholder(label, name: str='') -> bool
+```
+
+```text
+A label whose numbers can't be used for goals.
+
+- A prepared food listed per 1 gram ("Gram (1g)": a bagel at 0 calories).
+  A plain item per gram (black pepper, lettuce: one ingredient or none)
+  really is about zero, so it's left alone.
+- A dish of the day ("Soup Du Jour") with no ingredients listed: the recipe
+  changes daily, so its label is a stand-in.
+Small vegetable portions that read all zeros are real and left alone.
+```
+
+### `nutrition_unavailable`
+
+```python
+def nutrition_unavailable(label, name: str='') -> bool
+```
+
+Whether to show an item's label as "nutrition info unavailable" instead of its numbers.
+
+True for a placeholder label, or one whose calories NC State itself flags
+as incomplete. Other flagged nutrients (often just protein) leave the rest
+of the label usable, so they don't hide it.
 
 ### `check`
 

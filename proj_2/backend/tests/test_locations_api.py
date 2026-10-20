@@ -10,6 +10,9 @@ def test_list_locations_with_open_status(client, seed):
     seed.location(1, "Fountain Dining Hall", "fountain")
     seed.location(2, "Case Dining Hall", "case")
     seed.location(12, "Talley - 1887 Bistro", None)
+    for location_id, menu_id in ((1, 31), (2, 32), (12, 33)):  # listed: has menu data
+        seed.menu(menu_id, location_id, WED, "Lunch")
+        seed.item(menu_id, "Soup")
     seed.hours(1, TUE, windows=[(420, 1260)], raw_text="7:00am - 9:00pm")
     seed.hours(2, TUE, windows=[(420, 600), (660, 810)])
 
@@ -49,6 +52,8 @@ def test_list_locations_with_open_status(client, seed):
 
 def test_list_uses_yesterdays_window_after_midnight(client, seed):
     seed.location(1)
+    seed.menu(31, 1, WED, "Lunch")
+    seed.item(31, "Soup")
     seed.hours(1, MON, windows=[(420, 1500)])
     seed.hours(1, TUE, status="closed", raw_text="Closed all day")
     [loc] = client.get("/locations", params={"at": "2026-10-06T00:30:00-04:00"}).json()
@@ -79,6 +84,16 @@ def test_location_detail_has_a_week_of_hours_and_upcoming_menus(client, seed):
         ("2026-10-06", "Daily", False),
         ("2026-10-07", "Lunch", True),
     ]
+
+
+def test_locations_without_menu_items_are_not_listed(client, seed):
+    seed.location(1)
+    seed.menu(31, 1, WED, "Lunch")
+    seed.item(31, "Soup")
+    seed.location(13, "Starbucks", "starbucks")
+    seed.menu(32, 13, WED, "Lunch")  # listed by NetNutrition, but no items
+    seed.location(17, "Port City Java", None)  # no menus at all
+    assert [loc["id"] for loc in client.get("/locations").json()] == [1]
 
 
 def test_unknown_location_is_404(client, seed):
@@ -136,6 +151,17 @@ def test_all_menus_for_a_day_with_items_and_nutrition(client, seed):
     mystery = breakfast["items"][1]
     assert mystery["nutrition"] is None  # no label: allergens are icons only
     assert mystery["unrecognized_traits"] == ["Contains Shellfish"]
+
+
+def test_incomplete_label_is_marked_unavailable(client, seed):
+    seed.location(1)
+    seed.menu(11, 1, TUE, "Lunch")
+    seed.nutrition("1|grinder|sandwich", calories=0, missing_fields=["Calories"])
+    seed.item(11, "Meatball Grinder", nutrition_key="1|grinder|sandwich")
+    seed.item(11, "Apple")
+    [menu] = client.get("/locations/1/menus", params={"date": "2026-10-06"}).json()
+    unavailable = {i["name"]: i["nutrition_unavailable"] for i in menu["items"]}
+    assert unavailable == {"Meatball Grinder": True, "Apple": False}
 
 
 def test_day_without_menus_is_empty(client, seed):

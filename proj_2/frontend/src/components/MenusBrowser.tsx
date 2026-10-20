@@ -255,7 +255,7 @@ export function MenusBrowser({
                     checked={hideConflicts}
                     onChange={(event) => setHideConflicts(event.target.checked)}
                   />
-                  Hide items that don’t fit (items we can’t confirm stay
+                  Hide items that don’t fit (items that need a check stay
                   visible)
                 </label>
               </>

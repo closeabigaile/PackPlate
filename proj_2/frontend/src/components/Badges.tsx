@@ -1,5 +1,6 @@
 import { CROWD_LABELS } from "@/lib/diet";
 import type { Crowd, Verdict } from "@/lib/types";
+import { reasonSummary } from "@/lib/verdicts";
 
 // Meaning is always in the words, never in colour alone.
 
@@ -27,10 +28,17 @@ export function CrowdBadge({ crowd }: { crowd: Crowd }) {
   );
 }
 
-export function VerdictBadge({ verdict }: { verdict: Verdict }) {
+export function VerdictBadge({
+  verdict,
+  reasons = [],
+}: {
+  verdict: Verdict;
+  reasons?: string[];
+}) {
   if (verdict === "fits") return <span className="pill pill-ok">✓ Fits</span>;
   if (verdict === "conflicts") {
     return <span className="pill pill-bad">✕ Doesn’t fit</span>;
   }
-  return <span className="pill pill-warn">? Can’t confirm</span>;
+  // Name what's uncertain ("Not labeled Halal"), not a generic "unknown".
+  return <span className="pill pill-warn">{reasonSummary(reasons)}</span>;
 }

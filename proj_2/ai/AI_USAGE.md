@@ -52,3 +52,4 @@ changed, and how the result was checked.
 | 07 | [Ingredient-based allergen flags](artifacts/07-allergen-flags.md) | Morgan Simon | 2026-10-19 |
 | 08 | [Review queue for contradicted diet tags](artifacts/08-label-reviews.md) | Morgan Simon | 2026-10-19 |
 | 09 | [Shared database and daily scrape](artifacts/09-shared-db-schedule.md) | Morgan Simon | 2026-10-19 |
+| 10 | [Menu display and nutrition info unavailable](artifacts/10-menu-display.md) | Morgan Simon | 2026-10-20 |
