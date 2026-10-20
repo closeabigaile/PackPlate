@@ -4,7 +4,7 @@
 
 Every public module, class, and function in the Python code, with its signature and description, read from the source. The website (`frontend/`) is described in [how.md](how.md) instead.
 
-**215 of 215** modules, classes, and functions have a description.
+**222 of 222** modules, classes, and functions have a description.
 
 - **API** (`backend/app/`)
   - [`app`](#app)
@@ -18,6 +18,7 @@ Every public module, class, and function in the Python code, with its signature 
   - [`app.repositories`](#apprepositories)
   - [`app.repositories.crowd_reports`](#apprepositoriescrowd_reports)
   - [`app.repositories.ingest_runs`](#apprepositoriesingest_runs)
+  - [`app.repositories.label_reviews`](#apprepositorieslabel_reviews)
   - [`app.repositories.locations`](#apprepositorieslocations)
   - [`app.repositories.menus`](#apprepositoriesmenus)
   - [`app.schemas`](#appschemas)
@@ -30,6 +31,7 @@ Every public module, class, and function in the Python code, with its signature 
   - [`app.services.filter_engine`](#appservicesfilter_engine)
   - [`app.services.freshness`](#appservicesfreshness)
   - [`app.services.hours`](#appserviceshours)
+  - [`app.services.label_reviews`](#appserviceslabel_reviews)
   - [`app.services.menus`](#appservicesmenus)
 - **Database** (`db/`)
   - [`db`](#db)
@@ -283,6 +285,20 @@ def latest_completed(db: Session) -> IngestRun | None
 ```
 
 The most recent run that finished with data: status "ok" or "partial".
+
+## `app.repositories.label_reviews`
+
+Source: [`backend/app/repositories/label_reviews.py`](../backend/app/repositories/label_reviews.py)
+
+Queries for approved label reviews (#18). Read-only: ingestion writes them.
+
+### `approved`
+
+```python
+def approved(db: Session) -> dict[tuple[int, str, str], tuple[list[str], str]]
+```
+
+Approved reviews: (location_id, dish, ingredients_hash) -> (tags to remove, reason).
 
 ## `app.repositories.locations`
 
@@ -553,6 +569,7 @@ Fields:
 - `serving_size: str | None`
 - `allergens: list[str]`
 - `diets: list[str]`
+- `diets_removed: dict[str, str]`
 - `unrecognized_traits: list[str]`
 - `nutrition: Nutrition | None`
 
@@ -782,6 +799,53 @@ Whether a location is open at `at`.
 
 today / yesterday are HoursDay rows (anything with .date, .status,
 .windows) for at's date and the day before, or None if not stored.
+
+## `app.services.label_reviews`
+
+Source: [`backend/app/services/label_reviews.py`](../backend/app/services/label_reviews.py)
+
+Apply approved label reviews (#18): remove diet tags a person confirmed are contradicted.
+
+NC State's data in the database is never changed. Each menu item is returned as
+a view with the approved tags taken out of `diets` and the reasons in
+`diets_removed`, e.g. {"vegan": "ingredients list chicken"}. A decision only
+applies to the exact ingredient text it was made on, so if NC State changes the
+ingredients, the tags come back until someone reviews the new text.
+
+dish_name and ingredients_hash must match ingestion/label_reviews.py (a test
+checks this).
+
+### `dish_name`
+
+```python
+def dish_name(name: str) -> str
+```
+
+How a dish is matched across menus: its name, lowercased, spaces collapsed.
+
+### `ingredients_hash`
+
+```python
+def ingredients_hash(ingredients: str | None) -> str
+```
+
+Fingerprint of the ingredient text a decision was made on (sha256 hex).
+
+### `reviewed`
+
+```python
+def reviewed(item, location_id: int, approved: Approved) -> SimpleNamespace
+```
+
+A read-only view of `item` with any approved diet tags removed.
+
+### `reviewed_items`
+
+```python
+def reviewed_items(menu, approved: Approved) -> list[SimpleNamespace]
+```
+
+A menu's items in id order, each with approved reviews applied.
 
 ## `app.services.menus`
 

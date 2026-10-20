@@ -11,12 +11,14 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
 from app.deps import get_db
+from app.repositories import label_reviews as reviews_repo
 from app.repositories import locations as locations_repo
 from app.repositories import menus as menus_repo
 from app.schemas.filters import FilteredMenu, FilterRequest, GroupLocation
 from app.schemas.locations import MenuItem
 from app.services import filter_engine
 from app.services.hours import campus_time, open_state
+from app.services.label_reviews import reviewed_items
 from app.services.menus import menu_sort_key
 
 router = APIRouter(prefix="/filters", tags=["filters"])
@@ -48,6 +50,7 @@ def filter_menus(
     profiles = _profiles(request)
     day = on or campus_time().date()
     menus = sorted(menus_repo.menus_on(db, location_id, day), key=menu_sort_key)
+    approved = reviews_repo.approved(db)
     return [
         {
             "id": menu.id,
@@ -59,7 +62,7 @@ def filter_menus(
                     **MenuItem.model_validate(item, from_attributes=True).model_dump(),
                     "results": [vars(filter_engine.check(item, p)) for p in profiles],
                 }
-                for item in sorted(menu.items, key=lambda i: i.id)
+                for item in reviewed_items(menu, approved)
             ],
         }
         for menu in menus
@@ -76,9 +79,12 @@ def filter_group(
     """
     at = campus_time(at)
     profiles = _profiles(request)
+    approved = reviews_repo.approved(db)
     items_by_location: dict[int, list] = {}
     for menu in menus_repo.all_menus_on(db, at.date()):
-        items_by_location.setdefault(menu.location_id, []).extend(menu.items)
+        items_by_location.setdefault(menu.location_id, []).extend(
+            reviewed_items(menu, approved)
+        )
     hours = locations_repo.hours_between(db, at.date() - timedelta(days=1), at.date())
 
     results = []
