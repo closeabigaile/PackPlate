@@ -4,7 +4,7 @@
 
 Every public module, class, and function in the Python code, with its signature and description, read from the source. The website (`frontend/`) is described in [how.md](how.md) instead.
 
-**204 of 204** modules, classes, and functions have a description.
+**205 of 205** modules, classes, and functions have a description.
 
 - **API** (`backend/app/`)
   - [`app`](#app)
@@ -848,7 +848,8 @@ Source: [`db/models.py`](../db/models.py)
 Tables.
 
 Single writer per table (proj_1b report, Figure 1):
-    ingestion/  writes locations, hours_days, menus, menu_items, nutrition, ingest_runs
+    ingestion/  writes locations, hours_days, menus, menu_items, nutrition, ingest_runs,
+                label_reviews
     backend/    reads those; writes only crowd_reports
 
 Unknown stays unknown: a NULL nutrient or a missing label means "not published",
@@ -984,6 +985,32 @@ Fields:
 - `location_id: Mapped[int]`
 - `level: Mapped[str]`
 - `created_at: Mapped[datetime]`
+
+### class `LabelReview` (Base)
+
+A diet tag that NC State's own ingredients contradict, for a person to decide.
+Writer: ingestion (the scraper adds pending rows; the review command decides).
+
+A dish is a location plus its name (NetNutrition gives it a new item id on
+every menu). ingredients_hash pins the decision to the ingredient text it was
+made on: if NC State changes the ingredients, a new review is needed.
+Approved rows tell the API to remove `tags` from the dish; NC State's own
+data in menu_items is never changed.
+
+Fields:
+
+- `id: Mapped[int]`
+- `location_id: Mapped[int]`
+- `dish: Mapped[str]`
+- `item_name: Mapped[str]`
+- `tags: Mapped[list]`
+- `words: Mapped[list]`
+- `ingredients_hash: Mapped[str]`
+- `status: Mapped[str]`
+- `first_seen_at: Mapped[datetime]`
+- `decided_at: Mapped[datetime | None]`
+- `decided_by: Mapped[str | None]`
+- `reason: Mapped[str | None]`
 
 ## `db.session`
 
