@@ -1,4 +1,4 @@
-import { allergenLabel, dietLabel } from "@/lib/diet";
+import { ALLERGENS, allergenLabel, dietLabel } from "@/lib/diet";
 import { formatNumber } from "@/lib/format";
 import { startsCollapsed, stationLabel, stationRank } from "@/lib/stations";
 import type { ItemResult, MenuItem, MenuSummary, Nutrition } from "@/lib/types";
@@ -48,9 +48,19 @@ function NutritionTable({ nutrition }: { nutrition: Nutrition }) {
   );
 }
 
+// Allergens the ingredients mention that NC State's label doesn't list.
+function possibleAllergens(item: ViewItem): [string, string[]][] {
+  const flags = item.nutrition?.ingredient_flags ?? {};
+  return ALLERGENS.filter(
+    (a) => flags[a.key] && !item.allergens.includes(a.key),
+  ).map((a) => [a.key, flags[a.key]]);
+}
+
 function Item({ item }: { item: ViewItem }) {
   const result = item.results?.[0];
   const tone = result ? `item item-${result.verdict}` : "item";
+  const possible = possibleAllergens(item);
+  const removed = Object.entries(item.diets_removed ?? {});
 
   return (
     <li className={tone}>
@@ -63,6 +73,9 @@ function Item({ item }: { item: ViewItem }) {
               {dietLabel(diet)}
             </span>
           ))}
+          {possible.length > 0 ? (
+            <span className="pill pill-warn">Check label</span>
+          ) : null}
         </summary>
 
         <div className="item-detail">
@@ -86,6 +99,28 @@ function Item({ item }: { item: ViewItem }) {
               ))
             )}
           </p>
+
+          {possible.length > 0 ? (
+            <p className="banner banner-warn">
+              The ingredients mention{" "}
+              {possible
+                .map(
+                  ([key, words]) =>
+                    `${words.join(", ")} (${allergenLabel(key)})`,
+                )
+                .join("; ")}
+              , which NC State’s label doesn’t list. Check the label or ask
+              dining staff.
+            </p>
+          ) : null}
+
+          {removed.length > 0 ? (
+            <p className="banner banner-warn">
+              NC State lists this as{" "}
+              {removed.map(([diet]) => dietLabel(diet)).join(" and ")}, but
+              PackPlate doesn’t: {removed[0][1]}.
+            </p>
+          ) : null}
 
           {item.unrecognized_traits.length > 0 ? (
             <p className="banner banner-warn">
