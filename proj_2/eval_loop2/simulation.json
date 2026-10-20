@@ -1,0 +1,76 @@
+{
+ "about": "Settings for M0 loop 2's simulated groups (#26). A copy of loop 1's eval/simulation.json with only the days changed, kept here so loop 2 never depends on loop 1. Settings for M0's simulated groups. These are simulated users, not real ones. Each person independently gets each allergy and halal with the probability below; diet is one of vegan, vegetarian, or none. Probabilities are for US adults, not NC State students.",
+ "seed": 510,
+ "groups": 1000,
+ "group_size": [
+  2,
+  5
+ ],
+ "days": [
+  "2026-10-20",
+  "2026-10-21",
+  "2026-10-22"
+ ],
+ "times": {
+  "08:00": "Breakfast",
+  "12:30": "Lunch",
+  "18:00": "Dinner"
+ },
+ "all_day_menus": [
+  "Daily",
+  "Gluten Friendly"
+ ],
+ "avoid": {
+  "dairy": {
+   "p": 0.019,
+   "source": "Gupta RS et al. Prevalence and Severity of Food Allergies Among US Adults. JAMA Netw Open. 2019;2(1):e185630. https://jamanetwork.com/journals/jamanetworkopen/fullarticle/2720064",
+   "quote": "milk (1.9%; 95% CI, 1.8%-2.1%)"
+  },
+  "egg": {
+   "p": 0.008,
+   "source": "Gupta et al. 2019 (above), Table 2, all ages",
+   "quote": "Egg 0.8% (95% CI, 0.7%-0.9%)"
+  },
+  "gluten": {
+   "p": 0.008,
+   "source": "Gupta et al. 2019 (above), Table 2, all ages: wheat allergy",
+   "quote": "Wheat 0.8% (95% CI, 0.7%-0.9%)"
+  },
+  "nuts": {
+   "p": 0.03,
+   "source": "Gupta et al. 2019 (above): peanut plus tree nut, added. NC State's \"Contains Nuts\" covers both. Adding overstates a little, since some people have both.",
+   "quote": "peanut (1.8%; 95% CI, 1.7%-1.9%), tree nut (1.2%; 95% CI, 1.1%-1.3%)"
+  },
+  "seafood": {
+   "p": 0.038,
+   "source": "Gupta et al. 2019 (above): shellfish plus fin fish, added. NC State's \"Contains Seafood\" covers both. Adding overstates a little.",
+   "quote": "shellfish (2.9%; 95% CI, 2.7%-3.1%) ... fin fish (0.9%; 95% CI, 0.8%-1.0%)"
+  },
+  "sesame": {
+   "p": 0.002,
+   "source": "Gupta et al. 2019 (above), Table 2, all ages",
+   "quote": "Sesame 0.2% (95% CI, 0.2%-0.3%)"
+  },
+  "soy": {
+   "p": 0.006,
+   "source": "Gupta et al. 2019 (above), Table 2, all ages",
+   "quote": "Soy 0.6% (95% CI, 0.5%-0.7%)"
+  },
+  "pork": {
+   "p": 0.004,
+   "source": "Pew Research Center, Jewish Americans in 2020 (2021): 2.4% of US adults are Jewish, and 17% of them keep kosher at home; 0.024 x 0.17 = 0.004. Halal (below) covers Muslims separately. https://www.pewresearch.org/religion/2021/05/11/jewish-practices-and-customs/ and https://www.pewresearch.org/short-reads/2021/05/11/10-key-findings-about-jewish-americans/",
+   "quote": "17% of U.S. Jews keep kosher at home; 2.4% of U.S. adults are Jewish"
+  }
+ },
+ "halal": {
+  "p": 0.011,
+  "source": "Pew Research Center, New estimates show U.S. Muslim population continues to grow (2018). Treats every Muslim as keeping halal, which overstates it. https://www.pewresearch.org/short-reads/2018/01/03/new-estimates-show-u-s-muslim-population-continues-to-grow/",
+  "quote": "Muslims made up about 1.1% of the total U.S. population (2017)"
+ },
+ "diet": {
+  "vegan": 0.01,
+  "vegetarian": 0.04,
+  "source": "Gallup, Snapshot: Few Americans Vegetarian or Vegan (2023). https://news.gallup.com/poll/510038/identify-vegetarian-vegan.aspx",
+  "quote": "about 4% of Americans identify as vegetarian and 1% as vegan"
+ }
+}

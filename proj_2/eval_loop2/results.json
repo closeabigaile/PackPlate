@@ -1,0 +1,65 @@
+{
+ "answers": {
+  "answers": 31086,
+  "fits": 0.7278,
+  "incomplete": 0.0959
+ },
+ "days": [
+  "2026-10-20",
+  "2026-10-21",
+  "2026-10-22"
+ ],
+ "loop": 2,
+ "safe": {
+  "fits_answers_in_pool": 7774,
+  "fits_answers_left_out_no_ingredients": 294,
+  "miss_rate_upper_bound_95": 0.0644,
+  "missed": 0,
+  "missed_answers": [],
+  "ok": 45,
+  "sampled": 50,
+  "unclear": 5,
+  "unclear_answers": [
+   {
+    "item": "Quinoa Pilaf",
+    "note": "natural flavors; source not stated",
+    "profile": "avoids pork"
+   },
+   {
+    "item": "Vegan Cheese Pizza",
+    "note": "natural flavors; source not stated",
+    "profile": "avoids pork"
+   },
+   {
+    "item": "Plant-Based Breakfast Sausage Patty",
+    "note": "natural flavors; source not stated",
+    "profile": "eats halal"
+   },
+   {
+    "item": "Chips and Salsa",
+    "note": "natural flavors; source not stated",
+    "profile": "is vegan"
+   },
+   {
+    "item": "Black Bean Patty",
+    "note": "natural flavors; source not stated",
+    "profile": "is vegetarian"
+   }
+  ]
+ },
+ "thresholds": {
+  "safe_max_missed": 0,
+  "useful_min_answer_rate": 0.8
+ },
+ "useful": {
+  "answer_rate": 0.902,
+  "answer_rate_with_restrictions": 0.8879,
+  "answered": 902,
+  "groups": 1000,
+  "groups_with_restrictions": 473
+ },
+ "verdict": {
+  "safe_met": true,
+  "useful_met": true
+ }
+}
