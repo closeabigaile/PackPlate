@@ -171,6 +171,7 @@ A menu item with one result per profile, in request order.
 | `allergens` | list of string | yes |
 | `diets` | list of string | yes |
 | `diets_removed` | object | no |
+| `nutrition_unavailable` | boolean | no |
 | `unrecognized_traits` | list of string | yes |
 | `nutrition` | [Nutrition](#nutrition) or null | yes |
 | `results` | list of [ItemResult](#itemresult) | yes |
@@ -298,6 +299,7 @@ One dish on a menu, with its allergens, diets, and nutrition label if it has one
 | `allergens` | list of string | yes |
 | `diets` | list of string | yes |
 | `diets_removed` | object | no |
+| `nutrition_unavailable` | boolean | no |
 | `unrecognized_traits` | list of string | yes |
 | `nutrition` | [Nutrition](#nutrition) or null | yes |
 

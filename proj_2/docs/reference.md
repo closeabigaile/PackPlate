@@ -4,7 +4,7 @@
 
 Every public module, class, and function in the Python code, with its signature and description, read from the source. The website (`frontend/`) is described in [how.md](how.md) instead.
 
-**223 of 223** modules, classes, and functions have a description.
+**224 of 224** modules, classes, and functions have a description.
 
 - **API** (`backend/app/`)
   - [`app`](#app)
@@ -574,6 +574,7 @@ Fields:
 - `allergens: list[str]`
 - `diets: list[str]`
 - `diets_removed: dict[str, str]`
+- `nutrition_unavailable: bool`
 - `unrecognized_traits: list[str]`
 - `nutrition: Nutrition | None`
 
@@ -726,6 +727,18 @@ A label whose numbers can't be used for goals.
   changes daily, so its label is a stand-in.
 Small vegetable portions that read all zeros are real and left alone.
 ```
+
+### `nutrition_unavailable`
+
+```python
+def nutrition_unavailable(label, name: str='') -> bool
+```
+
+Whether to show an item's label as "nutrition info unavailable" instead of its numbers.
+
+True for a placeholder label, or one whose calories NC State itself flags
+as incomplete. Other flagged nutrients (often just protein) leave the rest
+of the label usable, so they don't hide it.
 
 ### `check`
 

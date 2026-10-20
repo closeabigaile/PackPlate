@@ -109,6 +109,19 @@ def is_placeholder(label, name: str = "") -> bool:
     return "," in ingredients
 
 
+def nutrition_unavailable(label, name: str = "") -> bool:
+    """Whether to show an item's label as "nutrition info unavailable" instead of its numbers.
+
+    True for a placeholder label, or one whose calories NC State itself flags
+    as incomplete. Other flagged nutrients (often just protein) leave the rest
+    of the label usable, so they don't hide it.
+    """
+    if label is None:
+        return False
+    flagged = getattr(label, "missing_fields", None) or []
+    return is_placeholder(label, name) or "Calories" in flagged
+
+
 def check(item, profile: Profile) -> Result:
     """One item against one profile.
 

@@ -153,6 +153,17 @@ def test_all_menus_for_a_day_with_items_and_nutrition(client, seed):
     assert mystery["unrecognized_traits"] == ["Contains Shellfish"]
 
 
+def test_incomplete_label_is_marked_unavailable(client, seed):
+    seed.location(1)
+    seed.menu(11, 1, TUE, "Lunch")
+    seed.nutrition("1|grinder|sandwich", calories=0, missing_fields=["Calories"])
+    seed.item(11, "Meatball Grinder", nutrition_key="1|grinder|sandwich")
+    seed.item(11, "Apple")
+    [menu] = client.get("/locations/1/menus", params={"date": "2026-10-06"}).json()
+    unavailable = {i["name"]: i["nutrition_unavailable"] for i in menu["items"]}
+    assert unavailable == {"Meatball Grinder": True, "Apple": False}
+
+
 def test_day_without_menus_is_empty(client, seed):
     seed.location(1)
     assert client.get("/locations/1/menus", params={"date": "2026-10-09"}).json() == []

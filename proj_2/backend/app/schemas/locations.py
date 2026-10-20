@@ -90,6 +90,9 @@ class MenuItem(BaseModel):
     # Tags removed because a reviewer confirmed the ingredients contradict them,
     # with the reason, e.g. {"vegan": "ingredients list chicken"}.
     diets_removed: dict[str, str] = {}
+    # NC State's label for this item is incomplete (e.g. 0 calories for a full
+    # sandwich): show "nutrition info unavailable" instead of its numbers.
+    nutrition_unavailable: bool = False
     unrecognized_traits: list[str]  # names we have no key for: treat as data incomplete
     nutrition: Nutrition | None  # null = no label, so allergens come from icons only
 

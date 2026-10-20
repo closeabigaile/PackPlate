@@ -14,6 +14,8 @@ import hashlib
 import re
 from types import SimpleNamespace
 
+from app.services.filter_engine import nutrition_unavailable
+
 Approved = dict[tuple[int, str, str], tuple[list[str], str]]
 
 
@@ -45,6 +47,7 @@ def reviewed(item, location_id: int, approved: Approved) -> SimpleNamespace:
         diets_removed=removed,
         unrecognized_traits=item.unrecognized_traits,
         nutrition=label,
+        nutrition_unavailable=nutrition_unavailable(label, item.name),
     )
 
 
