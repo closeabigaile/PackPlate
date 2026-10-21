@@ -50,14 +50,6 @@ export function SiteHeader() {
               {link.label}
             </Link>
           ))}
-          <Link
-            href="/login"
-            className="nav-login"
-            aria-current={pathname === "/login" ? "page" : undefined}
-            onClick={() => setOpen(false)}
-          >
-            Log in
-          </Link>
         </nav>
       </div>
     </header>
