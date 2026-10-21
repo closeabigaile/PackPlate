@@ -1,0 +1,19 @@
+cff-version: 1.2.0
+message: "If you use PackPlate, please cite it as below."
+title: PackPlate
+abstract: >-
+  A website that helps NC State students decide where to eat on campus. It puts
+  dining hours, menus, and nutrition information from every campus dining
+  location in one place, and filters the menus by dietary restrictions and goals.
+type: software
+authors:
+  - given-names: Ethan
+    family-names: Goodman
+  - given-names: Moe
+    family-names: Ko
+  - given-names: Savanah
+    family-names: Hendzel
+  - given-names: Morgan
+    family-names: Simon
+repository-code: "https://github.com/morgansimon425/PackPlate"
+license: MIT
