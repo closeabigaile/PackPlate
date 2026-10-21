@@ -3,6 +3,7 @@
 <!-- Badges report the dev branch. Each links to its workflow runs on dev. -->
 [![Tests](https://github.com/morgansimon425/PackPlate/actions/workflows/tests.yml/badge.svg?branch=dev)](https://github.com/morgansimon425/PackPlate/actions/workflows/tests.yml?query=branch%3Adev)
 [![Test count](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/EthanGoodman/723b874f576ec1c7acbc27ac884ffeca/raw/packplate-tests.json)](https://github.com/morgansimon425/PackPlate/actions/workflows/tests.yml?query=branch%3Adev)
+[![Coverage](https://codecov.io/gh/morgansimon425/PackPlate/branch/dev/graph/badge.svg)](https://app.codecov.io/gh/morgansimon425/PackPlate/tree/dev)
 [![Ruff](https://github.com/morgansimon425/PackPlate/actions/workflows/ruff.yml/badge.svg?branch=dev)](https://github.com/morgansimon425/PackPlate/actions/workflows/ruff.yml?query=branch%3Adev)
 [![Black](https://github.com/morgansimon425/PackPlate/actions/workflows/black.yml/badge.svg?branch=dev)](https://github.com/morgansimon425/PackPlate/actions/workflows/black.yml?query=branch%3Adev)
 [![Prettier](https://github.com/morgansimon425/PackPlate/actions/workflows/prettier.yml/badge.svg?branch=dev)](https://github.com/morgansimon425/PackPlate/actions/workflows/prettier.yml?query=branch%3Adev)

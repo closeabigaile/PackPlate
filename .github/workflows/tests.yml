@@ -52,6 +52,7 @@ jobs:
         run: >-
           pytest --cov=app --cov-config=../pyproject.toml
           --junitxml="$GITHUB_WORKSPACE/test-results/backend.xml"
+          --cov-report=xml:"$GITHUB_WORKSPACE/coverage/backend.xml"
 
       - name: Ingestion tests
         # Run even if the backend failed, so the badge counts both suites.
@@ -60,6 +61,7 @@ jobs:
         run: >-
           pytest ingestion --cov=ingestion --cov=db --cov-config=pyproject.toml
           --junitxml="$GITHUB_WORKSPACE/test-results/ingestion.xml"
+          --cov-report=xml:"$GITHUB_WORKSPACE/coverage/ingestion.xml"
 
       - name: M0 eval tests
         if: ${{ !cancelled() }}
@@ -67,6 +69,7 @@ jobs:
         run: >-
           pytest eval --cov=eval --cov-config=pyproject.toml
           --junitxml="$GITHUB_WORKSPACE/test-results/eval.xml"
+          --cov-report=xml:"$GITHUB_WORKSPACE/coverage/eval.xml"
 
       - name: M0 loop 2 tests
         if: ${{ !cancelled() }}
@@ -74,12 +77,24 @@ jobs:
         run: >-
           pytest eval_loop2 --cov=eval_loop2 --cov-config=pyproject.toml
           --junitxml="$GITHUB_WORKSPACE/test-results/eval_loop2.xml"
+          --cov-report=xml:"$GITHUB_WORKSPACE/coverage/eval_loop2.xml"
 
       # docs/reference.md and docs/api.md are generated from the code.
       - name: Generated docs are up to date
         if: ${{ !cancelled() }}
         working-directory: proj_2
         run: python docs/generate.py --check
+
+      # Coverage badge: Codecov reads the four reports. A Codecov outage only
+      # skips the upload; it never fails the tests.
+      - name: Upload coverage
+        if: ${{ !cancelled() }}
+        uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v7.1.1
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: coverage/backend.xml,coverage/ingestion.xml,coverage/eval.xml,coverage/eval_loop2.xml
+          disable_search: true
+          fail_ci_if_error: false
 
       # Test-count badge: only pushes to dev update it, so feature branches
       # don't overwrite the number. The JSON lives in a gist that shields.io reads.
