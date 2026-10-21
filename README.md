@@ -13,6 +13,8 @@
 [![M0 loop 2](https://github.com/morgansimon425/PackPlate/actions/workflows/m0_loop2.yml/badge.svg?branch=dev)](https://github.com/morgansimon425/PackPlate/actions/workflows/m0_loop2.yml?query=branch%3Adev)
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.23521650.svg)](https://doi.org/10.5281/zenodo.23521650)
 
+https://github.com/user-attachments/assets/c9b771b0-a093-43f9-bab0-dbc98d99fb92
+
 A website that helps NC State students decide where to eat on campus. It puts
 dining hours, menus, and nutrition information from every campus dining
 location in one place, and filters the menus by dietary restrictions and goals
