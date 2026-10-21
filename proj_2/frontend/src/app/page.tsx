@@ -15,19 +15,10 @@ export default function WelcomePage() {
           diet.
         </p>
         <div className="button-row">
-          <Link href="/signup" className="btn">
-            Sign up
-          </Link>
-          <Link href="/login" className="btn btn-outline">
-            Log in
+          <Link href="/home" className="btn">
+            Get started
           </Link>
         </div>
-        <p className="meta">
-          You don’t need an account to use PackPlate.{" "}
-          <Link href="/home" style={{ fontWeight: 700, color: "var(--red)" }}>
-            Continue without one →
-          </Link>
-        </p>
       </section>
 
       <div className="page-body">
