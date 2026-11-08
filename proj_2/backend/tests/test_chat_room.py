@@ -1,5 +1,7 @@
 # This file tests the functionality of using the chat room. Milestone 4
 
+import pytest
+
 
 # Test creating a Chat Room with only the creator as a member
 def test_room_with_only_creator_is_pending():
@@ -93,6 +95,25 @@ def test_leaving_two_member_room_makes_it_inactive():
     # Check who is left and that the Chat Room is inactive.
     assert room.member_ids == {1}
     assert room.status == "inactive"
+
+
+# Test what happens to a pending invitation when the Chat Room becomes inactive
+def test_inactive_room_clears_pending_invitation():
+    from app.services.chat_room import ChatRoom
+
+    # Set up an active Chat Room with two members and one invitee.
+    room = ChatRoom(member_ids={1, 2}, pending_invitee_ids={3}, status="active")
+
+    # Have member 2 leave so the Chat Room becomes inactive.
+    room.leave(member_id=2)
+
+    assert room.status == "inactive"
+    assert room.pending_invitee_ids == set()
+
+    # Check that user 3 can no longer join.
+    with pytest.raises(PermissionError):
+        room.accept_invitation(user_id=3)
+    assert room.member_ids == {1}
 
 
 # Test exiting a Chat Room with two other members (Chat Room stays active)

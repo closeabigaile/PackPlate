@@ -4,11 +4,12 @@
 
 Every public module, class, and function in the Python code, with its signature and description, read from the source. The website (`frontend/`) is described in [how.md](how.md) instead.
 
-**259 of 259** modules, classes, and functions have a description.
+**300 of 300** modules, classes, and functions have a description.
 
 - **API** (`backend/app/`)
   - [`app`](#app)
   - [`app.api`](#appapi)
+  - [`app.api.chat_room`](#appapichat_room)
   - [`app.api.crowd`](#appapicrowd)
   - [`app.api.filters`](#appapifilters)
   - [`app.api.locations`](#appapilocations)
@@ -16,17 +17,20 @@ Every public module, class, and function in the Python code, with its signature 
   - [`app.deps`](#appdeps)
   - [`app.main`](#appmain)
   - [`app.repositories`](#apprepositories)
+  - [`app.repositories.chat_rooms`](#apprepositorieschat_rooms)
   - [`app.repositories.crowd_reports`](#apprepositoriescrowd_reports)
   - [`app.repositories.ingest_runs`](#apprepositoriesingest_runs)
   - [`app.repositories.label_reviews`](#apprepositorieslabel_reviews)
   - [`app.repositories.locations`](#apprepositorieslocations)
   - [`app.repositories.menus`](#apprepositoriesmenus)
   - [`app.schemas`](#appschemas)
+  - [`app.schemas.chat_room`](#appschemaschat_room)
   - [`app.schemas.crowd`](#appschemascrowd)
   - [`app.schemas.filters`](#appschemasfilters)
   - [`app.schemas.locations`](#appschemaslocations)
   - [`app.schemas.meta`](#appschemasmeta)
   - [`app.services`](#appservices)
+  - [`app.services.chat_room`](#appserviceschat_room)
   - [`app.services.crowd`](#appservicescrowd)
   - [`app.services.filter_engine`](#appservicesfilter_engine)
   - [`app.services.freshness`](#appservicesfreshness)
@@ -35,6 +39,7 @@ Every public module, class, and function in the Python code, with its signature 
   - [`app.services.menus`](#appservicesmenus)
 - **Database** (`db/`)
   - [`db`](#db)
+  - [`db.chat_models`](#dbchat_models)
   - [`db.migrate`](#dbmigrate)
   - [`db.models`](#dbmodels)
   - [`db.session`](#dbsession)
@@ -85,6 +90,93 @@ PackPlate's HTTP API (FastAPI). Run from proj_2/: `uvicorn app.main:app --app-di
 Source: [`backend/app/api/__init__.py`](../backend/app/api/__init__.py)
 
 HTTP routes, one module per feature: locations, meta (freshness), filters, and crowd.
+
+## `app.api.chat_room`
+
+Source: [`backend/app/api/chat_room.py`](../backend/app/api/chat_room.py)
+
+Draft the Chat Room routes and the fields each route sends back.
+
+### `list_rooms`
+
+```python
+@router.get('/rooms', response_model=list[ChatRoomOut])
+def list_rooms()
+```
+
+Return the rooms the current user has joined.
+
+### `create_room`
+
+```python
+@router.post('/rooms', response_model=ChatRoomOut, status_code=201)
+def create_room(request: ChatRoomCreate)
+```
+
+Create a pending room from the selected account IDs.
+
+### `get_room`
+
+```python
+@router.get('/rooms/{room_id}', response_model=ChatRoomOut)
+def get_room(room_id: int)
+```
+
+Return the room's status and joined members.
+
+### `leave_room`
+
+```python
+@router.post('/rooms/{room_id}/leave', status_code=204, response_class=Response)
+def leave_room(room_id: int)
+```
+
+Remove the current member and update the room status.
+
+### `list_invitations`
+
+```python
+@router.get('/invitations', response_model=list[ChatInvitationOut])
+def list_invitations()
+```
+
+Return the current user's pending invitations.
+
+### `accept_invitation`
+
+```python
+@router.post('/invitations/{invitation_id}/accept', response_model=ChatRoomOut)
+def accept_invitation(invitation_id: int)
+```
+
+Accept the current user's invitation and return the updated room.
+
+### `decline_invitation`
+
+```python
+@router.post('/invitations/{invitation_id}/decline', status_code=204, response_class=Response)
+def decline_invitation(invitation_id: int)
+```
+
+Decline the current user's invitation.
+
+### `list_messages`
+
+```python
+@router.get('/rooms/{room_id}/messages', response_model=list[ChatMessageOut])
+def list_messages(room_id: int)
+```
+
+Return message history for a current member, even if the room is inactive.
+
+### `send_message`
+
+```python
+@router.post('/rooms/{room_id}/messages', response_model=ChatMessageOut, status_code=201)
+def send_message(room_id: int, request: ChatMessageCreate)
+```
+
+Save the text with the signed-in sender and return the saved message.
 
 ## `app.api.crowd`
 
@@ -259,6 +351,87 @@ Data access layer: the only code in the API that queries Postgres.
 Single writer per table: the API writes crowd reports only. Menu and
 nutrition tables are written by ingestion/ and are read-only here.
 
+## `app.repositories.chat_rooms`
+
+Source: [`backend/app/repositories/chat_rooms.py`](../backend/app/repositories/chat_rooms.py)
+
+Save and load Chat Rooms, invitations, and messages.
+
+The route passes account IDs from M1 and commits when the whole request
+succeeds. Room changes use the same transaction so they are saved together.
+
+### `create_room`
+
+```python
+def create_room(db: Session, creator_id: int, invitee_ids: Iterable[int]) -> ChatRoomRecord
+```
+
+Save a pending room with verified M1 account IDs. Raises ValueError on bad invites.
+
+### `list_rooms`
+
+```python
+def list_rooms(db: Session, user_id: int) -> list[ChatRoomRecord]
+```
+
+Return the user's rooms with the current members loaded.
+
+### `get_room`
+
+```python
+def get_room(db: Session, room_id: int, user_id: int) -> ChatRoomRecord
+```
+
+Load a room for a joined member. Raises LookupError or PermissionError.
+
+### `list_invitations`
+
+```python
+def list_invitations(db: Session, user_id: int) -> list[ChatInvitation]
+```
+
+Return pending invitations for this account.
+
+### `accept_invitation`
+
+```python
+def accept_invitation(db: Session, invitation_id: int, user_id: int) -> ChatRoomRecord
+```
+
+Save an acceptance and return the room. Raises LookupError or PermissionError.
+
+### `decline_invitation`
+
+```python
+def decline_invitation(db: Session, invitation_id: int, user_id: int) -> None
+```
+
+Save a decline without adding a member. Raises LookupError or PermissionError.
+
+### `leave_room`
+
+```python
+def leave_room(db: Session, room_id: int, member_id: int) -> None
+```
+
+Remove a member and save the room status. Raises LookupError or PermissionError.
+
+### `list_messages`
+
+```python
+def list_messages(db: Session, room_id: int, user_id: int) -> list[ChatMessage]
+```
+
+Return a member's room history in order. Raises LookupError or PermissionError.
+
+### `add_message`
+
+```python
+def add_message(db: Session, room_id: int, sender_id: int, text: str) -> ChatMessage
+```
+
+Save a member's message in an active room. Raises ValueError on bad text or room status.
+
 ## `app.repositories.crowd_reports`
 
 Source: [`backend/app/repositories/crowd_reports.py`](../backend/app/repositories/crowd_reports.py)
@@ -378,6 +551,76 @@ Every location's menus on `day`, with items and their nutrition labels loaded.
 Source: [`backend/app/schemas/__init__.py`](../backend/app/schemas/__init__.py)
 
 Pydantic models for the API's requests and responses, one module per feature.
+
+## `app.schemas.chat_room`
+
+Source: [`backend/app/schemas/chat_room.py`](../backend/app/schemas/chat_room.py)
+
+Request and response fields for Chat Rooms and Open to Chat.
+
+### class `ChatRoomCreate` (BaseModel)
+
+The user IDs the creator sends when starting a Chat Room.
+
+Fields:
+
+- `invitee_ids: list[AccountId]`
+
+#### `remove_duplicate_invitees`
+
+```python
+@field_validator('invitee_ids')
+@classmethod
+def remove_duplicate_invitees(cls, invitee_ids: list[AccountId]) -> list[AccountId]
+```
+
+Keep the first occurrence of each invited user ID.
+
+### class `ChatRoomOut` (BaseModel)
+
+A Chat Room and the users who have joined it.
+
+Fields:
+
+- `id: int`
+- `status: RoomStatus`
+- `member_ids: list[AccountId]`
+
+### class `ChatInvitationOut` (BaseModel)
+
+A pending invitation the signed-in user can accept or decline.
+
+Fields:
+
+- `id: int`
+- `room_id: int`
+
+### class `ChatMessageCreate` (BaseModel)
+
+The text a member sends to an active Chat Room.
+
+Fields:
+
+- `text: str`
+
+### class `ChatMessageOut` (BaseModel)
+
+A saved message with its sender and the time it was sent.
+
+Fields:
+
+- `id: int`
+- `text: str`
+- `sender_id: AccountId`
+- `created_at: AwareDatetime`
+
+### class `OpenToChatUpdate` (BaseModel)
+
+The setting a signed-in user sends to turn Open to Chat on or off.
+
+Fields:
+
+- `open_to_chat: bool`
 
 ## `app.schemas.crowd`
 
@@ -617,6 +860,62 @@ Fields:
 Source: [`backend/app/services/__init__.py`](../backend/app/services/__init__.py)
 
 Business logic with no database access: hours, menus, freshness, filters, crowd.
+
+## `app.services.chat_room`
+
+Source: [`backend/app/services/chat_room.py`](../backend/app/services/chat_room.py)
+
+Keep track of who has joined a Chat Room and what they can do.
+
+### class `ChatRoom`
+
+Track the members, pending invitations, and status of one Chat Room.
+
+Fields:
+
+- `member_ids: set[UserId]`
+- `pending_invitee_ids: set[UserId]`
+- `status: RoomStatus`
+
+#### `accept_invitation`
+
+```python
+def accept_invitation(self, user_id: UserId) -> None
+```
+
+Add an invited user to the room. Raises PermissionError without an invite.
+
+#### `decline_invitation`
+
+```python
+def decline_invitation(self, user_id: UserId) -> None
+```
+
+Remove a pending invitation. Raises PermissionError without an invite.
+
+#### `leave`
+
+```python
+def leave(self, member_id: UserId) -> None
+```
+
+Remove a member and close the room if fewer than two people remain.
+
+#### `can_read_messages`
+
+```python
+def can_read_messages(self, user_id: UserId) -> bool
+```
+
+Check if the user is still a member and can see the room's messages.
+
+#### `can_send_messages`
+
+```python
+def can_send_messages(self, user_id: UserId) -> bool
+```
+
+Check if the user is a member of an active room and can send messages.
 
 ## `app.services.crowd`
 
@@ -921,6 +1220,64 @@ session.py     engine + sessions from DATABASE_URL
 migrations/    Alembic versions; apply from proj_2/ with
                alembic -c db/alembic.ini upgrade head
 ```
+
+## `db.chat_models`
+
+Source: [`db/chat_models.py`](../db/chat_models.py)
+
+Draft tables for Chat Rooms, members, invitations, and messages.
+
+### class `ChatRoomRecord` (Base)
+
+One saved Chat Room and its status. Writer: backend.
+
+Fields:
+
+- `id: Mapped[int]`
+- `status: Mapped[str]`
+- `memberships: Mapped[list['ChatRoomMember']]`
+- `invitations: Mapped[list['ChatInvitation']]`
+
+#### `member_ids`
+
+```python
+@property
+def member_ids(self) -> list[int]
+```
+
+Return the account IDs of people who have joined the Chat Room.
+
+### class `ChatRoomMember` (Base)
+
+One account that has joined a Chat Room. Writer: backend.
+
+Fields:
+
+- `room_id: Mapped[int]`
+- `user_id: Mapped[int]`
+
+### class `ChatInvitation` (Base)
+
+An invitation and its response, so retries can find it. Writer: backend.
+
+Fields:
+
+- `id: Mapped[int]`
+- `room_id: Mapped[int]`
+- `invitee_id: Mapped[int]`
+- `status: Mapped[str]`
+
+### class `ChatMessage` (Base)
+
+One message saved in a Chat Room. Writer: backend.
+
+Fields:
+
+- `id: Mapped[int]`
+- `room_id: Mapped[int]`
+- `sender_id: Mapped[int]`
+- `text: Mapped[str]`
+- `created_at: Mapped[datetime]`
 
 ## `db.migrate`
 
