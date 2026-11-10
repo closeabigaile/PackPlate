@@ -1,4 +1,4 @@
-"""Chat Room routes (M4): rooms, invitations, messages, and Open to Chat.
+"""Chat Room routes (M4): rooms, invitations, messages, and finding people.
 
 Every route needs a logged-in user (M1's current_user, 401 otherwise); the
 account comes from the session cookie, never from the request body. The rules
@@ -12,6 +12,7 @@ Errors from the repository map to:
 """
 
 from collections.abc import Callable
+from datetime import UTC
 
 from fastapi import APIRouter, Depends, HTTPException, Response
 from sqlalchemy import select
@@ -30,6 +31,7 @@ from app.schemas.chat_room import (
     OpenToChatPerson,
     OpenToChatUpdate,
 )
+from app.services.auth import normalize_username, username_problem
 from db.chat_models import ChatMessage, ChatRoomRecord
 from db.models import User
 
@@ -62,7 +64,7 @@ def _message_out(message: ChatMessage) -> ChatMessageOut:
         id=message.id,
         text=message.text,
         sender_id=message.sender_id,
-        created_at=message.created_at,
+        created_at=message.created_at.astimezone(UTC),
     )
 
 
@@ -171,6 +173,25 @@ def send_message(
     """Save the text with the signed-in sender and return the saved message."""
     message = _commit(db, chat_repo.add_message, room_id, user.id, request.text)
     return _message_out(message)
+
+
+@router.get("/users/{username}", response_model=OpenToChatPerson)
+def lookup_user(
+    username: str, user: User = Depends(current_user), db: Session = Depends(get_db)
+):
+    """Find another account by exact username, ignoring case.
+
+    Returns the account ID and username even if Open to Chat is off.
+    400 for an invalid username or 404 when no other account matches.
+    """
+    username = normalize_username(username)
+    problem = username_problem(username)
+    if problem:
+        raise HTTPException(status_code=400, detail=problem)
+    person = users_repo.get_by_username(db, username)
+    if person is None or person.id == user.id:
+        raise HTTPException(status_code=404, detail="user not found")
+    return OpenToChatPerson(id=person.id, username=person.username)
 
 
 # Turn the logged-in user's Open to Chat setting on or off.

@@ -28,6 +28,7 @@ Every endpoint and data model of the PackPlate API, read from the API's own Open
 - [`POST /chat/invitations/{invitation_id}/decline`](#post-chatinvitationsinvitation_iddecline)
 - [`GET /chat/rooms/{room_id}/messages`](#get-chatroomsroom_idmessages)
 - [`POST /chat/rooms/{room_id}/messages`](#post-chatroomsroom_idmessages)
+- [`GET /chat/users/{username}`](#get-chatusersusername)
 - [`GET /chat/open-to-chat`](#get-chatopen-to-chat)
 - [`PUT /chat/open-to-chat`](#put-chatopen-to-chat)
 - [`GET /health`](#get-health)
@@ -307,6 +308,22 @@ Save the text with the signed-in sender and return the saved message.
 | 201 Successful Response | [ChatMessageOut](#chatmessageout) |
 | 422 Validation Error | [HTTPValidationError](#httpvalidationerror) |
 
+### `GET /chat/users/{username}`
+
+Find another account by exact username, ignoring case.
+
+Returns the account ID and username even if Open to Chat is off.
+400 for an invalid username or 404 when no other account matches.
+
+| Parameter | In | Type | Required | Default |
+|---|---|---|---|---|
+| `username` | path | string | yes |  |
+
+| Response | Body |
+|---|---|
+| 200 Successful Response | [OpenToChatPerson](#opentochatperson) |
+| 422 Validation Error | [HTTPValidationError](#httpvalidationerror) |
+
 ### `GET /chat/open-to-chat`
 
 Everyone else with Open to Chat on, by username.
@@ -368,7 +385,7 @@ The text a member sends to an active Chat Room.
 
 ### ChatMessageOut
 
-A saved message with its sender and the time it was sent.
+A saved message with its sender and the UTC time it was sent.
 
 | Field | Type | Required |
 |---|---|---|
@@ -617,7 +634,7 @@ The signed-in user's Open to Chat setting after a change.
 
 ### OpenToChatPerson
 
-Someone on the Open to Chat list, to invite by ID.
+The ID and username of an account that can be invited to a Chat Room.
 
 | Field | Type | Required |
 |---|---|---|

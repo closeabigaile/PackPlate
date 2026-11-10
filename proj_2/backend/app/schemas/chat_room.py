@@ -52,7 +52,7 @@ class ChatMessageCreate(BaseModel):
 
 
 class ChatMessageOut(BaseModel):
-    """A saved message with its sender and the time it was sent."""
+    """A saved message with its sender and the UTC time it was sent."""
 
     id: int
     text: str
@@ -77,7 +77,7 @@ class OpenToChatOut(BaseModel):
 
 
 class OpenToChatPerson(BaseModel):
-    """Someone on the Open to Chat list, to invite by ID."""
+    """The ID and username of an account that can be invited to a Chat Room."""
 
     id: AccountId
     username: str

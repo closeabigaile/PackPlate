@@ -88,9 +88,36 @@ def test_every_chat_route_needs_a_login(client):
         ("POST", "/chat/invitations/1/accept"),
         ("POST", "/chat/invitations/1/decline"),
         ("GET", "/chat/rooms/1/messages"),
+        ("GET", "/chat/users/bob"),
         ("GET", "/chat/open-to-chat"),
     ]:
         assert client.request(method, path).status_code == 401, path
+
+
+def test_inviting_an_account_found_by_username(client):
+    alice, bob = make_user(client, "alice"), make_user(client, "bobby")
+    headers = alice["headers"]
+    assert client.get("/chat/open-to-chat", headers=headers).json() == []
+
+    response = client.get("/chat/users/BoBbY", headers=headers)
+    assert response.status_code == 200, response.text
+    assert response.json() == {"id": bob["id"], "username": "bobby"}
+
+    room = client.post(
+        "/chat/rooms", headers=headers, json={"invitee_ids": [response.json()["id"]]}
+    )
+    assert room.status_code == 201, room.text
+    [invitation] = client.get("/chat/invitations", headers=bob["headers"]).json()
+    assert invitation["room_id"] == room.json()["id"]
+
+
+def test_username_lookup_rejects_partial_matches_and_self(client):
+    alice = make_user(client, "alice")
+    make_user(client, "bobby")
+    headers = alice["headers"]
+    assert client.get("/chat/users/bob", headers=headers).status_code == 404
+    assert client.get("/chat/users/alice", headers=headers).status_code == 404
+    assert client.get("/chat/users/invalid!", headers=headers).status_code == 400
 
 
 def test_open_to_chat_is_off_by_default_and_hides_yourself(client):

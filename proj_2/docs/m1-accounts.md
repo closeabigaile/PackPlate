@@ -85,10 +85,13 @@ feature's rows need cleanup rules beyond a cascade, call them from
   rules (`chat_rooms.leave_all_rooms`). A plain cascade would leave an
   "active" room with one member, which the rules refuse to load, or a pending
   room with no creator.
-- Inviting someone by ID works whether or not they're Open to Chat; the
-  setting only controls the list. Whether to restrict that is still open.
+- Open to Chat controls whether an account appears in the discovery list.
+  A signed-in user who knows someone's exact username can still look them up
+  and invite them by ID.
 
-**Username lookup.** `repositories/users.get_by_username(db, normalize_username(name))`.
+**Username lookup.** `GET /chat/users/{username}` returns the other account's
+`id` and `username`. Use the ID in `POST /chat/rooms`. Usernames are
+case-insensitive.
 
 **Tests.** `client` in `backend/tests/conftest.py` keeps cookies between calls,
 so register and you're logged in:

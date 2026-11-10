@@ -25,6 +25,7 @@ from datetime import datetime
 
 import pytest
 from fastapi.testclient import TestClient
+from sqlalchemy import text
 
 from app.main import app
 from app.services.auth import SESSION_COOKIE
@@ -242,7 +243,7 @@ def test_accessing_messages_after_leaving(client, active_room):
 
 
 # Test sending and receiving a message in the Chat Room
-def test_sending_and_receiving_a_message(client, active_room):
+def test_sending_and_receiving_a_message(client, active_room, db):
     room_id, creator, member = active_room
     messages_url = f"{CHAT_ROOMS}/{room_id}/messages"
     message_text = "Want to meet at Fountain?"
@@ -253,6 +254,8 @@ def test_sending_and_receiving_a_message(client, active_room):
     assert sent.status_code == 201
 
     # Check that the other member can see the message, who sent it, and when.
+    # PostgreSQL can return the timestamp in a different time zone than it was sent.
+    db.execute(text("SET LOCAL TIME ZONE 'America/New_York'"))
     history = client.get(messages_url, headers=member["headers"])
     assert history.status_code == 200
     [message] = history.json()

@@ -4,7 +4,7 @@
 
 Every public module, class, and function in the Python code, with its signature and description, read from the source. The website (`frontend/`) is described in [how.md](how.md) instead.
 
-**347 of 347** modules, classes, and functions have a description.
+**348 of 348** modules, classes, and functions have a description.
 
 - **API** (`backend/app/`)
   - [`app`](#app)
@@ -178,7 +178,7 @@ Delete the logged-in account and everything tied to it. Needs the password.
 Source: [`backend/app/api/chat_room.py`](../backend/app/api/chat_room.py)
 
 ```text
-Chat Room routes (M4): rooms, invitations, messages, and Open to Chat.
+Chat Room routes (M4): rooms, invitations, messages, and finding people.
 
 Every route needs a logged-in user (M1's current_user, 401 otherwise); the
 account comes from the session cookie, never from the request body. The rules
@@ -273,6 +273,18 @@ def send_message(room_id: int, request: ChatMessageCreate, user: User=Depends(cu
 ```
 
 Save the text with the signed-in sender and return the saved message.
+
+### `lookup_user`
+
+```python
+@router.get('/users/{username}', response_model=OpenToChatPerson)
+def lookup_user(username: str, user: User=Depends(current_user), db: Session=Depends(get_db))
+```
+
+Find another account by exact username, ignoring case.
+
+Returns the account ID and username even if Open to Chat is off.
+400 for an invalid username or 404 when no other account matches.
 
 ### `set_open_to_chat`
 
@@ -882,7 +894,7 @@ Fields:
 
 ### class `ChatMessageOut` (BaseModel)
 
-A saved message with its sender and the time it was sent.
+A saved message with its sender and the UTC time it was sent.
 
 Fields:
 
@@ -909,7 +921,7 @@ Fields:
 
 ### class `OpenToChatPerson` (BaseModel)
 
-Someone on the Open to Chat list, to invite by ID.
+The ID and username of an account that can be invited to a Chat Room.
 
 Fields:
 
