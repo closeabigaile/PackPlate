@@ -1,4 +1,10 @@
-"""Draft tables for Chat Rooms, members, invitations, and messages."""
+"""Tables for Chat Rooms, members, invitations, and messages (M4). Writer: backend.
+
+Imported at the bottom of db/models.py, so these tables are on Base.metadata
+for Alembic and the tests. Every account ID is users.id from M1: memberships and
+invitations go when the account is deleted; a message stays, with sender_id set
+to NULL ("deleted user"), so other members keep their history.
+"""
 
 from datetime import datetime
 
@@ -14,9 +20,6 @@ from sqlalchemy import (
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from db.models import Base
-
-# These account IDs are integers for now, like the IDs in the chat tests.
-# Match M1's ID type and add the account foreign keys when we make the migration.
 
 
 class ChatRoomRecord(Base):
@@ -53,7 +56,9 @@ class ChatRoomMember(Base):
     room_id: Mapped[int] = mapped_column(
         ForeignKey("chat_rooms.id", ondelete="CASCADE"), primary_key=True
     )
-    user_id: Mapped[int] = mapped_column(primary_key=True, index=True)
+    user_id: Mapped[int] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), primary_key=True, index=True
+    )
 
 
 class ChatInvitation(Base):
@@ -72,7 +77,9 @@ class ChatInvitation(Base):
     room_id: Mapped[int] = mapped_column(
         ForeignKey("chat_rooms.id", ondelete="CASCADE")
     )
-    invitee_id: Mapped[int] = mapped_column(index=True)
+    invitee_id: Mapped[int] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), index=True
+    )
     status: Mapped[str] = mapped_column(String(10))
 
 
@@ -88,7 +95,10 @@ class ChatMessage(Base):
     room_id: Mapped[int] = mapped_column(
         ForeignKey("chat_rooms.id", ondelete="CASCADE")
     )
-    # Keep the sender ID with the message even after the sender leaves.
-    sender_id: Mapped[int]
+    # Keep the sender ID with the message even after the sender leaves the room.
+    # NULL once the sender deletes their account.
+    sender_id: Mapped[int | None] = mapped_column(
+        ForeignKey("users.id", ondelete="SET NULL")
+    )
     text: Mapped[str] = mapped_column(Text)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))

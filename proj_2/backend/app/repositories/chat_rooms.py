@@ -196,3 +196,15 @@ def add_message(db: Session, room_id: int, sender_id: int, text: str) -> ChatMes
     db.add(message)
     db.flush()
     return message
+
+
+# Called before an account is deleted (M1's DELETE /auth/me).
+def leave_all_rooms(db: Session, user_id: int) -> None:
+    """Have the user leave every room they've joined, using the normal rules.
+
+    Deleting the account would otherwise drop their memberships at the database
+    level and skip leave(), leaving an "active" room with one member (which the
+    rules then refuse to load) or a pending room with nobody in it.
+    """
+    for room in list_rooms(db, user_id):
+        leave_room(db, room.id, user_id)

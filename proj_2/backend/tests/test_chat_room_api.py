@@ -7,16 +7,14 @@
 # When creating a Chat Room, invitee_ids are lists of the people we want to invite.
 # Each invitation has its own id and a room_id for the Chat Room it belongs to.
 #
-# What I expect the User to have: NOTE THIS COULD CHANGE!!!
+# What the User has (from M1, see docs/m1-accounts.md):
 # - username is the unique name the user picks, like azalin. This is what I show
-#   when the creator searches for someone to invite.
-# - id is the account's backend ID, like 42. Use the same ID that M1 uses,
-#   whether it is a number or a UUID.
-# - The tests use email and password for now. Check with M1 whether login uses
-#   email or username!!
+#   when the creator searches for someone to invite. Case-insensitive.
+# - id is the account's backend ID, like 42 (users.id, an integer).
+# - Accounts sign up and log in with username and password.
 # - open_to_chat controls whether the user shows up in the Open to Chat list.
-# Login returns an access_token. The tests put it in headers to make requests
-# as that user.
+# Signing up logs the user in with a session cookie. The tests put each user's
+# cookie in headers to make requests as that user.
 #
 # If the creator picks azalin, look up the account and send 42 in invitee_ids.
 # After Alice accepts, add 42 to member_ids. If she changes her username later,
@@ -29,6 +27,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from app.main import app
+from app.services.auth import SESSION_COOKIE
 
 CHAT_ROOMS = "/chat/rooms"
 CHAT_INVITATIONS = "/chat/invitations"
@@ -38,23 +37,18 @@ OPEN_TO_CHAT = "/chat/open-to-chat"
 # Create a test User and log them in
 @pytest.fixture
 def make_chat_user(client):
-    # Update these two requests once the account routes are ready.
     def make_user(name):
-        credentials = {
-            "email": f"{name}@example.test",
-            "password": "PackPlate-Test-123!",
-        }
+        credentials = {"username": name, "password": "PackPlate-Test-123!"}
         account = client.post("/auth/register", json=credentials)
         assert account.status_code == 201, account.text
 
-        login = client.post("/auth/login", json=credentials)
-        assert login.status_code == 200, login.text
-
-        # Keep the user's ID and the headers we need to make requests as them.
-        token = login.json()["access_token"]
+        # Signing up logs in with a cookie. Take it out of the shared client so
+        # each user sends only their own cookie, through their headers.
+        token = client.cookies[SESSION_COOKIE]
+        client.cookies.clear()
         return {
             "id": account.json()["id"],
-            "headers": {"Authorization": f"Bearer {token}"},
+            "headers": {"Cookie": f"{SESSION_COOKIE}={token}"},
         }
 
     return make_user

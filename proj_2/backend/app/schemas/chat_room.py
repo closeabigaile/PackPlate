@@ -1,14 +1,13 @@
 """Request and response fields for Chat Rooms and Open to Chat."""
 
 from typing import Annotated
-from uuid import UUID
 
 from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, field_validator
 
 from app.services.chat_room import RoomStatus
 
-# Use the account ID that M1 gives us. We can narrow this once we know its format.
-type AccountId = Annotated[int, Field(strict=True, gt=0)] | UUID
+# M1's account ID: users.id, a positive integer.
+type AccountId = Annotated[int, Field(strict=True, gt=0)]
 
 
 class ChatRoomCreate(BaseModel):
@@ -57,7 +56,7 @@ class ChatMessageOut(BaseModel):
 
     id: int
     text: str
-    sender_id: AccountId
+    sender_id: AccountId | None  # null once the sender deletes their account
     # Include the time zone so the frontend can show the right time.
     created_at: AwareDatetime
 
@@ -69,3 +68,16 @@ class OpenToChatUpdate(BaseModel):
 
     # True puts the user on the Open to Chat list. False takes them off.
     open_to_chat: bool = Field(strict=True)
+
+
+class OpenToChatOut(BaseModel):
+    """The signed-in user's Open to Chat setting after a change."""
+
+    open_to_chat: bool
+
+
+class OpenToChatPerson(BaseModel):
+    """Someone on the Open to Chat list, to invite by ID."""
+
+    id: AccountId
+    username: str

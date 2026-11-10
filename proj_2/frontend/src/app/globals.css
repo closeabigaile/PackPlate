@@ -965,3 +965,17 @@ legend {
 .stack .stack {
   gap: 0.75rem;
 }
+
+/* ---------- account link in the header ---------- */
+
+.nav a.nav-account {
+  font-weight: 700;
+}
+
+@media (min-width: 960px) {
+  .nav a.nav-account {
+    margin-left: 0.5rem;
+    border: 2px solid currentColor;
+    border-radius: 999px;
+  }
+}

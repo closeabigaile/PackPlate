@@ -4,11 +4,12 @@
 
 Every public module, class, and function in the Python code, with its signature and description, read from the source. The website (`frontend/`) is described in [how.md](how.md) instead.
 
-**300 of 300** modules, classes, and functions have a description.
+**347 of 347** modules, classes, and functions have a description.
 
 - **API** (`backend/app/`)
   - [`app`](#app)
   - [`app.api`](#appapi)
+  - [`app.api.auth`](#appapiauth)
   - [`app.api.chat_room`](#appapichat_room)
   - [`app.api.crowd`](#appapicrowd)
   - [`app.api.filters`](#appapifilters)
@@ -23,13 +24,16 @@ Every public module, class, and function in the Python code, with its signature 
   - [`app.repositories.label_reviews`](#apprepositorieslabel_reviews)
   - [`app.repositories.locations`](#apprepositorieslocations)
   - [`app.repositories.menus`](#apprepositoriesmenus)
+  - [`app.repositories.users`](#apprepositoriesusers)
   - [`app.schemas`](#appschemas)
+  - [`app.schemas.auth`](#appschemasauth)
   - [`app.schemas.chat_room`](#appschemaschat_room)
   - [`app.schemas.crowd`](#appschemascrowd)
   - [`app.schemas.filters`](#appschemasfilters)
   - [`app.schemas.locations`](#appschemaslocations)
   - [`app.schemas.meta`](#appschemasmeta)
   - [`app.services`](#appservices)
+  - [`app.services.auth`](#appservicesauth)
   - [`app.services.chat_room`](#appserviceschat_room)
   - [`app.services.crowd`](#appservicescrowd)
   - [`app.services.filter_engine`](#appservicesfilter_engine)
@@ -37,6 +41,7 @@ Every public module, class, and function in the Python code, with its signature 
   - [`app.services.hours`](#appserviceshours)
   - [`app.services.label_reviews`](#appserviceslabel_reviews)
   - [`app.services.menus`](#appservicesmenus)
+  - [`app.services.passwords`](#appservicespasswords)
 - **Database** (`db/`)
   - [`db`](#db)
   - [`db.chat_models`](#dbchat_models)
@@ -91,17 +96,106 @@ Source: [`backend/app/api/__init__.py`](../backend/app/api/__init__.py)
 
 HTTP routes, one module per feature: locations, meta (freshness), filters, and crowd.
 
+## `app.api.auth`
+
+Source: [`backend/app/api/auth.py`](../backend/app/api/auth.py)
+
+Routes for accounts: sign up, log in, log out, who am I, settings, delete.
+
+A successful sign-up or login sets an HttpOnly session cookie; the browser
+sends it back on every request (the frontend uses credentials: "include"), and
+routes read the account through app.deps.current_user / optional_user.
+
+Only a username, a password hash, and the Open to Chat setting are stored. Dietary profiles stay in the
+browser, as before.
+
+### `get_login_limiter`
+
+```python
+def get_login_limiter() -> LoginLimiter
+```
+
+The shared failed-login limiter, as a dependency so tests can swap in a fresh one.
+
+### `register`
+
+```python
+@router.post('/register', response_model=UserOut, status_code=201)
+def register(body: Credentials, response: Response, db: Session=Depends(get_db))
+```
+
+Create an account and log in. 400 if the username or password isn't allowed,
+409 if the username is taken. Usernames are case-insensitive.
+
+### `login`
+
+```python
+@router.post('/login', response_model=UserOut)
+def login(body: Credentials, request: Request, response: Response, db: Session=Depends(get_db), limiter: LoginLimiter=Depends(get_login_limiter))
+```
+
+Log in. 401 for a wrong username or password (the message doesn't say which),
+429 after too many failed tries for one username.
+
+### `logout`
+
+```python
+@router.post('/logout', status_code=204)
+def logout(request: Request, response: Response, db: Session=Depends(get_db))
+```
+
+Log this browser out. Succeeds even if it wasn't logged in.
+
+### `me`
+
+```python
+@router.get('/me', response_model=UserOut)
+def me(user: User=Depends(current_user))
+```
+
+The logged-in account. 401 when logged out.
+
+### `update_me`
+
+```python
+@router.patch('/me', response_model=UserOut)
+def update_me(body: AccountSettings, user: User=Depends(current_user), db: Session=Depends(get_db))
+```
+
+Change the logged-in account's settings: {"open_to_chat": true | false}.
+
+### `delete_me`
+
+```python
+@router.delete('/me', status_code=204)
+def delete_me(body: PasswordConfirm, request: Request, response: Response, user: User=Depends(current_user), db: Session=Depends(get_db))
+```
+
+Delete the logged-in account and everything tied to it. Needs the password.
+
 ## `app.api.chat_room`
 
 Source: [`backend/app/api/chat_room.py`](../backend/app/api/chat_room.py)
 
-Draft the Chat Room routes and the fields each route sends back.
+```text
+Chat Room routes (M4): rooms, invitations, messages, and Open to Chat.
+
+Every route needs a logged-in user (M1's current_user, 401 otherwise); the
+account comes from the session cookie, never from the request body. The rules
+live in services/chat_room.py and the queries in repositories/chat_rooms.py,
+which only flush; each route commits once the whole change has worked.
+
+Errors from the repository map to:
+    LookupError      404  room, invitation, or user not found
+    PermissionError  403  not a member, or someone else's invitation
+    ValueError       409  the room's status doesn't allow it (pending/inactive)
+```
 
 ### `list_rooms`
 
 ```python
 @router.get('/rooms', response_model=list[ChatRoomOut])
-def list_rooms()
+def list_rooms(user: User=Depends(current_user), db: Session=Depends(get_db))
 ```
 
 Return the rooms the current user has joined.
@@ -110,16 +204,18 @@ Return the rooms the current user has joined.
 
 ```python
 @router.post('/rooms', response_model=ChatRoomOut, status_code=201)
-def create_room(request: ChatRoomCreate)
+def create_room(request: ChatRoomCreate, user: User=Depends(current_user), db: Session=Depends(get_db))
 ```
 
 Create a pending room from the selected account IDs.
+
+400 if the creator invites themselves, 404 if an invited account doesn't exist.
 
 ### `get_room`
 
 ```python
 @router.get('/rooms/{room_id}', response_model=ChatRoomOut)
-def get_room(room_id: int)
+def get_room(room_id: int, user: User=Depends(current_user), db: Session=Depends(get_db))
 ```
 
 Return the room's status and joined members.
@@ -128,7 +224,7 @@ Return the room's status and joined members.
 
 ```python
 @router.post('/rooms/{room_id}/leave', status_code=204, response_class=Response)
-def leave_room(room_id: int)
+def leave_room(room_id: int, user: User=Depends(current_user), db: Session=Depends(get_db))
 ```
 
 Remove the current member and update the room status.
@@ -137,7 +233,7 @@ Remove the current member and update the room status.
 
 ```python
 @router.get('/invitations', response_model=list[ChatInvitationOut])
-def list_invitations()
+def list_invitations(user: User=Depends(current_user), db: Session=Depends(get_db))
 ```
 
 Return the current user's pending invitations.
@@ -146,7 +242,7 @@ Return the current user's pending invitations.
 
 ```python
 @router.post('/invitations/{invitation_id}/accept', response_model=ChatRoomOut)
-def accept_invitation(invitation_id: int)
+def accept_invitation(invitation_id: int, user: User=Depends(current_user), db: Session=Depends(get_db))
 ```
 
 Accept the current user's invitation and return the updated room.
@@ -155,7 +251,7 @@ Accept the current user's invitation and return the updated room.
 
 ```python
 @router.post('/invitations/{invitation_id}/decline', status_code=204, response_class=Response)
-def decline_invitation(invitation_id: int)
+def decline_invitation(invitation_id: int, user: User=Depends(current_user), db: Session=Depends(get_db))
 ```
 
 Decline the current user's invitation.
@@ -164,7 +260,7 @@ Decline the current user's invitation.
 
 ```python
 @router.get('/rooms/{room_id}/messages', response_model=list[ChatMessageOut])
-def list_messages(room_id: int)
+def list_messages(room_id: int, user: User=Depends(current_user), db: Session=Depends(get_db))
 ```
 
 Return message history for a current member, even if the room is inactive.
@@ -173,10 +269,28 @@ Return message history for a current member, even if the room is inactive.
 
 ```python
 @router.post('/rooms/{room_id}/messages', response_model=ChatMessageOut, status_code=201)
-def send_message(room_id: int, request: ChatMessageCreate)
+def send_message(room_id: int, request: ChatMessageCreate, user: User=Depends(current_user), db: Session=Depends(get_db))
 ```
 
 Save the text with the signed-in sender and return the saved message.
+
+### `set_open_to_chat`
+
+```python
+@router.put('/open-to-chat', response_model=OpenToChatOut)
+def set_open_to_chat(request: OpenToChatUpdate, user: User=Depends(current_user), db: Session=Depends(get_db))
+```
+
+Show or hide the current user on the Open to Chat list (off by default).
+
+### `list_open_to_chat`
+
+```python
+@router.get('/open-to-chat', response_model=list[OpenToChatPerson])
+def list_open_to_chat(user: User=Depends(current_user), db: Session=Depends(get_db))
+```
+
+Everyone else with Open to Chat on, by username.
 
 ## `app.api.crowd`
 
@@ -296,6 +410,10 @@ Shared FastAPI dependencies.
 The engine is created on first use, not at import, so the app (and /health)
 still starts when DATABASE_URL is unset or the database is down.
 
+Accounts: a route that needs a signed-in user takes
+`user: User = Depends(current_user)` (401 when signed out); one that works
+either way takes `user: User | None = Depends(optional_user)`.
+
 ### `get_engine`
 
 ```python
@@ -312,6 +430,22 @@ def get_db()
 ```
 
 One session per request, closed when the request ends.
+
+### `optional_user`
+
+```python
+def optional_user(request: Request, db: Session=Depends(get_db)) -> User | None
+```
+
+The signed-in account for this request, or None when signed out.
+
+### `current_user`
+
+```python
+def current_user(_: None=Depends(_has_session_cookie), user: User | None=Depends(optional_user)) -> User
+```
+
+The signed-in account. 401 when signed out or the session expired.
 
 ## `app.main`
 
@@ -432,6 +566,18 @@ def add_message(db: Session, room_id: int, sender_id: int, text: str) -> ChatMes
 
 Save a member's message in an active room. Raises ValueError on bad text or room status.
 
+### `leave_all_rooms`
+
+```python
+def leave_all_rooms(db: Session, user_id: int) -> None
+```
+
+Have the user leave every room they've joined, using the normal rules.
+
+Deleting the account would otherwise drop their memberships at the database
+level and skip leave(), leaving an "active" room with one member (which the
+rules then refuse to load) or a pending room with nobody in it.
+
 ## `app.repositories.crowd_reports`
 
 Source: [`backend/app/repositories/crowd_reports.py`](../backend/app/repositories/crowd_reports.py)
@@ -546,11 +692,142 @@ def all_menus_on(db: Session, day: date) -> list[Menu]
 
 Every location's menus on `day`, with items and their nutrition labels loaded.
 
+## `app.repositories.users`
+
+Source: [`backend/app/repositories/users.py`](../backend/app/repositories/users.py)
+
+Queries for accounts and sign-in sessions.
+
+### `get_by_username`
+
+```python
+def get_by_username(db: Session, username: str) -> User | None
+```
+
+The account with this (normalized) username, if any.
+
+### `get_by_id`
+
+```python
+def get_by_id(db: Session, user_id: int) -> User | None
+```
+
+The account with this id, if any.
+
+### `create_user`
+
+```python
+def create_user(db: Session, username: str, password_hash: str) -> User | None
+```
+
+Store a new account. None if the username is already taken.
+
+### `set_password_hash`
+
+```python
+def set_password_hash(db: Session, user: User, password_hash: str)
+```
+
+Replace the account's password hash (e.g. after raising the cost).
+
+### `set_open_to_chat`
+
+```python
+def set_open_to_chat(db: Session, user: User, value: bool)
+```
+
+Turn the account's Open to Chat setting on or off.
+
+### `delete_user`
+
+```python
+def delete_user(db: Session, user: User)
+```
+
+Delete the account; its sessions (and anything else keyed on it) cascade.
+
+### `add_session`
+
+```python
+def add_session(db: Session, user_id: int, token_hash: str, expires_at: datetime)
+```
+
+Record a signed-in browser.
+
+### `user_for_session`
+
+```python
+def user_for_session(db: Session, token_hash: str, now: datetime) -> User | None
+```
+
+The account a session token belongs to, or None if unknown or expired.
+
+### `delete_session`
+
+```python
+def delete_session(db: Session, token_hash: str)
+```
+
+Sign one browser out. Does nothing if the session is already gone.
+
+### `delete_expired_sessions`
+
+```python
+def delete_expired_sessions(db: Session, now: datetime) -> int
+```
+
+Remove expired sessions; returns how many. Called on login to keep the table small.
+
 ## `app.schemas`
 
 Source: [`backend/app/schemas/__init__.py`](../backend/app/schemas/__init__.py)
 
 Pydantic models for the API's requests and responses, one module per feature.
+
+## `app.schemas.auth`
+
+Source: [`backend/app/schemas/auth.py`](../backend/app/schemas/auth.py)
+
+Request and response models for accounts.
+
+### class `Credentials` (BaseModel)
+
+A username and password, for signing up or logging in. Extra fields are rejected.
+
+Lengths are checked loosely here and properly in services.auth, so the
+error message can say what's wrong.
+
+Fields:
+
+- `username: str`
+- `password: str`
+
+### class `PasswordConfirm` (BaseModel)
+
+The current password, to confirm deleting the account.
+
+Fields:
+
+- `password: str`
+
+### class `AccountSettings` (BaseModel)
+
+Settings the logged-in user can change. Extra fields are rejected.
+
+Fields:
+
+- `open_to_chat: bool`
+
+### class `UserOut` (BaseModel)
+
+The signed-in account. Never includes the password hash.
+
+Fields:
+
+- `id: int`
+- `username: str`
+- `open_to_chat: bool`
+- `created_at: datetime`
 
 ## `app.schemas.chat_room`
 
@@ -611,7 +888,7 @@ Fields:
 
 - `id: int`
 - `text: str`
-- `sender_id: AccountId`
+- `sender_id: AccountId | None`
 - `created_at: AwareDatetime`
 
 ### class `OpenToChatUpdate` (BaseModel)
@@ -621,6 +898,23 @@ The setting a signed-in user sends to turn Open to Chat on or off.
 Fields:
 
 - `open_to_chat: bool`
+
+### class `OpenToChatOut` (BaseModel)
+
+The signed-in user's Open to Chat setting after a change.
+
+Fields:
+
+- `open_to_chat: bool`
+
+### class `OpenToChatPerson` (BaseModel)
+
+Someone on the Open to Chat list, to invite by ID.
+
+Fields:
+
+- `id: AccountId`
+- `username: str`
 
 ## `app.schemas.crowd`
 
@@ -860,6 +1154,87 @@ Fields:
 Source: [`backend/app/services/__init__.py`](../backend/app/services/__init__.py)
 
 Business logic with no database access: hours, menus, freshness, filters, crowd.
+
+## `app.services.auth`
+
+Source: [`backend/app/services/auth.py`](../backend/app/services/auth.py)
+
+Account rules: what a valid username and password are, and session tokens.
+
+Sessions are opaque random tokens kept in an HttpOnly cookie; the database
+stores only their SHA-256 (see db.models.AuthSession). No JWTs: a session can
+be revoked by deleting its row, and nothing about the user is in the token.
+
+### `normalize_username`
+
+```python
+def normalize_username(username: str) -> str
+```
+
+Usernames are case-insensitive: stored and looked up lowercased.
+
+### `username_problem`
+
+```python
+def username_problem(username: str) -> str | None
+```
+
+Why `username` (already normalized) can't be used, or None if it can.
+
+### `password_problem`
+
+```python
+def password_problem(password: str, username: str) -> str | None
+```
+
+Why `password` is too weak to accept, or None if it's fine.
+
+### `new_token`
+
+```python
+def new_token() -> str
+```
+
+A fresh session token for the cookie (256 bits, URL-safe).
+
+### `token_hash`
+
+```python
+def token_hash(token: str) -> str
+```
+
+What the database stores for `token`.
+
+### class `LoginLimiter`
+
+Slows password guessing: after `limit` failed logins for one username from
+one client within `window` seconds, further tries are refused until the
+oldest failure ages out. In memory only, like the crowd throttle; the API
+is a single process, so it resets on restart.
+
+#### `retry_after`
+
+```python
+def retry_after(self, key) -> float
+```
+
+Seconds until `key` may try again; 0 if it may try now.
+
+#### `failed`
+
+```python
+def failed(self, key)
+```
+
+Record a failed login for `key`.
+
+#### `succeeded`
+
+```python
+def succeeded(self, key)
+```
+
+Forget `key`'s failures after a correct password.
 
 ## `app.services.chat_room`
 
@@ -1206,6 +1581,40 @@ def menu_sort_key(menu)
 
 Sort key for menus: by date, then by meal in MEAL_ORDER, then other meals by name.
 
+## `app.services.passwords`
+
+Source: [`backend/app/services/passwords.py`](../backend/app/services/passwords.py)
+
+Password hashing with scrypt from the standard library (no extra dependency).
+
+A stored hash looks like "scrypt$16384$8$1$<salt hex>$<hash hex>", so the cost
+parameters can be raised later without breaking existing accounts:
+needs_rehash() says when a hash was made with older settings.
+
+### `hash_password`
+
+```python
+def hash_password(password: str) -> str
+```
+
+A salted scrypt hash of `password`, safe to store.
+
+### `verify_password`
+
+```python
+def verify_password(password: str, stored: str) -> bool
+```
+
+Whether `password` matches `stored`. False for a malformed hash.
+
+### `needs_rehash`
+
+```python
+def needs_rehash(stored: str) -> bool
+```
+
+True if `stored` wasn't made with the current settings.
+
 # Database: `db/`
 
 ## `db`
@@ -1225,7 +1634,12 @@ migrations/    Alembic versions; apply from proj_2/ with
 
 Source: [`db/chat_models.py`](../db/chat_models.py)
 
-Draft tables for Chat Rooms, members, invitations, and messages.
+Tables for Chat Rooms, members, invitations, and messages (M4). Writer: backend.
+
+Imported at the bottom of db/models.py, so these tables are on Base.metadata
+for Alembic and the tests. Every account ID is users.id from M1: memberships and
+invitations go when the account is deleted; a message stays, with sender_id set
+to NULL ("deleted user"), so other members keep their history.
 
 ### class `ChatRoomRecord` (Base)
 
@@ -1275,7 +1689,7 @@ Fields:
 
 - `id: Mapped[int]`
 - `room_id: Mapped[int]`
-- `sender_id: Mapped[int]`
+- `sender_id: Mapped[int | None]`
 - `text: Mapped[str]`
 - `created_at: Mapped[datetime]`
 
@@ -1319,7 +1733,8 @@ Tables.
 Single writer per table (proj_1b report, Figure 1):
     ingestion/  writes locations, hours_days, menus, menu_items, nutrition, ingest_runs,
                 label_reviews
-    backend/    reads those; writes only crowd_reports
+    backend/    reads those; writes crowd_reports, users, auth_sessions, and the
+                chat tables (chat_models.py)
 
 Unknown stays unknown: a NULL nutrient or a missing label means "not published",
 never zero or safe.
@@ -1480,6 +1895,43 @@ Fields:
 - `decided_at: Mapped[datetime | None]`
 - `decided_by: Mapped[str | None]`
 - `reason: Mapped[str | None]`
+
+### class `User` (Base)
+
+A PackPlate account. Writer: backend (the API).
+
+Only a username, a password hash, and the Open to Chat setting are stored:
+no email, no real name, and no dietary profile (that stays in the browser).
+open_to_chat (off by default) is whether the user appears in chat's list of
+people to invite. username is stored
+lowercased, so "Wolf" and "wolf" are the same account. Other features
+(chat, preferences) should reference users.id with ON DELETE CASCADE, so
+deleting an account deletes everything tied to it.
+
+Fields:
+
+- `id: Mapped[int]`
+- `username: Mapped[str]`
+- `password_hash: Mapped[str]`
+- `open_to_chat: Mapped[bool]`
+- `created_at: Mapped[datetime]`
+- `sessions: Mapped[list['AuthSession']]`
+
+### class `AuthSession` (Base)
+
+One signed-in browser. Writer: backend (the API).
+
+The browser holds a random token in an HttpOnly cookie; only its SHA-256 is
+stored here, so a leaked table can't be used to sign in. Logging out deletes
+the row; a row past expires_at is treated as missing.
+
+Fields:
+
+- `token_hash: Mapped[str]`
+- `user_id: Mapped[int]`
+- `created_at: Mapped[datetime]`
+- `expires_at: Mapped[datetime]`
+- `user: Mapped[User]`
 
 ## `db.session`
 
