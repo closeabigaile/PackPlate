@@ -10,6 +10,7 @@ const LINKS = [
   { href: "/locations", label: "What’s open" },
   { href: "/menus", label: "Menus" },
   { href: "/group", label: "Eat as a group" },
+  { href: "/chat", label: "Group Chat" },
   { href: "/busy", label: "How busy" },
   { href: "/profile", label: "My diet" },
   { href: "/", label: "About" },

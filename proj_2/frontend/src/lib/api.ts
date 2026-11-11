@@ -3,6 +3,10 @@
 //
 // Set NEXT_PUBLIC_API_URL in .env.local to override the local dev server.
 import type {
+  ChatInvitation,
+  ChatMessage,
+  ChatPerson,
+  ChatRoom,
   Crowd,
   CrowdLevel,
   Freshness,
@@ -135,6 +139,33 @@ export const api = {
 
   deleteAccount: (password: string) =>
     request<void>("/auth/me", { password }, "DELETE"),
+
+  chatRooms: () => request<ChatRoom[]>("/chat/rooms"),
+
+  chatInvitations: () => request<ChatInvitation[]>("/chat/invitations"),
+
+  openToChatPeople: () => request<ChatPerson[]>("/chat/open-to-chat"),
+
+  chatPerson: (username: string) =>
+    request<ChatPerson>(`/chat/users/${encodeURIComponent(username)}`),
+
+  createChatRoom: (invitee_ids: number[]) =>
+    request<ChatRoom>("/chat/rooms", { invitee_ids }),
+
+  acceptChatInvitation: (id: number) =>
+    request<ChatRoom>(`/chat/invitations/${id}/accept`, undefined, "POST"),
+
+  declineChatInvitation: (id: number) =>
+    request<void>(`/chat/invitations/${id}/decline`, undefined, "POST"),
+
+  chatMessages: (roomId: number) =>
+    request<ChatMessage[]>(`/chat/rooms/${roomId}/messages`),
+
+  sendChatMessage: (roomId: number, text: string) =>
+    request<ChatMessage>(`/chat/rooms/${roomId}/messages`, { text }),
+
+  leaveChatRoom: (roomId: number) =>
+    request<void>(`/chat/rooms/${roomId}/leave`, undefined, "POST"),
 };
 
 export function errorMessage(error: unknown): string {

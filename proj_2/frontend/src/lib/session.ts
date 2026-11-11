@@ -19,31 +19,52 @@ export type Session =
 
 const LOADING: Session = { status: "loading" };
 let current: Session = LOADING;
-let started = false;
+let revision = 0;
+let sessionChannel: BroadcastChannel | undefined;
 const listeners = new Set<() => void>();
 
 function set(next: Session) {
+  revision += 1;
   current = next;
   listeners.forEach((listener) => listener());
 }
 
 export async function refreshSession(): Promise<Session> {
+  const requestRevision = ++revision;
+  let next: Session;
   try {
-    set({ status: "signed_in", user: await api.me() });
+    next = { status: "signed_in", user: await api.me() };
   } catch (error) {
     const reachable = error instanceof ApiError && error.status === 401;
-    set(reachable ? { status: "signed_out" } : { status: "unknown" });
+    next = reachable ? { status: "signed_out" } : { status: "unknown" };
   }
+  // A slower refresh must not restore an account after its session changes.
+  if (requestRevision === revision) set(next);
   return current;
 }
 
 function subscribe(onChange: () => void): () => void {
+  const first = listeners.size === 0;
   listeners.add(onChange);
-  if (!started) {
-    started = true;
+  if (first) {
+    if (typeof BroadcastChannel === "function") {
+      sessionChannel = new BroadcastChannel("packplate-session");
+      sessionChannel.onmessage = ({ data }) => {
+        // Tabs share the session cookie, so clear the old account's view first.
+        if (data === "identity") set(LOADING);
+        if (data === "identity" || data === "preferences")
+          void refreshSession();
+      };
+    }
     void refreshSession();
   }
-  return () => listeners.delete(onChange);
+  return () => {
+    listeners.delete(onChange);
+    if (listeners.size === 0) {
+      sessionChannel?.close();
+      sessionChannel = undefined;
+    }
+  };
 }
 
 export function useSession(): Session {
@@ -54,24 +75,39 @@ export function useSession(): Session {
   );
 }
 
+function setIdentity(next: Session) {
+  set(next);
+  sessionChannel?.postMessage("identity");
+}
+
 export async function register(username: string, password: string) {
-  set({ status: "signed_in", user: await api.register(username, password) });
+  setIdentity({
+    status: "signed_in",
+    user: await api.register(username, password),
+  });
 }
 
 export async function login(username: string, password: string) {
-  set({ status: "signed_in", user: await api.login(username, password) });
+  setIdentity({
+    status: "signed_in",
+    user: await api.login(username, password),
+  });
 }
 
 export async function logout() {
   await api.logout();
-  set({ status: "signed_out" });
+  setIdentity({ status: "signed_out" });
 }
 
 export async function setOpenToChat(value: boolean) {
-  set({ status: "signed_in", user: await api.setOpenToChat(value) });
+  const user = await api.setOpenToChat(value);
+  if (current.status === "signed_in" && current.user.id === user.id) {
+    set({ status: "signed_in", user });
+  }
+  sessionChannel?.postMessage("preferences");
 }
 
 export async function deleteAccount(password: string) {
   await api.deleteAccount(password);
-  set({ status: "signed_out" });
+  setIdentity({ status: "signed_out" });
 }
