@@ -9,6 +9,7 @@ const LINKS = [
   { href: "/home", label: "Home" },
   { href: "/locations", label: "What’s open" },
   { href: "/menus", label: "Menus" },
+  { href: "/compare", label: "Compare Meals" },
   { href: "/group", label: "Eat as a group" },
   { href: "/chat", label: "Group Chat" },
   { href: "/busy", label: "How busy" },

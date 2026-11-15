@@ -16,7 +16,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import text
 
-from app.api import auth, chat_room, crowd, filters, locations, meta
+from app.api import auth, chat_room, crowd, filters, locations, meta, recommendations
 from app.deps import get_engine
 from db.migrate import check_current
 
@@ -33,6 +33,7 @@ app.add_middleware(
 app.include_router(locations.router)
 app.include_router(meta.router)
 app.include_router(filters.router)
+app.include_router(recommendations.router)
 app.include_router(crowd.router)
 app.include_router(auth.router)
 app.include_router(chat_room.router)

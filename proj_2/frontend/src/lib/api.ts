@@ -17,6 +17,8 @@ import type {
   Menu,
   Profile,
   User,
+  RecommendationRequest,
+  RecommendationResponse
 } from "./types";
 
 export const API_URL =
@@ -99,6 +101,9 @@ function query(params: Record<string, string | undefined>): string {
 }
 
 export const api = {
+  recommendations: (options: RecommendationRequest) =>
+    request<RecommendationResponse>("/recommendations", options),
+
   freshness: () => request<Freshness>("/freshness"),
 
   locations: () => request<LocationSummary[]>("/locations"),
