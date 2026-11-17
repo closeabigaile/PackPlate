@@ -143,3 +143,34 @@ export interface GroupLocation {
   everyone_fits: boolean;
   profiles: ProfileCounts[];
 }
+
+// The logged-in account (GET /auth/me). No email, name, or diet is stored.
+export interface User {
+  id: number;
+  username: string;
+  open_to_chat: boolean; // listed for chat invites; off by default
+  created_at: string;
+}
+
+export interface ChatPerson {
+  id: number;
+  username: string;
+}
+
+export interface ChatRoom {
+  id: number;
+  status: "pending" | "active" | "inactive";
+  member_ids: number[];
+}
+
+export interface ChatInvitation {
+  id: number;
+  room_id: number;
+}
+
+export interface ChatMessage {
+  id: number;
+  text: string;
+  sender_id: number | null;
+  created_at: string;
+}
