@@ -18,7 +18,7 @@ import type {
   Profile,
   User,
   RecommendationRequest,
-  RecommendationResponse
+  RecommendationResponse,
 } from "./types";
 
 export const API_URL =
@@ -45,7 +45,7 @@ export class ApiError extends Error {
 async function request<T>(
   path: string,
   body?: unknown,
-  method: "GET" | "POST" | "PATCH" | "DELETE" = body === undefined
+  method: "GET" | "POST" | "PUT" | "PATCH" | "DELETE" = body === undefined
     ? "GET"
     : "POST",
 ): Promise<T> {
@@ -113,7 +113,7 @@ export const api = {
   menus: (id: number, date?: string) =>
     request<Menu[]>(`/locations/${id}/menus${query({ date })}`),
 
-  // Profiles are sent in the body and are never stored by the server.
+  // Profiles are sent in the body; the filter endpoints don't store them.
   filterMenus: (id: number, profiles: Profile[], date?: string) =>
     request<FilteredMenu[]>(
       `/filters/locations/${id}/menus${query({ date })}`,
@@ -144,6 +144,15 @@ export const api = {
 
   deleteAccount: (password: string) =>
     request<void>("/auth/me", { password }, "DELETE"),
+
+  // The logged-in user's saved dietary profile (null if none). Use
+  // lib/accountProfile.ts in components: it keeps the browser copy in sync.
+  savedProfile: () => request<Profile | null>("/profile"),
+
+  saveProfile: (profile: Profile) =>
+    request<Profile>("/profile", profile, "PUT"),
+
+  deleteProfile: () => request<void>("/profile", undefined, "DELETE"),
 
   chatRooms: () => request<ChatRoom[]>("/chat/rooms"),
 

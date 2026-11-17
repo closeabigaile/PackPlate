@@ -16,12 +16,13 @@ accounts to build on.
 | Stored | Not stored |
 |---|---|
 | username (3–30 of `a-z 0-9 _`, case-insensitive, unique) | email, real name, student ID |
-| scrypt hash of the password (salted, never the password) | the dietary profile (still in the browser only) |
-| Open to Chat (off by default) | anything about crowd reports |
+| scrypt hash of the password (salted, never the password) | anything about crowd reports |
+| Open to Chat (off by default) | |
 | when the account was made | |
 
-Fewer fields means less to protect. The 1b report's privacy stakeholders are
-why the diet stays in the browser.
+Fewer fields means less to protect. The dietary profile is kept in its own
+`diet_profiles` table (M5), only once a logged-in user saves one on My diet;
+logged out, it stays in the browser as before. See "Saved diet" below.
 
 ## How sign-in works
 
@@ -125,12 +126,30 @@ Send logged-out users to `/login`.
 - The login limiter is in memory, like the crowd throttle: fine for one API
   process, resets on restart.
 
+## Saved diet (M5)
+
+- `GET /profile` returns the logged-in user's profile (or `null`), `PUT
+  /profile` saves one, `DELETE /profile` removes it. Same fields and limits as a
+  filter request's profile, so a typo is a 422, not a profile that silently
+  matches everything.
+- `diet_profiles.user_id` references `users.id` with `ON DELETE CASCADE`:
+  deleting the account deletes the diet (migration `0007`).
+- The frontend still reads the profile from the browser (`useSavedProfile()`),
+  so My diet, Menus, Compare Meals, and Eat as a group didn't change.
+  `lib/accountProfile.ts` keeps that copy in sync:
+  - on login, the account's profile replaces the browser's; if the account has
+    none, a profile made while logged out is saved to it (never one that came
+    from a different account);
+  - saving or clearing on My diet while logged in changes the account first,
+    then the browser;
+  - logging out (in any tab) clears it from the browser, so the next person on
+    a shared computer doesn't see it.
+
 ## Not done (on purpose)
 
 - Password reset: there's no email to send a link to. A user who forgets
   their password makes a new account.
 - Changing username or password.
-- Moving the dietary profile into the account (that's M5's call).
 
 ## Checklist
 

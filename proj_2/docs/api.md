@@ -12,6 +12,7 @@ Every endpoint and data model of the PackPlate API, read from the API's own Open
 - [`GET /freshness`](#get-freshness)
 - [`POST /filters/locations/{location_id}/menus`](#post-filterslocationslocation_idmenus)
 - [`POST /filters/group`](#post-filtersgroup)
+- [`POST /recommendations`](#post-recommendations)
 - [`POST /crowd/{location_id}`](#post-crowdlocation_id)
 - [`POST /auth/register`](#post-authregister)
 - [`POST /auth/login`](#post-authlogin)
@@ -19,6 +20,9 @@ Every endpoint and data model of the PackPlate API, read from the API's own Open
 - [`GET /auth/me`](#get-authme)
 - [`DELETE /auth/me`](#delete-authme)
 - [`PATCH /auth/me`](#patch-authme)
+- [`GET /profile`](#get-profile)
+- [`PUT /profile`](#put-profile)
+- [`DELETE /profile`](#delete-profile)
 - [`GET /chat/rooms`](#get-chatrooms)
 - [`POST /chat/rooms`](#post-chatrooms)
 - [`GET /chat/rooms/{room_id}`](#get-chatroomsroom_id)
@@ -120,6 +124,17 @@ Order: locations where everyone fits first, then those open at `at`, then by nam
 | 200 Successful Response | list of [GroupLocation](#grouplocation) |
 | 422 Validation Error | [HTTPValidationError](#httpvalidationerror) |
 
+### `POST /recommendations`
+
+Recommend meals across campus based on a nutrition goal.
+
+**Request body:** [RecommendationRequest](#recommendationrequest)
+
+| Response | Body |
+|---|---|
+| 200 Successful Response | [RecommendationResponse](#recommendationresponse) |
+| 422 Validation Error | [HTTPValidationError](#httpvalidationerror) |
+
 ### `POST /crowd/{location_id}`
 
 Report how busy a location is right now. Returns the location's crowd level after it.
@@ -198,6 +213,34 @@ Change the logged-in account's settings: {"open_to_chat": true | false}.
 |---|---|
 | 200 Successful Response | [UserOut](#userout) |
 | 422 Validation Error | [HTTPValidationError](#httpvalidationerror) |
+
+### `GET /profile`
+
+The logged-in user's saved profile, or null if they haven't saved one. 401 when logged out.
+
+| Response | Body |
+|---|---|
+| 200 Successful Response | [Profile](#profile) or null |
+
+### `PUT /profile`
+
+Save (create or replace) the logged-in user's profile. Same rules as a filter
+request's profile: unknown allergens, diets, or fields are a 422.
+
+**Request body:** [Profile](#profile)
+
+| Response | Body |
+|---|---|
+| 200 Successful Response | [Profile](#profile) |
+| 422 Validation Error | [HTTPValidationError](#httpvalidationerror) |
+
+### `DELETE /profile`
+
+Remove the logged-in user's saved profile. Succeeds if there wasn't one.
+
+| Response | Body |
+|---|---|
+| 204 Successful Response |  |
 
 ### `GET /chat/rooms`
 
@@ -691,6 +734,35 @@ For one profile at one location: how many items fit, are incomplete, or conflict
 | `fits` | integer | yes |
 | `incomplete` | integer | yes |
 | `conflicts` | integer | yes |
+
+### RecommendationItem
+
+| Field | Type | Required |
+|---|---|---|
+| `rank` | integer | yes |
+| `item_id` | integer | yes |
+| `name` | string | yes |
+| `location_id` | integer | yes |
+| `location_name` | string | yes |
+| `meal` | string | yes |
+| `meal_periods` | list of string | yes |
+| `nutrition` | [Nutrition](#nutrition) | yes |
+| `reason` | string | yes |
+
+### RecommendationRequest
+
+| Field | Type | Required |
+|---|---|---|
+| `goal` | `high_protein` / `lower_calories` / `lower_sodium` | yes |
+| `date` | string (date) or null | no |
+| `meal` | string or null | no |
+| `profile` | [Profile](#profile) or null | no |
+
+### RecommendationResponse
+
+| Field | Type | Required |
+|---|---|---|
+| `recommendations` | list of [RecommendationItem](#recommendationitem) | no |
 
 ### RoomStatus
 
