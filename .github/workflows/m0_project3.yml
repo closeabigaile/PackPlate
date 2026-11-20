@@ -38,9 +38,12 @@ jobs:
         with:
           python-version: "3.12"
           cache: pip
-          cache-dependency-path: proj_2/backend/requirements.txt
+          cache-dependency-path: |
+            proj_2/backend/requirements.txt
+            proj_2/ingestion/requirements.txt
       - name: Install the existing dependencies
-        run: pip install -r backend/requirements.txt
+        # The inherited eval imports the ingestion parser too.
+        run: pip install -r backend/requirements.txt -r ingestion/requirements.txt
       - name: Reproduce Project 3 M0 and verify the faulty controls
         run: python eval_project3/m0.py --check
       - name: Reproduce inherited M0 loop 1
