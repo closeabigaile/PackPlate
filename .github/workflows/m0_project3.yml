@@ -1,0 +1,49 @@
+# Reproduce the Project 3 numbers, including honest findings that miss a target.
+name: M0 Project 3
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  m0-project3:
+    name: Project 3 M0 reproduces
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: packplate
+          POSTGRES_PASSWORD: packplate
+          POSTGRES_DB: packplate_m0_project3
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      M0_DATABASE_URL: postgresql://packplate:packplate@localhost:5432/packplate_m0_project3
+    defaults:
+      run:
+        working-directory: proj_2
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: proj_2/backend/requirements.txt
+      - name: Install the existing dependencies
+        run: pip install -r backend/requirements.txt
+      - name: Reproduce Project 3 M0 and verify the faulty controls
+        run: python eval_project3/m0.py --check
+      - name: Reproduce inherited M0 loop 1
+        run: python -m eval.m0 --check
+      - name: Reproduce inherited M0 loop 2
+        run: python -m eval_loop2.m0 --check
