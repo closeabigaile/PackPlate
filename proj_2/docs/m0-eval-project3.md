@@ -1,9 +1,10 @@
 # M0 — Project 3 risk-killer eval
 
-**Status (2026-11-19):** local evaluation completed. Both targets met.
-The separate CI workflow is added; a hosted GitHub run is still pending.
-[Issue #8](https://github.com/closeabigaile/PackPlate/issues/8) exists, but its
-description and review decision still need to be completed.
+**Status (2026-11-19):** local and hosted evaluations completed. Both new
+targets met. The [successful GitHub run](https://github.com/closeabigaile/PackPlate/actions/runs/44661125326)
+also reproduced both inherited M0 loops. [Issue #8](https://github.com/closeabigaile/PackPlate/issues/8)
+is being maintained by Abigail; its final description and team review decision
+have not been verified here.
 
 This is the new M0 for Project 3's accounts and private collaboration.
 The inherited [Project 2 M0](m0-eval.md) remains separate. Project 3 requires
@@ -208,7 +209,7 @@ whether students want private coordination; it cannot verify access controls.
 - [x] Initial application baseline measured without changing feature code
 - [x] Both inherited M0 loops reproduced
 - [x] Separate Project 3 CI workflow added
-- [ ] Hosted GitHub CI run completed
+- [x] Hosted GitHub CI run completed
 - [ ] Issue #8 description and team review decision completed
 
 ## Prepared update for Issue #8
@@ -233,5 +234,7 @@ the review decision:
 > .github/workflows/m0_project3.yml. These synthetic API results do not
 > establish real-user usability or universal security.
 >
+> Hosted CI passed: https://github.com/closeabigaile/PackPlate/actions/runs/44661125326
+>
 > Recommended decision: persevere with the current account/chat scope and
-> keep running the benchmark. Team decision and hosted CI status: pending.
+> keep running the benchmark. Team decision: pending confirmation in the issue.
