@@ -1,0 +1,277 @@
+{
+  "application_sha256": "8d18db7555ba8205576a93be0fed5e4eb0cebfc741b024b3d98a3972e105118a",
+  "authorized": {
+    "completed": 6,
+    "completion_rate": 1.0,
+    "journeys": [
+      {
+        "error": null,
+        "id": "round_trip",
+        "passed": true
+      },
+      {
+        "error": null,
+        "id": "separate_rooms",
+        "passed": true
+      },
+      {
+        "error": null,
+        "id": "leave_active",
+        "passed": true
+      },
+      {
+        "error": null,
+        "id": "leave_inactive",
+        "passed": true
+      },
+      {
+        "error": null,
+        "id": "delete_active",
+        "passed": true
+      },
+      {
+        "error": null,
+        "id": "delete_inactive",
+        "passed": true
+      }
+    ],
+    "total": 6
+  },
+  "baseline_revision": "e0f913d119b48b540b86abc6d48941a6a4939cbf",
+  "controls": {
+    "blocked_member_detected": true,
+    "outsider_read_detected": true,
+    "outsider_write_detected": true
+  },
+  "evaluator_sha256": "306f985d8fd1df2666ff35e1713b411dcd12126bfe0e8136af5e6aa712e3894f",
+  "issue": "https://github.com/closeabigaile/PackPlate/issues/8",
+  "privacy": {
+    "attempts": [
+      {
+        "actual_status": 403,
+        "executed": true,
+        "expected_status": 403,
+        "id": "outsider.read",
+        "passed": true,
+        "private_content_returned": false,
+        "stored_messages_changed": false,
+        "unauthorized_access": false
+      },
+      {
+        "actual_status": 403,
+        "executed": true,
+        "expected_status": 403,
+        "id": "outsider.write",
+        "passed": true,
+        "private_content_returned": false,
+        "stored_messages_changed": false,
+        "unauthorized_access": false
+      },
+      {
+        "actual_status": 403,
+        "executed": true,
+        "expected_status": 403,
+        "id": "invited.read",
+        "passed": true,
+        "private_content_returned": false,
+        "stored_messages_changed": false,
+        "unauthorized_access": false
+      },
+      {
+        "actual_status": 403,
+        "executed": true,
+        "expected_status": 403,
+        "id": "invited.write",
+        "passed": true,
+        "private_content_returned": false,
+        "stored_messages_changed": false,
+        "unauthorized_access": false
+      },
+      {
+        "actual_status": 403,
+        "executed": true,
+        "expected_status": 403,
+        "id": "declined.read",
+        "passed": true,
+        "private_content_returned": false,
+        "stored_messages_changed": false,
+        "unauthorized_access": false
+      },
+      {
+        "actual_status": 403,
+        "executed": true,
+        "expected_status": 403,
+        "id": "declined.write",
+        "passed": true,
+        "private_content_returned": false,
+        "stored_messages_changed": false,
+        "unauthorized_access": false
+      },
+      {
+        "actual_status": 403,
+        "executed": true,
+        "expected_status": 403,
+        "id": "former_member.read",
+        "passed": true,
+        "private_content_returned": false,
+        "stored_messages_changed": false,
+        "unauthorized_access": false
+      },
+      {
+        "actual_status": 403,
+        "executed": true,
+        "expected_status": 403,
+        "id": "former_member.write",
+        "passed": true,
+        "private_content_returned": false,
+        "stored_messages_changed": false,
+        "unauthorized_access": false
+      },
+      {
+        "actual_status": 401,
+        "executed": true,
+        "expected_status": 401,
+        "id": "missing_session.read",
+        "passed": true,
+        "private_content_returned": false,
+        "stored_messages_changed": false,
+        "unauthorized_access": false
+      },
+      {
+        "actual_status": 401,
+        "executed": true,
+        "expected_status": 401,
+        "id": "missing_session.write",
+        "passed": true,
+        "private_content_returned": false,
+        "stored_messages_changed": false,
+        "unauthorized_access": false
+      },
+      {
+        "actual_status": 401,
+        "executed": true,
+        "expected_status": 401,
+        "id": "invalid_session.read",
+        "passed": true,
+        "private_content_returned": false,
+        "stored_messages_changed": false,
+        "unauthorized_access": false
+      },
+      {
+        "actual_status": 401,
+        "executed": true,
+        "expected_status": 401,
+        "id": "invalid_session.write",
+        "passed": true,
+        "private_content_returned": false,
+        "stored_messages_changed": false,
+        "unauthorized_access": false
+      },
+      {
+        "actual_status": 401,
+        "executed": true,
+        "expected_status": 401,
+        "id": "expired_session.read",
+        "passed": true,
+        "private_content_returned": false,
+        "stored_messages_changed": false,
+        "unauthorized_access": false
+      },
+      {
+        "actual_status": 401,
+        "executed": true,
+        "expected_status": 401,
+        "id": "expired_session.write",
+        "passed": true,
+        "private_content_returned": false,
+        "stored_messages_changed": false,
+        "unauthorized_access": false
+      },
+      {
+        "actual_status": 401,
+        "executed": true,
+        "expected_status": 401,
+        "id": "logged_out_session.read",
+        "passed": true,
+        "private_content_returned": false,
+        "stored_messages_changed": false,
+        "unauthorized_access": false
+      },
+      {
+        "actual_status": 401,
+        "executed": true,
+        "expected_status": 401,
+        "id": "logged_out_session.write",
+        "passed": true,
+        "private_content_returned": false,
+        "stored_messages_changed": false,
+        "unauthorized_access": false
+      },
+      {
+        "actual_status": 401,
+        "executed": true,
+        "expected_status": 401,
+        "id": "deleted_account.read",
+        "passed": true,
+        "private_content_returned": false,
+        "stored_messages_changed": false,
+        "unauthorized_access": false
+      },
+      {
+        "actual_status": 401,
+        "executed": true,
+        "expected_status": 401,
+        "id": "deleted_account.write",
+        "passed": true,
+        "private_content_returned": false,
+        "stored_messages_changed": false,
+        "unauthorized_access": false
+      },
+      {
+        "actual_status": 409,
+        "executed": true,
+        "expected_status": 409,
+        "id": "pending_room.write",
+        "passed": true,
+        "private_content_returned": false,
+        "stored_messages_changed": false,
+        "unauthorized_access": false
+      },
+      {
+        "actual_status": 409,
+        "executed": true,
+        "expected_status": 409,
+        "id": "inactive_room.write",
+        "passed": true,
+        "private_content_returned": false,
+        "stored_messages_changed": false,
+        "unauthorized_access": false
+      },
+      {
+        "actual_status": 422,
+        "executed": true,
+        "expected_status": 422,
+        "id": "spoofed_sender.write",
+        "passed": true,
+        "private_content_returned": false,
+        "stored_messages_changed": false,
+        "unauthorized_access": false
+      }
+    ],
+    "executed_attempts": 21,
+    "planned_attempts": 21,
+    "unauthorized_accesses": 0
+  },
+  "scenarios_sha256": "9df295228a1bc7d0454a68dc91cdc12ca573a0014692bf7d6925ce5f1367dd28",
+  "simulation": "fixed fictional users; separate cookies; disposable PostgreSQL schema",
+  "thresholds": {
+    "authorized_completion_rate": 1.0,
+    "unauthorized_accesses": 0
+  },
+  "verdict": {
+    "controls_met": true,
+    "execution_complete": true,
+    "private_met": true,
+    "reliable_met": true
+  }
+}
