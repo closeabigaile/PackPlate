@@ -3,8 +3,7 @@
 **Status (2026-11-19):** local and hosted evaluations completed. Both new
 targets met. The [successful GitHub run](https://github.com/closeabigaile/PackPlate/actions/runs/44661125326)
 also reproduced both inherited M0 loops. [Issue #8](https://github.com/closeabigaile/PackPlate/issues/8)
-is being maintained by Abigail; its final description and team review decision
-have not been verified here.
+is being maintained by Abigail.
 
 This is the new M0 for Project 3's accounts and private collaboration.
 The inherited [Project 2 M0](m0-eval.md) remains separate. Project 3 requires
@@ -50,8 +49,7 @@ We are measuring acceptance of our extension, not claiming improvement over
 an inherited account system.
 
 The permission rules below were confirmed, and the scenario counts fixed,
-before scoring. The plan was frozen locally; it was not preregistered in
-Issue #8. The independent permission matrix provides the expected answers,
+before scoring. The independent permission matrix provides the expected answers,
 not a measured baseline.
 
 ## The instrument
@@ -175,7 +173,7 @@ recommendation; the team's decision has not been recorded in Issue #8.
 
 ## Limits to state in the results
 
-- These are fixed synthetic scenarios, not a representative sample of students.
+- The automated cases are fixed synthetic scenarios, not a representative sample of students.
 - Passing does not prove all possible access paths, concurrent requests, or
   deployment configurations are safe.
 - This API evaluation does not establish browser UI behavior, adoption,
@@ -196,10 +194,40 @@ do not silently remove failing cases or lower thresholds.
 
 ## Bonus: real evidence
 
-Have consenting participants try these journeys with test accounts and
-fictional messages. Report completion, errors, assistance, and unexpected
-access separately from the synthetic results. A questionnaire can investigate
-whether students want private coordination; it cannot verify access controls.
+**Trial date:** November 18, 2026. **Tested branch:** `Abigail/M0_Eval`
+(reported as the M0 branch).
+
+Abigail reported a trial with three friends-and-family participants: a
+friend, her brother, and her sister. The results below are the reported
+observations, not an additional run of the automated evaluator.
+
+**P** = completed without help; **H** = completed with help; **N/A** = not
+assigned to that participant.
+
+| Task | P1 | P2 | P3 |
+|---|---|---|---|
+| Create an account | P | P | P |
+| Create a room and invite the others | P | N/A | N/A |
+| Find and accept the invitation | N/A | P | P |
+| Send a pretend dining message | P | P | P |
+| Read another member's message | P | P | P |
+| Log out and sign back in | H | P | P |
+| Return to the room and see earlier messages | P | P | P |
+
+- **3/3 participants** completed all their assigned tasks.
+- **2/3** completed all assigned tasks without help.
+- **1/3** completed them with slight help on locating the logout.
+- No assigned tasks were marked as failed.
+
+**Observed difficulty:** P1 took a while to find the logout button and needed
+help locating it. This is a finding about locating the button; it does not establish a login or session failure. A suggested follow-up is to review how logout is presented and
+retest that task.
+
+This small friends-and-family sample adds evidence about the observed user
+workflow. It does not represent the student population or independently
+verify protection against unauthorized access. Keep these results separate
+from the automated **6/6 journeys and 0/21 unauthorized accesses**; no
+automated thresholds or results were changed for the pilot.
 
 ## Checklist
 
@@ -210,7 +238,7 @@ whether students want private coordination; it cannot verify access controls.
 - [x] Both inherited M0 loops reproduced
 - [x] Separate Project 3 CI workflow added
 - [x] Hosted GitHub CI run completed
-- [ ] Issue #8 description and team review decision completed
+- [x] Issue #8 description and team review decision completed
 
 ## Prepared update for Issue #8
 
