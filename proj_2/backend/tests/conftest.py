@@ -106,6 +106,8 @@ def no_outside_services(monkeypatch):
     test starts with them off. A test that wants one sets its own setting."""
     for name in ("LLM", "GEOCODE", "ROUTING"):
         monkeypatch.setenv(f"ASSISTANT_{name}_ENABLED", "false")
+    # Starting the app must not migrate whatever DATABASE_URL points at.
+    monkeypatch.setenv("MIGRATE_ON_START", "false")
 
 
 class Seed:

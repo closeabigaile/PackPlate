@@ -4,7 +4,7 @@
 
 Every public module, class, and function in the Python code, with its signature and description, read from the source. The website (`frontend/`) is described in [how.md](how.md) instead.
 
-**449 of 449** modules, classes, and functions have a description.
+**454 of 454** modules, classes, and functions have a description.
 
 - **API** (`backend/app/`)
   - [`app`](#app)
@@ -58,6 +58,7 @@ Every public module, class, and function in the Python code, with its signature 
   - [`app.services.label_reviews`](#appserviceslabel_reviews)
   - [`app.services.menus`](#appservicesmenus)
   - [`app.services.passwords`](#appservicespasswords)
+  - [`app.startup`](#appstartup)
 - **Database** (`db/`)
   - [`db`](#db)
   - [`db.assistant_models`](#dbassistant_models)
@@ -544,6 +545,15 @@ Layers (see proj_1b report, Figure 1):
 The tables live in proj_2/db (shared with ingestion), so proj_2/ must be on
 the Python path: see the README.
 ```
+
+### `lifespan`
+
+```python
+@asynccontextmanager
+async def lifespan(_app: FastAPI)
+```
+
+On start, bring a local database up to date (see app/startup.py).
 
 ### `health`
 
@@ -2562,6 +2572,47 @@ def needs_rehash(stored: str) -> bool
 ```
 
 True if `stored` wasn't made with the current settings.
+
+## `app.startup`
+
+Source: [`backend/app/startup.py`](../backend/app/startup.py)
+
+Bring a local database up to date when the API starts, so nobody has to run
+`alembic upgrade head` by hand after pulling new code.
+
+Only a database on this machine (or the Docker `db` service) is changed. A shared
+or hosted database is never touched here: someone runs the migration on purpose,
+and a warning in the log says so. MIGRATE_ON_START=false turns this off.
+
+A failure never stops the API from starting; /health still reports the schema as
+"outdated" or the database as "unreachable".
+
+### `enabled`
+
+```python
+def enabled() -> bool
+```
+
+Whether migrating on start is allowed (MIGRATE_ON_START, on unless "false").
+
+### `is_local`
+
+```python
+def is_local(url: str) -> bool
+```
+
+Whether a database URL points at this machine or the Docker `db` service.
+
+### `migrate_if_local`
+
+```python
+def migrate_if_local(url: str | None=None, engine=None, sleep=time.sleep) -> str
+```
+
+Migrate a local database to the newest revision; returns what happened.
+
+One of "disabled", "no database set", "not local", "current" (nothing to do),
+"migrated", or "failed". `engine` and `sleep` are for tests.
 
 # Database: `db/`
 
