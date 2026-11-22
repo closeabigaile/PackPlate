@@ -1,0 +1,31 @@
+{
+  "version": 1,
+  "issue": "https://github.com/closeabigaile/PackPlate/issues/8",
+  "baseline_revision": "e0f913d119b48b540b86abc6d48941a6a4939cbf",
+  "thresholds": {
+    "authorized_completion_rate": 1.0,
+    "unauthorized_accesses": 0
+  },
+  "authorized": [
+    {"id": "round_trip", "description": "Register, join, exchange messages, log out, and sign back in to the same history."},
+    {"id": "separate_rooms", "description": "Two groups keep the correct members, senders, and message histories."},
+    {"id": "leave_active", "description": "One of three members leaves; the remaining two can keep chatting."},
+    {"id": "leave_inactive", "description": "One of two members leaves; the remaining member can read retained history."},
+    {"id": "delete_active", "description": "One of three accounts is deleted; the remaining two can chat and read its anonymized messages."},
+    {"id": "delete_inactive", "description": "One of two accounts is deleted; the remaining member can read its anonymized messages."}
+  ],
+  "denied": [
+    {"id": "outsider", "description": "A signed-in user guesses another room's ID.", "operations": ["read", "write"], "status": 403},
+    {"id": "invited", "description": "An invited user has not accepted.", "operations": ["read", "write"], "status": 403},
+    {"id": "declined", "description": "An invited user declines instead of joining.", "operations": ["read", "write"], "status": 403},
+    {"id": "former_member", "description": "A member leaves, then tries the same room again.", "operations": ["read", "write"], "status": 403},
+    {"id": "missing_session", "description": "A request has no session cookie.", "operations": ["read", "write"], "status": 401},
+    {"id": "invalid_session", "description": "A request uses an invented session cookie.", "operations": ["read", "write"], "status": 401},
+    {"id": "expired_session", "description": "A member reuses a session whose expiry has passed.", "operations": ["read", "write"], "status": 401},
+    {"id": "logged_out_session", "description": "A member replays the old cookie after logging out.", "operations": ["read", "write"], "status": 401},
+    {"id": "deleted_account", "description": "A deleted account replays its old session cookie.", "operations": ["read", "write"], "status": 401},
+    {"id": "pending_room", "description": "The creator tries to send before anyone joins.", "operations": ["write"], "status": 409},
+    {"id": "inactive_room", "description": "The remaining member tries to send in an inactive room.", "operations": ["write"], "status": 409},
+    {"id": "spoofed_sender", "description": "A member supplies another account's sender ID.", "operations": ["write"], "status": 422}
+  ]
+}
