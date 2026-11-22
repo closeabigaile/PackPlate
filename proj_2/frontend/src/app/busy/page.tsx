@@ -3,7 +3,7 @@
 // How Busy Is It?: crowd levels at open locations, and a way to report.
 // Backed by `crowd` in GET /locations and POST /crowd/{id}.
 import { useState } from "react";
-import { CrowdBadge, StatusPill } from "@/components/Badges";
+import { CrowdBadge, ForecastBadge, StatusPill } from "@/components/Badges";
 import { PageShell } from "@/components/PageShell";
 import { StateMessage } from "@/components/StateMessage";
 import { api, ApiError, errorMessage } from "@/lib/api";
@@ -98,6 +98,7 @@ export default function BusyPage() {
                       </div>
                       <p>
                         <CrowdBadge crowd={crowd} />
+                        <ForecastBadge forecast={location.forecast} />{" "}
                         {crowd.last_reported_at ? (
                           <span className="meta">
                             {" "}

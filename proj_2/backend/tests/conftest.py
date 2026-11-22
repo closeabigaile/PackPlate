@@ -20,6 +20,7 @@ from app.deps import get_db
 from app.main import app
 from app.services.auth import LoginLimiter
 from app.services.crowd import Throttle
+from db.assistant_models import LocationPoint
 from db.migrate import upgrade
 from db.models import (
     Base,
@@ -99,6 +100,16 @@ def client(db):
     app.dependency_overrides.clear()
 
 
+@pytest.fixture(autouse=True)
+def no_outside_services(monkeypatch):
+    """The model, the place search and the route search are on by default, so every
+    test starts with them off. A test that wants one sets its own setting."""
+    for name in ("LLM", "GEOCODE", "ROUTING"):
+        monkeypatch.setenv(f"ASSISTANT_{name}_ENABLED", "false")
+    # Starting the app must not migrate whatever DATABASE_URL points at.
+    monkeypatch.setenv("MIGRATE_ON_START", "false")
+
+
 class Seed:
     """Insert rows the way ingestion would, with sensible defaults."""
 
@@ -115,6 +126,15 @@ class Seed:
                 dining_slug=slug,
                 description=description,
                 updated_at=SCRAPED,
+            )
+        )
+        self.db.commit()
+
+    def point(self, location_id, latitude, longitude):
+        """Save where a location is, as db/seed_location_points.py does."""
+        self.db.add(
+            LocationPoint(
+                location_id=location_id, latitude=latitude, longitude=longitude
             )
         )
         self.db.commit()

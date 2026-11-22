@@ -1,0 +1,538 @@
+{
+  "source": "OpenStreetMap, looked up 2026-11-22. Check each point on a map before relying on it. Add a place by copying an entry under \"spots\". The dining locations' own positions are in the database (see db/seed_location_points.py).",
+  "spots": {
+    "Talley Student Union": {
+      "at": [
+        35.78397,
+        -78.67092
+      ],
+      "aliases": [
+        "talley",
+        "student union"
+      ]
+    },
+    "Hunt Library": {
+      "at": [
+        35.76935,
+        -78.67638
+      ],
+      "aliases": [
+        "hunt library",
+        "hunt"
+      ]
+    },
+    "D. H. Hill Library": {
+      "at": [
+        35.78753,
+        -78.66971
+      ],
+      "aliases": [
+        "hill library",
+        "d.h. hill",
+        "dh hill",
+        "d. h. hill"
+      ]
+    },
+    "Witherspoon Student Center": {
+      "at": [
+        35.78515,
+        -78.67447
+      ],
+      "aliases": [
+        "witherspoon"
+      ]
+    },
+    "Reynolds Coliseum": {
+      "at": [
+        35.78351,
+        -78.66991
+      ],
+      "aliases": [
+        "reynolds"
+      ]
+    },
+    "Carmichael Gymnasium": {
+      "at": [
+        35.78314,
+        -78.67202
+      ],
+      "aliases": [
+        "carmichael"
+      ]
+    },
+    "Poe Hall": {
+      "at": [
+        35.78565,
+        -78.66637
+      ],
+      "aliases": [
+        "poe hall"
+      ]
+    },
+    "University Towers": {
+      "at": [
+        35.78835,
+        -78.67522
+      ],
+      "aliases": [
+        "university towers",
+        "univ towers"
+      ]
+    },
+    "Lampe Drive": {
+      "at": [
+        35.78631,
+        -78.66828
+      ],
+      "aliases": [
+        "lampe drive",
+        "lampe"
+      ]
+    },
+    "Alexander Hall": {
+      "at": [
+        35.78442,
+        -78.67197
+      ],
+      "aliases": [
+        "alexander hall"
+      ]
+    },
+    "Bagwell Hall": {
+      "at": [
+        35.78239,
+        -78.66594
+      ],
+      "aliases": [
+        "bagwell hall"
+      ]
+    },
+    "Becton Hall": {
+      "at": [
+        35.78255,
+        -78.66649
+      ],
+      "aliases": [
+        "becton hall"
+      ]
+    },
+    "Bowen Hall": {
+      "at": [
+        35.78564,
+        -78.67359
+      ],
+      "aliases": [
+        "bowen hall"
+      ]
+    },
+    "Bragaw Hall": {
+      "at": [
+        35.78566,
+        -78.67641
+      ],
+      "aliases": [
+        "bragaw",
+        "bragaw hall"
+      ]
+    },
+    "Carroll Hall": {
+      "at": [
+        35.78532,
+        -78.67269
+      ],
+      "aliases": [
+        "carroll hall"
+      ]
+    },
+    "Gold Hall": {
+      "at": [
+        35.7839,
+        -78.66511
+      ],
+      "aliases": [
+        "gold hall"
+      ]
+    },
+    "Lee Hall": {
+      "at": [
+        35.78614,
+        -78.67783
+      ],
+      "aliases": [
+        "lee hall"
+      ]
+    },
+    "Owen Hall": {
+      "at": [
+        35.78468,
+        -78.67298
+      ],
+      "aliases": [
+        "owen hall"
+      ]
+    },
+    "Sullivan Hall": {
+      "at": [
+        35.78688,
+        -78.67729
+      ],
+      "aliases": [
+        "sullivan hall"
+      ]
+    },
+    "Syme Hall": {
+      "at": [
+        35.78395,
+        -78.66579
+      ],
+      "aliases": [
+        "syme hall"
+      ]
+    },
+    "Tucker Hall": {
+      "at": [
+        35.785,
+        -78.67407
+      ],
+      "aliases": [
+        "tucker",
+        "tucker hall"
+      ]
+    },
+    "Turlington Hall": {
+      "at": [
+        35.78472,
+        -78.6725
+      ],
+      "aliases": [
+        "turlington hall"
+      ]
+    },
+    "Metcalf Hall": {
+      "at": [
+        35.78549,
+        -78.67313
+      ],
+      "aliases": [
+        "metcalf hall"
+      ]
+    },
+    "Welch Hall": {
+      "at": [
+        35.78358,
+        -78.66529
+      ],
+      "aliases": [
+        "welch hall"
+      ]
+    },
+    "Wolf Ridge": {
+      "at": [
+        35.76906,
+        -78.6721
+      ],
+      "aliases": [
+        "wolf ridge"
+      ]
+    },
+    "Avent Ferry Complex": {
+      "at": [
+        35.7796,
+        -78.67749
+      ],
+      "aliases": [
+        "avent ferry",
+        "avent ferry complex"
+      ]
+    },
+    "Engineering Building I": {
+      "at": [
+        35.77163,
+        -78.67506
+      ],
+      "aliases": [
+        "eb1",
+        "engineering building 1",
+        "engineering building i"
+      ]
+    },
+    "Engineering Building III": {
+      "at": [
+        35.77076,
+        -78.67391
+      ],
+      "aliases": [
+        "eb3",
+        "engineering building 3",
+        "engineering building iii"
+      ]
+    },
+    "Mann Hall": {
+      "at": [
+        35.78529,
+        -78.66917
+      ],
+      "aliases": [
+        "mann hall"
+      ]
+    },
+    "Riddick Hall": {
+      "at": [
+        35.78505,
+        -78.66836
+      ],
+      "aliases": [
+        "riddick hall"
+      ]
+    },
+    "Withers Hall": {
+      "at": [
+        35.78634,
+        -78.66785
+      ],
+      "aliases": [
+        "withers hall"
+      ]
+    },
+    "Page Hall": {
+      "at": [
+        35.78591,
+        -78.66696
+      ],
+      "aliases": [
+        "page hall"
+      ]
+    },
+    "Cox Hall": {
+      "at": [
+        35.78606,
+        -78.67094
+      ],
+      "aliases": [
+        "cox hall"
+      ]
+    },
+    "Broughton Hall": {
+      "at": [
+        35.78554,
+        -78.66992
+      ],
+      "aliases": [
+        "broughton hall"
+      ]
+    },
+    "Park Shops": {
+      "at": [
+        35.78555,
+        -78.6671
+      ],
+      "aliases": [
+        "park shops"
+      ]
+    },
+    "Jordan Hall": {
+      "at": [
+        35.78183,
+        -78.67647
+      ],
+      "aliases": [
+        "jordan hall"
+      ]
+    },
+    "Biltmore Hall": {
+      "at": [
+        35.78261,
+        -78.67807
+      ],
+      "aliases": [
+        "biltmore hall"
+      ]
+    },
+    "Williams Hall": {
+      "at": [
+        35.78659,
+        -78.67145
+      ],
+      "aliases": [
+        "williams hall"
+      ]
+    },
+    "Nelson Hall": {
+      "at": [
+        35.78835,
+        -78.6741
+      ],
+      "aliases": [
+        "nelson hall"
+      ]
+    },
+    "Kamphoefner Hall": {
+      "at": [
+        35.78462,
+        -78.66558
+      ],
+      "aliases": [
+        "kamphoefner hall"
+      ]
+    },
+    "Gardner Hall": {
+      "at": [
+        35.78725,
+        -78.67249
+      ],
+      "aliases": [
+        "gardner hall"
+      ]
+    },
+    "Polk Hall": {
+      "at": [
+        35.78614,
+        -78.67018
+      ],
+      "aliases": [
+        "polk hall"
+      ]
+    },
+    "Dabney Hall": {
+      "at": [
+        35.7861,
+        -78.67131
+      ],
+      "aliases": [
+        "dabney hall"
+      ]
+    },
+    "Tompkins Hall": {
+      "at": [
+        35.78666,
+        -78.66517
+      ],
+      "aliases": [
+        "tompkins hall"
+      ]
+    },
+    "Memorial Belltower": {
+      "at": [
+        35.78614,
+        -78.6635
+      ],
+      "aliases": [
+        "bell tower",
+        "belltower",
+        "memorial belltower"
+      ]
+    },
+    "Brickyard": {
+      "at": [
+        35.78698,
+        -78.67055
+      ],
+      "aliases": [
+        "brickyard",
+        "the brickyard"
+      ]
+    },
+    "Fitts-Woolard Hall": {
+      "at": [
+        35.77063,
+        -78.67585
+      ],
+      "aliases": [
+        "fitts",
+        "fitts woolard",
+        "fitts-woolard hall"
+      ]
+    },
+    "Hillsborough Building": {
+      "at": [
+        35.78864,
+        -78.67055
+      ],
+      "aliases": [
+        "hillsborough building"
+      ]
+    },
+    "Patterson Hall": {
+      "at": [
+        35.78708,
+        -78.66848
+      ],
+      "aliases": [
+        "patterson hall"
+      ]
+    },
+    "Scott Hall": {
+      "at": [
+        35.78803,
+        -78.67188
+      ],
+      "aliases": [
+        "scott hall"
+      ]
+    },
+    "Winston Hall": {
+      "at": [
+        35.78697,
+        -78.66636
+      ],
+      "aliases": [
+        "winston hall"
+      ]
+    },
+    "Leazar Hall": {
+      "at": [
+        35.78541,
+        -78.66555
+      ],
+      "aliases": [
+        "leazar hall"
+      ]
+    },
+    "Kilgore Hall": {
+      "at": [
+        35.78822,
+        -78.67278
+      ],
+      "aliases": [
+        "kilgore hall"
+      ]
+    },
+    "Centennial Campus": {
+      "at": [
+        35.77244,
+        -78.678
+      ],
+      "aliases": [
+        "centennial",
+        "centennial campus"
+      ]
+    },
+    "Greek Village": {
+      "at": [
+        35.77888,
+        -78.68164
+      ],
+      "aliases": [
+        "greek village"
+      ]
+    },
+    "Bostian Hall": {
+      "at": [
+        35.78747,
+        -78.67181
+      ],
+      "aliases": [
+        "bostian hall"
+      ]
+    },
+    "Thompson Hall": {
+      "at": [
+        35.78279,
+        -78.66691
+      ],
+      "aliases": [
+        "thompson hall"
+      ]
+    }
+  }
+}

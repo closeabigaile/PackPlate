@@ -1134,3 +1134,38 @@ legend {
 .comparison-profile-note a:hover {
   color: var(--red-dark);
 }
+/* ---------- dining assistant ---------- */
+
+.assistant-log {
+  max-height: 30rem;
+}
+
+.assistant-cards {
+  display: grid;
+  gap: 0.4rem;
+  margin-top: 0.5rem;
+  list-style: none;
+}
+
+.assistant-card {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.25rem 0.75rem;
+  padding: 0.4rem 0.6rem;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--page);
+}
+
+.assistant-card-name {
+  font-weight: 600;
+}
+
+.assistant-suggestions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  list-style: none;
+}

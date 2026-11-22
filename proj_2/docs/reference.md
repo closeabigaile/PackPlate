@@ -4,11 +4,12 @@
 
 Every public module, class, and function in the Python code, with its signature and description, read from the source. The website (`frontend/`) is described in [how.md](how.md) instead.
 
-**363 of 366** modules, classes, and functions have a description.
+**459 of 462** modules, classes, and functions have a description.
 
 - **API** (`backend/app/`)
   - [`app`](#app)
   - [`app.api`](#appapi)
+  - [`app.api.assistant`](#appapiassistant)
   - [`app.api.auth`](#appapiauth)
   - [`app.api.chat_room`](#appapichat_room)
   - [`app.api.crowd`](#appapicrowd)
@@ -20,15 +21,18 @@ Every public module, class, and function in the Python code, with its signature 
   - [`app.deps`](#appdeps)
   - [`app.main`](#appmain)
   - [`app.repositories`](#apprepositories)
+  - [`app.repositories.assistant`](#apprepositoriesassistant)
   - [`app.repositories.chat_rooms`](#apprepositorieschat_rooms)
   - [`app.repositories.crowd_reports`](#apprepositoriescrowd_reports)
   - [`app.repositories.ingest_runs`](#apprepositoriesingest_runs)
   - [`app.repositories.label_reviews`](#apprepositorieslabel_reviews)
+  - [`app.repositories.location_points`](#apprepositorieslocation_points)
   - [`app.repositories.locations`](#apprepositorieslocations)
   - [`app.repositories.menus`](#apprepositoriesmenus)
   - [`app.repositories.profiles`](#apprepositoriesprofiles)
   - [`app.repositories.users`](#apprepositoriesusers)
   - [`app.schemas`](#appschemas)
+  - [`app.schemas.assistant`](#appschemasassistant)
   - [`app.schemas.auth`](#appschemasauth)
   - [`app.schemas.chat_room`](#appschemaschat_room)
   - [`app.schemas.crowd`](#appschemascrowd)
@@ -37,21 +41,36 @@ Every public module, class, and function in the Python code, with its signature 
   - [`app.schemas.meta`](#appschemasmeta)
   - [`app.schemas.recommendations`](#appschemasrecommendations)
   - [`app.services`](#appservices)
+  - [`app.services.assistant`](#appservicesassistant)
+  - [`app.services.assistant.answers`](#appservicesassistantanswers)
+  - [`app.services.assistant.chat`](#appservicesassistantchat)
+  - [`app.services.assistant.geocode`](#appservicesassistantgeocode)
+  - [`app.services.assistant.intents`](#appservicesassistantintents)
+  - [`app.services.assistant.limits`](#appservicesassistantlimits)
+  - [`app.services.assistant.llm`](#appservicesassistantllm)
+  - [`app.services.assistant.places`](#appservicesassistantplaces)
+  - [`app.services.assistant.routing`](#appservicesassistantrouting)
+  - [`app.services.assistant.settings`](#appservicesassistantsettings)
+  - [`app.services.assistant.tools`](#appservicesassistanttools)
+  - [`app.services.assistant.validate`](#appservicesassistantvalidate)
   - [`app.services.auth`](#appservicesauth)
   - [`app.services.chat_room`](#appserviceschat_room)
   - [`app.services.crowd`](#appservicescrowd)
+  - [`app.services.crowd_forecast`](#appservicescrowd_forecast)
   - [`app.services.filter_engine`](#appservicesfilter_engine)
   - [`app.services.freshness`](#appservicesfreshness)
   - [`app.services.hours`](#appserviceshours)
   - [`app.services.label_reviews`](#appserviceslabel_reviews)
   - [`app.services.menus`](#appservicesmenus)
   - [`app.services.passwords`](#appservicespasswords)
-  - [`app.services.recommendations`](#appservicesrecommendations)
+  - [`app.startup`](#appstartup)
 - **Database** (`db/`)
   - [`db`](#db)
+  - [`db.assistant_models`](#dbassistant_models)
   - [`db.chat_models`](#dbchat_models)
   - [`db.migrate`](#dbmigrate)
   - [`db.models`](#dbmodels)
+  - [`db.seed_location_points`](#dbseed_location_points)
   - [`db.session`](#dbsession)
 - **Scraper** (`ingestion/`)
   - [`ingestion`](#ingestion)
@@ -100,6 +119,57 @@ PackPlate's HTTP API (FastAPI). Run from proj_2/: `uvicorn app.main:app --app-di
 Source: [`backend/app/api/__init__.py`](../backend/app/api/__init__.py)
 
 HTTP routes, one module per feature: locations, meta (freshness), filters, and crowd.
+
+## `app.api.assistant`
+
+Source: [`backend/app/api/assistant.py`](../backend/app/api/assistant.py)
+
+Routes for the dining assistant (M3): send a message, read and clear history.
+
+Every route needs a logged-in user (M1's current_user, 401 otherwise); the
+account comes from the session cookie, never from the request body. The
+assistant itself lives in services/assistant/; this file only checks the
+request, applies the rate limit, and saves the conversation.
+
+The dietary profile comes in the request body (POST), so it never lands in a URL
+or a log, and it is not stored. Only the message text and the reply are.
+
+### `get_limiter`
+
+```python
+def get_limiter() -> RateLimiter
+```
+
+The shared per-account limiter, as a dependency so tests can swap in their own.
+
+### `send_message`
+
+```python
+@router.post('/messages', response_model=ReplyOut, status_code=201)
+def send_message(body: MessageIn, user: User=Depends(current_user), db: Session=Depends(get_db), limiter: RateLimiter=Depends(get_limiter))
+```
+
+Ask the assistant something. Returns its reply, and saves both messages.
+
+429 (with Retry-After) when the account is asking too fast.
+
+### `list_messages`
+
+```python
+@router.get('/messages', response_model=list[MessageOut])
+def list_messages(limit: int=Query(50, ge=1, le=settings.HISTORY_LIMIT), user: User=Depends(current_user), db: Session=Depends(get_db))
+```
+
+The logged-in account's latest messages, oldest first. Never anyone else's.
+
+### `clear_messages`
+
+```python
+@router.delete('/messages', status_code=204)
+def clear_messages(user: User=Depends(current_user), db: Session=Depends(get_db))
+```
+
+Delete the logged-in account's whole conversation.
 
 ## `app.api.auth`
 
@@ -536,6 +606,15 @@ The tables live in proj_2/db (shared with ingestion), so proj_2/ must be on
 the Python path: see the README.
 ```
 
+### `lifespan`
+
+```python
+@asynccontextmanager
+async def lifespan(_app: FastAPI)
+```
+
+On start, bring a local database up to date (see app/startup.py).
+
 ### `health`
 
 ```python
@@ -556,6 +635,47 @@ Data access layer: the only code in the API that queries Postgres.
 
 Single writer per table: the API writes crowd reports only. Menu and
 nutrition tables are written by ingestion/ and are read-only here.
+
+## `app.repositories.assistant`
+
+Source: [`backend/app/repositories/assistant.py`](../backend/app/repositories/assistant.py)
+
+Save and load the dining assistant's chat history.
+
+Each account has one running conversation. The queries only flush; the route
+commits once the whole request has worked.
+
+### `add_message`
+
+```python
+def add_message(db: Session, user_id: int, role: str, text: str, cards: list[dict], at: datetime) -> AssistantMessage
+```
+
+Save one message ('user' or 'assistant') for an account, timestamped `at`.
+
+### `recent`
+
+```python
+def recent(db: Session, user_id: int, limit: int) -> list[AssistantMessage]
+```
+
+An account's latest `limit` messages, oldest first.
+
+### `trim`
+
+```python
+def trim(db: Session, user_id: int, keep: int) -> None
+```
+
+Delete an account's messages except the newest `keep`.
+
+### `clear`
+
+```python
+def clear(db: Session, user_id: int) -> None
+```
+
+Delete all of an account's messages.
 
 ## `app.repositories.chat_rooms`
 
@@ -699,6 +819,21 @@ def approved(db: Session) -> dict[tuple[int, str, str], tuple[list[str], str]]
 ```
 
 Approved reviews: (location_id, dish, ingredients_hash) -> (tags to remove, reason).
+
+## `app.repositories.location_points`
+
+Source: [`backend/app/repositories/location_points.py`](../backend/app/repositories/location_points.py)
+
+Where the dining locations are (M3). Read-only queries; the table is filled by
+db/seed_location_points.py, never by the ingestion job.
+
+### `points`
+
+```python
+def points(db: Session) -> dict[int, tuple[float, float]]
+```
+
+Every known position, as {location_id: (latitude, longitude)}.
 
 ## `app.repositories.locations`
 
@@ -886,6 +1021,48 @@ Source: [`backend/app/schemas/__init__.py`](../backend/app/schemas/__init__.py)
 
 Pydantic models for the API's requests and responses, one module per feature.
 
+## `app.schemas.assistant`
+
+Source: [`backend/app/schemas/assistant.py`](../backend/app/schemas/assistant.py)
+
+Request and response models for the dining assistant (M3).
+
+Unknown fields are rejected (422), and so are unknown allergens or diets in the
+profile (the same Profile model the filter endpoints use), so a typo can't
+quietly turn into "no restriction".
+
+### class `MessageIn` (BaseModel)
+
+A message to the assistant. The account comes from the login, not from here.
+
+Fields:
+
+- `text: str`
+- `profile: Profile | None`
+- `at: AwareDatetime | None`
+
+### class `ReplyOut` (BaseModel)
+
+The assistant's reply, with result cards (menu items) to show beside it.
+
+Fields:
+
+- `reply: str`
+- `cards: list[dict[str, Any]]`
+- `source: str`
+
+### class `MessageOut` (BaseModel)
+
+One saved message in the account's history.
+
+Fields:
+
+- `id: int`
+- `role: Literal['user', 'assistant']`
+- `text: str`
+- `cards: list[dict[str, Any]]`
+- `created_at: AwareDatetime`
+
 ## `app.schemas.auth`
 
 Source: [`backend/app/schemas/auth.py`](../backend/app/schemas/auth.py)
@@ -1042,6 +1219,16 @@ Fields:
 - `report_count: int`
 - `last_reported_at: datetime | None`
 
+### class `CrowdForecast` (BaseModel)
+
+Predicted crowd level from the time of day and opening hours: no student input needed.
+
+Fields:
+
+- `level: CrowdLevel | None`
+- `estimate: CrowdLevel | None`
+- `source: Literal['forecast', 'reports', 'forecast+reports', 'none']`
+
 ## `app.schemas.filters`
 
 Source: [`backend/app/schemas/filters.py`](../backend/app/schemas/filters.py)
@@ -1170,6 +1357,7 @@ Fields:
 - `opens_next_at: datetime | None`
 - `today: HoursDay`
 - `crowd: Crowd`
+- `forecast: CrowdForecast`
 
 ### class `MenuSummary` (BaseModel)
 
@@ -1297,6 +1485,775 @@ Fields:
 Source: [`backend/app/services/__init__.py`](../backend/app/services/__init__.py)
 
 Business logic with no database access: hours, menus, freshness, filters, crowd.
+
+## `app.services.assistant`
+
+Source: [`backend/app/services/assistant/__init__.py`](../backend/app/services/assistant/__init__.py)
+
+The dining assistant (M3): tools over the existing services.
+
+## `app.services.assistant.answers`
+
+Source: [`backend/app/services/assistant/answers.py`](../backend/app/services/assistant/answers.py)
+
+Reply wording for the dining assistant (M3).
+
+Every function here turns a tool result into text. The words are fixed; the
+facts are filled in from the result and nothing else, so a reply can't state a
+dish, number, or time a tool didn't return. Dietary answers say "fits your
+filters", never "safe".
+
+### `example_questions`
+
+```python
+def example_questions(place: str | None=None) -> list[str]
+```
+
+The example questions, naming `place` (a real location).
+
+With no known location, only the questions that don't need one are returned,
+so every example shown is one the assistant can actually answer.
+
+### `examples`
+
+```python
+def examples(place: str | None=None) -> str
+```
+
+The reply to "help": what the assistant can do, with example questions.
+
+### `not_understood`
+
+```python
+def not_understood(place: str | None=None) -> str
+```
+
+The reply when a message matches no known question: say so, then show examples.
+
+### `fallback`
+
+```python
+def fallback() -> str
+```
+
+The reply when a built answer fails validation: say so rather than show it.
+
+### `medical`
+
+```python
+def medical() -> str
+```
+
+The fixed reply to a medical question: decline and point to a professional.
+
+### `safety`
+
+```python
+def safety(place: str | None=None) -> str
+```
+
+The fixed reply to "is this safe?": the assistant never says a dish is safe, only what fits.
+
+### `nearby_not_ready`
+
+```python
+def nearby_not_ready(place: str | None=None) -> str
+```
+
+The reply to "which hall is closest?" when no coordinates are loaded at all.
+
+### `place_not_found`
+
+```python
+def place_not_found() -> str
+```
+
+The start of the reply when a typed place couldn't be found near campus.
+
+### `ask_origin`
+
+```python
+def ask_origin(spots: list[str]) -> str
+```
+
+The reply when the student asks what is near them but names no known place.
+
+### `nearby`
+
+```python
+def nearby(result: dict) -> str
+```
+
+The reply to "which dining hall is near <place>?": the closest, with rough walks.
+
+Each line gives the facts the ranking used: the walking estimate, whether it is
+open (and until when), and how many items fit the diet if one is saved.
+
+### `recommend`
+
+```python
+def recommend(result: dict) -> str
+```
+
+The reply to "which hall do you recommend?": the best open places and why.
+
+Each line gives the facts the ranking used: when it closes, how many items fit
+(or are on the menu if no diet is saved), and how busy it is.
+
+### `locations_list`
+
+```python
+def locations_list(result: dict) -> str
+```
+
+The reply to "how many dining halls are there?": the count and the names.
+
+### `unknown_location`
+
+```python
+def unknown_location(text: str) -> str
+```
+
+The reply when a typed location name matches no known location.
+
+### `ask_which`
+
+```python
+def ask_which(candidates: list[dict]) -> str
+```
+
+The reply when a typed name fits several locations: ask which one is meant.
+
+### `ask_location`
+
+```python
+def ask_location(place: str | None=None) -> str
+```
+
+The reply when a question needs a location and the message names none.
+
+### `food_filtered`
+
+```python
+def food_filtered(location_name: str, result: dict, when: str, meal: str | None) -> tuple[str, list[dict]]
+```
+
+The reply and result cards for items checked against a profile.
+
+### `food_menu`
+
+```python
+def food_menu(location_name: str, result: dict, when: str, meal: str | None) -> tuple[str, list[dict]]
+```
+
+The reply for a menu that wasn't checked against any restrictions.
+
+### `status_one`
+
+```python
+def status_one(location_name: str, status: dict) -> str
+```
+
+The reply about one location's hours: open until, closed until, or hours unknown.
+
+### `open_now`
+
+```python
+def open_now(rows: list[tuple[str, str]], unknown: int) -> str
+```
+
+rows: (name, closes_at) for locations open now; unknown: locations without hours.
+
+### `open_day`
+
+```python
+def open_day(when: str, rows: list[tuple[str, list[dict]]], closed: int, unknown: int) -> str
+```
+
+The reply to "which dining halls are open today/tomorrow?": each place with its hours.
+
+rows: (name, periods) for the locations open that day, each period
+{"opens_at", "closes_at"}; closed: how many are closed all day; unknown: how
+many have no hours stored.
+
+### `crowd`
+
+```python
+def crowd(location_name: str, result: dict) -> str
+```
+
+The reply about how busy a location is. No recent reports is said as unknown, not "not busy".
+
+## `app.services.assistant.chat`
+
+Source: [`backend/app/services/assistant/chat.py`](../backend/app/services/assistant/chat.py)
+
+Answer one message (M3): parse it, run the matching tool, word the result.
+
+The saved profile always applies. Restrictions typed in the message are added to
+it for this question only, and a message can only make the filter stricter: it
+can never remove a saved restriction or loosen a limit.
+
+Every reply built from a tool result is checked by validate.py before it is
+returned. A reply that fails the check is replaced by a plain fallback.
+
+The language model (llm.py) is optional. It only reads messages the rules can't;
+every word of the reply still comes from answers.py and every fact from tools.py.
+
+### `merge_profile`
+
+```python
+def merge_profile(saved: filter_engine.Profile, intent: intents.Intent) -> filter_engine.Profile
+```
+
+The saved profile plus what the message asked for. Never looser than saved.
+
+### `respond`
+
+```python
+def respond(db: Session, text: str, profile: filter_engine.Profile | None=None, at: datetime | None=None, history: list[dict] | None=None, model=None, geocoder=None, router=None) -> dict
+```
+
+The assistant's answer to `text`: {"reply", "cards", "source"}.
+
+`history` is the recent conversation as [{"role", "text"}], oldest first, so a
+follow-up like "what about tomorrow?" can be understood. `model` is a language
+model client; by default the one from the settings (None while switched off).
+`source` is "rules", "llm" when the model read the question, or "fallback".
+`geocoder` finds a typed place that campus_places.json doesn't list, and
+`router` gives driving distances from a place too far to walk; by default the
+ones from the settings (None while switched off).
+
+## `app.services.assistant.geocode`
+
+Source: [`backend/app/services/assistant/geocode.py`](../backend/app/services/assistant/geocode.py)
+
+Find where a typed place is (M3), for places campus_places.json doesn't list.
+
+Only the typed place (a few words such as "Cox Hall") is sent to OpenStreetMap's
+free search, never an account, a profile, or the rest of the message. The NC State
+campus is searched first, so "Cox Hall" can't turn into another city's Cox Hall;
+if nothing is found there, the Raleigh-Durham-Cary area is searched, which finds
+an apartment or street off campus. Results (and misses) are cached, and calls are
+spaced at least a second apart, as OpenStreetMap's usage policy asks.
+
+Anything that goes wrong (switched off, slow, down, nothing found) returns None
+and the assistant asks the student where they are instead.
+
+### class `Geocoder`
+
+Looks places up in the NC State area. `lookup` never raises.
+
+#### `lookup`
+
+```python
+def lookup(self, phrase: str) -> tuple[str, tuple[float, float]] | None
+```
+
+(name, (latitude, longitude)) for a typed place, or None.
+
+### `default`
+
+```python
+def default() -> Geocoder | None
+```
+
+The geocoder from the settings, or None while the lookup is switched off.
+
+One shared object, so its cache and its spacing between calls last across requests.
+
+## `app.services.assistant.intents`
+
+Source: [`backend/app/services/assistant/intents.py`](../backend/app/services/assistant/intents.py)
+
+Understand a student's message (M3).
+
+Turns free text into an Intent: what kind of question it is, which location,
+meal and day it mentions, and any restrictions or nutrition goals typed in the
+message. Pure functions, no database: the caller passes in the location names.
+
+This is the rule-based understanding step. An optional language model can later
+replace parse() and return the same Intent, and nothing after it changes.
+
+### class `Intent`
+
+What a message asks for. Unset fields are None or empty, never guesses.
+
+Fields:
+
+- `kind: str`
+- `location_text: str | None`
+- `meal: str | None`
+- `day_offset: int`
+- `diets: frozenset[str]`
+- `avoid: frozenset[str]`
+- `min_protein_g: float | None`
+- `max_calories: float | None`
+
+### `where_phrase`
+
+```python
+def where_phrase(text: str) -> str | None
+```
+
+The place a student says they are at or near, as typed, or None.
+
+"I'm at Cox Hall, which dining hall is close?" gives "cox hall". It only cuts
+the text out; whether the place is real is for campus_places.json or the
+online lookup to say.
+
+### `parse`
+
+```python
+def parse(text: str, location_names: list[str] | tuple[str, ...]=()) -> Intent
+```
+
+Read one message. `location_names` are the locations the app knows.
+
+## `app.services.assistant.limits`
+
+Source: [`backend/app/services/assistant/limits.py`](../backend/app/services/assistant/limits.py)
+
+A per-account limit on how often the assistant can be asked.
+
+Kept in memory only, like the crowd-report throttle, so nothing about an account's
+activity is stored. The API is a single process, so one dict is enough; it resets
+on restart.
+
+### class `RateLimiter`
+
+At most `max_calls` per key within any `seconds`-long window.
+
+#### `hit`
+
+```python
+def hit(self, key) -> float
+```
+
+Record a call for key. Returns 0 if allowed, else seconds until it would be.
+
+## `app.services.assistant.llm`
+
+Source: [`backend/app/services/assistant/llm.py`](../backend/app/services/assistant/llm.py)
+
+The optional language model layer (M3): a local Ollama server.
+
+The model has one job: read a message the rules couldn't ("im starving, what can
+i get?") and say what kind of question it is. It never writes text for the
+student. Every word of every reply still comes from answers.py, and every fact
+from the database tools.
+
+That limit is deliberate. A small local model will confidently invent dishes and
+places, so nothing it says is shown. What it returns is checked before use:
+the kind and the diet/allergen keys must be known ones, goals must be numbers in
+range, and a location is kept only if the student actually mentioned it.
+
+If the model is off, unreachable, slow, or returns something unusable,
+understand() returns None and the rule-based assistant answers instead.
+
+### class `OllamaClient`
+
+Talks to an Ollama server's /api/chat. Raises OSError or ValueError on trouble.
+
+#### `chat`
+
+```python
+def chat(self, messages: list[dict], schema: dict | None=None) -> str
+```
+
+Send chat messages and return the model's reply text.
+
+`schema` asks Ollama to answer with JSON in that shape. Temperature is 0 so
+the same message gets the same reading.
+
+### `default_client`
+
+```python
+def default_client() -> OllamaClient | None
+```
+
+The model client from the settings, or None while the layer is switched off.
+
+### `intent_from_model`
+
+```python
+def intent_from_model(data) -> intents.Intent | None
+```
+
+The model's JSON as an Intent, or None if it isn't something we'd accept.
+
+Nothing is taken on trust: the kind must be a known one, diets and allergens
+must be known keys, and goals must be numbers in range.
+
+### `understand`
+
+```python
+def understand(client, text: str, history: list[dict], place_names: list[str]) -> intents.Intent | None
+```
+
+Read a message the rules couldn't, or None if the model can't help.
+
+## `app.services.assistant.places`
+
+Source: [`backend/app/services/assistant/places.py`](../backend/app/services/assistant/places.py)
+
+Where things are on campus (M3), for "which dining hall is near ...?".
+
+The student names a place ("I'm at Talley", "near Hunt Library"). This module
+knows a list of campus places and their coordinates, read from
+campus_places.json, and turns two points into a rough walking time. The dining
+locations' own positions are in the database (location_points); one with no
+saved position is simply not ranked: nothing here guesses a position.
+
+Distance is the straight line between two points (haversine). A walk is longer
+than that, so the walking time adds a winding factor. It is an estimate and the
+replies say so.
+
+### `load`
+
+```python
+@cache
+def load() -> dict
+```
+
+The campus places file: {"spots": {name: {"at": [lat, lng], "aliases": [...]}}}.
+
+### `distance_m`
+
+```python
+def distance_m(a: tuple[float, float], b: tuple[float, float]) -> float
+```
+
+Straight-line metres between two (latitude, longitude) points.
+
+### `walk_minutes`
+
+```python
+def walk_minutes(metres: float) -> int
+```
+
+A rough walking time in whole minutes, at least 1.
+
+### `miles`
+
+```python
+def miles(metres: float) -> float
+```
+
+A straight-line distance in miles, to one decimal place (never less than 0.1).
+
+### `spot_names`
+
+```python
+def spot_names(data: dict | None=None) -> list[str]
+```
+
+The campus places a student can say they are at.
+
+### `find_spot`
+
+```python
+def find_spot(text: str, data: dict | None=None) -> tuple[str, tuple[float, float]] | None
+```
+
+The campus place a message names, as (name, point), or None.
+
+Matches an alias inside the text, or a close spelling of a one-word alias
+("tally" for "talley"). If several places match, the longest alias wins.
+
+## `app.services.assistant.routing`
+
+Source: [`backend/app/services/assistant/routing.py`](../backend/app/services/assistant/routing.py)
+
+Driving distance and time from a faraway place to the dining locations (M3).
+
+Used only when the student is too far from campus to walk. One request to the free
+public OSRM server returns the road distance and time from the student's place to
+every dining location at once. Only coordinates are sent: the student's place
+(found from what they typed) and the dining locations' positions, nothing about the
+account. Times are for light traffic; real trips can take longer.
+
+Anything that goes wrong (switched off, slow, down, no route) returns None and the
+reply shows straight-line distances instead. Answers are cached by place.
+
+### class `Router`
+
+Looks up driving distances. `driving` never raises.
+
+#### `driving`
+
+```python
+def driving(self, origin: tuple[float, float], destinations: list[tuple[float, float]]) -> list[tuple[float, float] | None] | None
+```
+
+For each destination, (metres, seconds) by road, or None if no route to it.
+
+Returns None for the whole list if the lookup failed.
+
+### `default`
+
+```python
+def default() -> Router | None
+```
+
+The router from the settings, or None while the lookup is switched off.
+
+One shared object, so its cache and its spacing between calls last across requests.
+
+## `app.services.assistant.settings`
+
+Source: [`backend/app/services/assistant/settings.py`](../backend/app/services/assistant/settings.py)
+
+Settings for the dining assistant, read from the environment (see .env.example).
+
+The limits are read once when the app starts. Whether the assistant is on is read
+on every request, so it can be switched off without a restart in tests.
+
+### `enabled`
+
+```python
+def enabled() -> bool
+```
+
+Whether the assistant is switched on (ASSISTANT_ENABLED, on unless "false").
+
+### `llm_enabled`
+
+```python
+def llm_enabled() -> bool
+```
+
+Whether the language model layer is on (ASSISTANT_LLM_ENABLED, on unless "false").
+
+### `llm_url`
+
+```python
+def llm_url() -> str
+```
+
+Where Ollama listens (ASSISTANT_LLM_URL, default the local server).
+
+### `llm_model`
+
+```python
+def llm_model() -> str
+```
+
+Which Ollama model to ask (ASSISTANT_LLM_MODEL; blank means qwen2.5:1.5b).
+
+### `llm_timeout`
+
+```python
+def llm_timeout() -> float
+```
+
+Seconds to wait for the model before using the rule-based answer instead.
+
+### `geocode_enabled`
+
+```python
+def geocode_enabled() -> bool
+```
+
+Whether typed places may be looked up online (ASSISTANT_GEOCODE_ENABLED, on unless "false").
+
+### `geocode_url`
+
+```python
+def geocode_url() -> str
+```
+
+The search service (ASSISTANT_GEOCODE_URL, default OpenStreetMap's Nominatim).
+
+### `geocode_timeout`
+
+```python
+def geocode_timeout() -> float
+```
+
+Seconds to wait for the lookup before asking the student where they are.
+
+### `routing_enabled`
+
+```python
+def routing_enabled() -> bool
+```
+
+Whether driving distances may be looked up online (ASSISTANT_ROUTING_ENABLED, on unless "false").
+
+### `routing_url`
+
+```python
+def routing_url() -> str
+```
+
+The routing service (ASSISTANT_ROUTING_URL, default the public OSRM server).
+
+### `routing_timeout`
+
+```python
+def routing_timeout() -> float
+```
+
+Seconds to wait for a route before showing straight-line distances instead.
+
+## `app.services.assistant.tools`
+
+Source: [`backend/app/services/assistant/tools.py`](../backend/app/services/assistant/tools.py)
+
+Tools for the dining assistant (M3).
+
+Each tool is a plain function over an existing service or repository. It takes
+the database session and plain values and returns plain dicts, so the assistant
+can only state what a tool returned. Tools only read.
+
+Unknown stays unknown: a missing menu, label, hours row, or report comes back as
+None or an empty list, never as zero, closed, or safe. Dietary verdicts come
+from services.filter_engine and are never decided here.
+
+### `find_location`
+
+```python
+def find_location(db: Session, name: str) -> dict
+```
+
+Which location a typed name means.
+
+Returns {"match": {"id", "name"} or None, "candidates": [...]}. One clear
+match fills `match`. Several possible ones fill `candidates` (the assistant
+should ask which). Nothing close leaves both empty. Tries the exact name,
+then a part of the name ("fountain"), then a close spelling ("fountian").
+
+### `get_menu`
+
+```python
+def get_menu(db: Session, location_id: int, day: date, meal: str | None=None) -> dict
+```
+
+Every menu at a location on `day` (or just `meal`), with each item's numbers.
+
+`scraped` False means NetNutrition lists the menu but its items were never
+fetched. An empty `menus` list means there is no menu for that day.
+
+### `filter_items`
+
+```python
+def filter_items(db: Session, location_id: int, day: date, profile: filter_engine.Profile, meal: str | None=None) -> dict
+```
+
+A location's items on `day` checked against one profile by the filter engine.
+
+`fits` holds only items the engine says fit. `incomplete` holds items it
+can't confirm (with the reasons). Conflicts are only counted. Nothing is
+ever moved into `fits` because data is missing.
+
+### `get_status`
+
+```python
+def get_status(db: Session, location_id: int, at: datetime | None=None) -> dict
+```
+
+Whether a location is open at `at` (default now), and when it closes or next opens.
+
+`is_open` None means the hours are unknown, not closed.
+
+### `get_hours`
+
+```python
+def get_hours(db: Session, location_id: int, day: date) -> dict
+```
+
+When a location is open on `day`: its opening periods, as times.
+
+`status` is "open", "closed" (all day), or "unknown" (no hours stored for that
+day). `periods` is empty unless it is open.
+
+### `get_crowd`
+
+```python
+def get_crowd(db: Session, location_id: int, at: datetime | None=None) -> dict
+```
+
+The crowd level from recent student reports. `level` None means no recent
+reports: unknown, not "not busy".
+
+### `list_locations`
+
+```python
+def list_locations(db: Session) -> dict
+```
+
+Every dining location that has a menu, by name.
+
+Locations without any menu items are left out, as everywhere else in the app.
+An empty list means no menus have been loaded yet.
+
+### `recommend`
+
+```python
+def recommend(db: Session, profile: filter_engine.Profile, at: datetime | None=None, meal: str | None=None) -> dict
+```
+
+The best open locations right now, as plain facts to rank by.
+
+Only locations known to be open at `at` are considered. With a profile, those
+with nothing confirmed to fit it come last. After that the quietest comes
+first (no recent reports counts as in between, not as quiet), then the one
+with more items that fit. The ranking uses only the same tools as the
+answers above: hours, crowd reports, and the filter engine.
+
+### `nearest`
+
+```python
+def nearest(db: Session, origin_name: str, origin: tuple[float, float], profile: filter_engine.Profile, at: datetime | None=None, meal: str | None=None, router=None) -> dict
+```
+
+The dining locations closest to a place the student named, with rough walking times.
+
+From too far to walk, `router` (if any) gives the driving distance and time, and
+the ranking uses the driving time; without it, straight-line miles are shown.
+
+Only locations with a saved position (the location_points table) are ranked; `unplaced`
+counts the ones left out. Locations in the same building count once, keeping
+the better of them. Open places come first, then (with a profile) those with
+something that fits, then the shorter walk. Walking times come from the
+straight-line distance and are estimates.
+
+## `app.services.assistant.validate`
+
+Source: [`backend/app/services/assistant/validate.py`](../backend/app/services/assistant/validate.py)
+
+Check a reply against the tool result it was built from (M3).
+
+A reply may state only what a tool returned. This module takes the reply text
+and the tool result and lists everything that doesn't match: a number or time
+the result doesn't have, a dish or location the result doesn't name, wording
+that claims safety, or a missing label warning. An empty list means the reply is
+consistent with the result.
+
+The replies are built from fixed templates today, so a problem here means a
+bug or a template change. It becomes the main safety check once a language
+model is allowed to reword replies.
+
+### `allowed`
+
+```python
+def allowed(result) -> tuple[set[str], set[str]]
+```
+
+The numbers and the text a reply built from `result` is allowed to contain.
+
+### `problems`
+
+```python
+def problems(reply: str, result, *, allowed_locations=(), all_locations=(), require_warning: bool=False) -> list[str]
+```
+
+Everything in `reply` that the tool `result` doesn't support. Empty means it is consistent.
+
+allowed_locations: location names the reply may mention.
+all_locations: every known location name, so a mix-up with another one is caught.
+require_warning: whether the label warning must be present (food answers).
 
 ## `app.services.auth`
 
@@ -1482,6 +2439,80 @@ def hit(self, key) -> float
 ```
 
 Record a report for key. Returns 0 if allowed, else seconds until it would be.
+
+## `app.services.crowd_forecast`
+
+Source: [`backend/app/services/crowd_forecast.py`](../backend/app/services/crowd_forecast.py)
+
+```text
+Predicted crowd level: no student input needed.
+
+Goes in backend/app/services/crowd_forecast.py. Pure functions, no database.
+
+The forecast comes from three things PackPlate already knows or can know for free:
+  1. The time of day: meal rushes (a hand-tuned curve, easy to adjust below).
+  2. The opening hours already stored in HoursDay: crowds are thin right after
+     opening and right before closing, and a closed location has no crowd.
+  3. A campus-calendar factor: breaks and exam weeks (fill in CALENDAR below).
+
+Student reports stay optional: if any exist in the window they pull the level
+toward what students saw, but nobody is ever asked to report.
+```
+
+### class `Forecast`
+
+_No description yet._
+
+Fields:
+
+- `level: str | None`
+- `score: float | None`
+
+### `calendar_factor`
+
+```python
+def calendar_factor(day: date) -> float
+```
+
+_No description yet._
+
+### `bucket`
+
+```python
+def bucket(score: float) -> str
+```
+
+_No description yet._
+
+### `forecast`
+
+```python
+def forecast(at: datetime, open_period: tuple[datetime, datetime] | None, location_id: int=0) -> Forecast
+```
+
+open_period: the (opens, closes) period containing `at`, or None if closed/unknown.
+
+### `blend`
+
+```python
+def blend(forecast_score: float | None, reports, at: datetime, window: timedelta)
+```
+
+Combine the forecast (as a prior) with optional reports. Returns (level, source).
+
+reports: (level, created_at) pairs. Each counts like in services.crowd.aggregate
+(weight 1 when new, falling to 0 at the window's end).
+
+### `current_period`
+
+```python
+def current_period(at: datetime, today, yesterday) -> tuple[datetime, datetime] | None
+```
+
+The open period containing `at`, from HoursDay rows for at's date and the day before.
+
+Checks yesterday first because a close at or past midnight runs into today.
+Returns None if closed, or if the hours are unknown.
 
 ## `app.services.filter_engine`
 
@@ -1758,29 +2789,46 @@ def needs_rehash(stored: str) -> bool
 
 True if `stored` wasn't made with the current settings.
 
-## `app.services.recommendations`
+## `app.startup`
 
-Source: [`backend/app/services/recommendations.py`](../backend/app/services/recommendations.py)
+Source: [`backend/app/startup.py`](../backend/app/startup.py)
 
-Rule-based meal recommendations for PackPlate M5.
+Bring a local database up to date when the API starts, so nobody has to run
+`alembic upgrade head` by hand after pulling new code.
 
-### `rank_meals`
+Only a database on this machine (or the Docker `db` service) is changed. A shared
+or hosted database is never touched here: someone runs the migration on purpose,
+and a warning in the log says so. MIGRATE_ON_START=false turns this off.
 
-```python
-def rank_meals(items: list, goal: NutritionGoal) -> list
-```
+A failure never stops the API from starting; /health still reports the schema as
+"outdated" or the database as "unreachable".
 
-Return meals ranked by the selected nutrition goal.
-
-Excludes meals with missing or unreliable nutrition data.
-
-### `recommend_meals`
+### `enabled`
 
 ```python
-def recommend_meals(items: list, goal: NutritionGoal, profile: Profile) -> list
+def enabled() -> bool
 ```
 
-Return compatible meals ranked by the user's nutrition goal.
+Whether migrating on start is allowed (MIGRATE_ON_START, on unless "false").
+
+### `is_local`
+
+```python
+def is_local(url: str) -> bool
+```
+
+Whether a database URL points at this machine or the Docker `db` service.
+
+### `migrate_if_local`
+
+```python
+def migrate_if_local(url: str | None=None, engine=None, sleep=time.sleep) -> str
+```
+
+Migrate a local database to the newest revision; returns what happened.
+
+One of "disabled", "no database set", "not local", "current" (nothing to do),
+"migrated", or "failed". `engine` and `sleep` are for tests.
 
 # Database: `db/`
 
@@ -1796,6 +2844,49 @@ session.py     engine + sessions from DATABASE_URL
 migrations/    Alembic versions; apply from proj_2/ with
                alembic -c db/alembic.ini upgrade head
 ```
+
+## `db.assistant_models`
+
+Source: [`db/assistant_models.py`](../db/assistant_models.py)
+
+Tables for the dining assistant (M3): chat history and dining locations' positions. Writer: backend.
+
+Imported at the bottom of db/models.py, so the table is on Base.metadata for
+Alembic and the tests. Each account has one running conversation, so a message
+belongs to a user directly. Deleting the account deletes its messages.
+
+The positions of the dining locations live in their own table, not on `locations`,
+because the ingestion job owns that one and a scrape must never touch them.
+
+### class `AssistantMessage` (Base)
+
+One message in an account's conversation with the assistant.
+
+role is 'user' (what the person typed) or 'assistant' (the reply). cards holds
+the result cards shown with a reply (menu items), so history can show them again.
+The dietary profile is never stored: it comes from the browser with each message.
+
+Fields:
+
+- `id: Mapped[int]`
+- `user_id: Mapped[int]`
+- `role: Mapped[str]`
+- `text: Mapped[str]`
+- `cards: Mapped[list]`
+- `created_at: Mapped[datetime]`
+
+### class `LocationPoint` (Base)
+
+Where a dining location is: latitude and longitude, for "which hall is closest?".
+
+Writer: backend (db/seed_location_points.py). One row per location, kept apart from
+`locations` so the nightly ingestion never overwrites it. Deleted with its location.
+
+Fields:
+
+- `location_id: Mapped[int]`
+- `latitude: Mapped[float]`
+- `longitude: Mapped[float]`
 
 ## `db.chat_models`
 
@@ -2101,25 +3192,46 @@ Fields:
 - `expires_at: Mapped[datetime]`
 - `user: Mapped[User]`
 
-### class `DietProfile` (Base)
+## `db.seed_location_points`
 
-A logged-in user's saved dietary profile (M5). Writer: backend (the API).
+Source: [`db/seed_location_points.py`](../db/seed_location_points.py)
 
-One row per account, only once the user saves a profile while logged in;
-logged-out profiles stay in the browser. Same fields and limits as a filter
-request's profile (app/schemas/filters.py). NULL goal = no limit set.
-Deleted with the account (ON DELETE CASCADE).
+```text
+Save where each dining location is (M3), so the assistant can rank by distance.
 
-Fields:
+    python -m db.seed_location_points
 
-- `user_id: Mapped[int]`
-- `name: Mapped[str | None]`
-- `avoid: Mapped[list]`
-- `diets: Mapped[list]`
-- `min_protein_g: Mapped[float | None]`
-- `max_calories: Mapped[float | None]`
-- `max_sodium_mg: Mapped[float | None]`
-- `updated_at: Mapped[datetime]`
+Matches by exact location name against the `locations` table and saves or updates
+one row per match. Safe to run again. To add or fix a location, edit POINTS and
+run it again. Names with no match in the database are listed and skipped (the
+ingestion job may not have loaded that location yet).
+
+Nobody has to run it for a new setup: the assistant calls ensure() the first time
+it needs positions, which fills in any that are missing and never changes one that
+exists. Run this script when you have corrected a coordinate in POINTS.
+
+Coordinates came from Google Maps (Case, Clark, One Earth, On the Oval, Atrium)
+and OpenStreetMap (the rest); check any of them on a map before relying on it.
+```
+
+### `seed`
+
+```python
+def seed(db: Session, points: dict[str, tuple[float, float]]=POINTS) -> list[str]
+```
+
+Save the positions of the locations that exist; return the names that don't.
+
+### `ensure`
+
+```python
+def ensure(db: Session, points: dict[str, tuple[float, float]]=POINTS) -> None
+```
+
+Fill in positions that are missing, leaving any saved one as it is.
+
+Cheap when nothing is missing (one query). Does not commit: the caller's
+transaction does, so a request that seeds saves them with its own work.
 
 ## `db.session`
 

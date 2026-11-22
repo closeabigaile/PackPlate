@@ -341,6 +341,8 @@ class DietProfile(Base):
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
     )
 
+# The dining assistant's chat history (M3) is in its own file, imported the same way.
+import db.assistant_models  # noqa: E402, F401
 
 # M4's chat tables live in their own file; importing it here puts them on
 # Base.metadata wherever the models are used (Alembic, the tests). At the bottom
