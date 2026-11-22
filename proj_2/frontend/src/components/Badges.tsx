@@ -1,5 +1,5 @@
 import { CROWD_LABELS } from "@/lib/diet";
-import type { Crowd, Verdict } from "@/lib/types";
+import type { Crowd, CrowdForecast, Verdict } from "@/lib/types";
 import { reasonSummary } from "@/lib/verdicts";
 
 // Meaning is always in the words, never in colour alone.
@@ -24,6 +24,27 @@ export function CrowdBadge({ crowd }: { crowd: Crowd }) {
   return (
     <span className={`pill ${tone}`}>
       {CROWD_LABELS[crowd.level]} · {reports}
+    </span>
+  );
+}
+// The predicted level: needs no student reports, so it is labelled as a prediction.
+export function ForecastBadge({ forecast }: { forecast: CrowdForecast }) {
+  if (forecast.estimate === null) return null;
+  const tone =
+    forecast.estimate === "not_busy"
+      ? "pill-ok"
+      : forecast.estimate === "moderate"
+        ? "pill-warn"
+        : "pill-bad";
+  const basis =
+    forecast.source === "forecast+reports"
+      ? "predicted + reports"
+      : forecast.source === "reports"
+        ? "reports"
+        : "predicted";
+  return (
+    <span className={`pill ${tone}`}>
+      {CROWD_LABELS[forecast.estimate]} · {basis}
     </span>
   );
 }
