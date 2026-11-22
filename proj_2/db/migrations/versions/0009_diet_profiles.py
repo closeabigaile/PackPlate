@@ -1,7 +1,7 @@
 """saved dietary profiles for logged-in users (M5)
 
-Revision ID: 0007
-Revises: 0006
+Revision ID: 0009
+Revises: 0008
 Create Date: 2026-11-16
 """
 
@@ -9,8 +9,8 @@ import sqlalchemy as sa
 from alembic import op
 from sqlalchemy.dialects import postgresql
 
-revision = "0007"
-down_revision = "0006"
+revision = "0009"
+down_revision = "0008"
 branch_labels = None
 depends_on = None
 

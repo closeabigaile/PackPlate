@@ -1,14 +1,14 @@
-
 """Rule-based meal recommendations for PackPlate M5."""
 
 from typing import Literal
 
-from app.services.filter_engine import is_placeholder
-
 from app.services.filter_engine import (
-    Profile, FITS, check, is_placeholder, nutrition_unavailable
+    FITS,
+    Profile,
+    check,
+    is_placeholder,
+    nutrition_unavailable,
 )
-
 
 NutritionGoal = Literal[
     "high_protein",
@@ -72,9 +72,11 @@ def rank_meals(items: list, goal: NutritionGoal) -> list:
     return sorted(
         eligible,
         key=lambda item: (
-            -getattr(item.nutrition, field)
-            if descending
-            else getattr(item.nutrition, field),
+            (
+                -getattr(item.nutrition, field)
+                if descending
+                else getattr(item.nutrition, field)
+            ),
             item.name.casefold(),
             item.id,
         ),

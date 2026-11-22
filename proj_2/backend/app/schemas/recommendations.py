@@ -1,4 +1,3 @@
-
 """Request and response schemas for PackPlate M5 recommendations."""
 
 from datetime import date as Date
@@ -8,7 +7,6 @@ from pydantic import BaseModel, Field
 
 from app.schemas.filters import Profile
 from app.schemas.locations import Nutrition
-
 
 NutritionGoal = Literal[
     "high_protein",

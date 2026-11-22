@@ -1,24 +1,21 @@
-
 """API routes for PackPlate M5 meal recommendations."""
-
-from datetime import date
 
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from app.deps import get_db
-from app.repositories import menus as menus_repo
-from app.repositories import locations as locations_repo
 from app.repositories import label_reviews as reviews_repo
+from app.repositories import locations as locations_repo
+from app.repositories import menus as menus_repo
 from app.schemas.locations import MenuItem
 from app.schemas.recommendations import (
     RecommendationRequest,
     RecommendationResponse,
 )
 from app.services.filter_engine import Profile as DietProfile
+from app.services.hours import campus_time
 from app.services.label_reviews import reviewed_items
 from app.services.recommendations import recommend_meals
-from app.services.hours import campus_time
 
 router = APIRouter(prefix="/recommendations", tags=["recommendations"])
 
@@ -50,10 +47,7 @@ def get_recommendations(
     approved = reviews_repo.approved(db)
 
     # Map location IDs to names.
-    locations = {
-        loc.id: loc.name
-        for loc in locations_repo.list_locations(db)
-    }
+    locations = {loc.id: loc.name for loc in locations_repo.list_locations(db)}
 
     # Collect meals and preserve their location/meal information.
     items = []
@@ -84,7 +78,6 @@ def get_recommendations(
     }[request.goal]
 
     nutrient_field, unit = field
-
 
     # Group identical dishes at the same location.
     # Preserve all meal periods while returning each dish once.
@@ -124,22 +117,22 @@ def get_recommendations(
         item = entry["item"]
         info = entry["info"]
 
-        nutrition = MenuItem.model_validate(
-            item, from_attributes=True
-        ).nutrition
+        nutrition = MenuItem.model_validate(item, from_attributes=True).nutrition
 
         value = getattr(nutrition, nutrient_field)
 
-        results.append({
-            "rank": rank,
-            "item_id": item.id,
-            "name": item.name,
-            "location_id": info["location_id"],
-            "location_name": info["location_name"],
-            "meal": info["meal"],
-            "meal_periods": entry["meal_periods"],
-            "nutrition": nutrition,
-            "reason": f"Provides {value:g} {unit} per listed serving.",
-        })
+        results.append(
+            {
+                "rank": rank,
+                "item_id": item.id,
+                "name": item.name,
+                "location_id": info["location_id"],
+                "location_name": info["location_name"],
+                "meal": info["meal"],
+                "meal_periods": entry["meal_periods"],
+                "nutrition": nutrition,
+                "reason": f"Provides {value:g} {unit} per listed serving.",
+            }
+        )
 
     return {"recommendations": results}

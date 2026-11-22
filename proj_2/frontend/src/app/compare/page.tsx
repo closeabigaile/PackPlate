@@ -1,16 +1,11 @@
-
 "use client";
 
 import { useState } from "react";
 import { PageShell } from "@/components/PageShell";
 import { api, errorMessage } from "@/lib/api";
 import { useSavedProfile } from "@/lib/profileStore";
-import type {
-  NutritionGoal,
-  RecommendationItem,
-} from "@/lib/types";
+import type { NutritionGoal, RecommendationItem } from "@/lib/types";
 import Link from "next/link";
-
 
 const goals: { value: NutritionGoal; label: string }[] = [
   { value: "high_protein", label: "High Protein" },
@@ -19,7 +14,7 @@ const goals: { value: NutritionGoal; label: string }[] = [
 ];
 
 function mealKey(item: RecommendationItem): string {
-    return `${item.location_id}:${item.meal_periods.join(", ")}:${item.item_id}`;
+  return `${item.location_id}:${item.meal_periods.join(", ")}:${item.item_id}`;
 }
 
 export default function ComparePage() {
@@ -39,9 +34,7 @@ export default function ComparePage() {
   const [searched, setSearched] = useState(false);
   const [selectedMeals, setSelectedMeals] = useState<string[]>([]);
 
-
   const savedProfile = useSavedProfile();
-
 
   function toggleMealSelection(key: string) {
     setSelectedMeals((current) => {
@@ -63,14 +56,14 @@ export default function ComparePage() {
     setResults([]);
 
     try {
-        const response = await api.recommendations({
-            goal,
-            meal: meal || null,
-            date,
-            profile: savedProfile,
-        });
+      const response = await api.recommendations({
+        goal,
+        meal: meal || null,
+        date,
+        profile: savedProfile,
+      });
 
-        setResults(response.recommendations);
+      setResults(response.recommendations);
 
       setSearched(true);
     } catch (err) {
@@ -100,9 +93,7 @@ export default function ComparePage() {
               id="nutrition-goal"
               className="input"
               value={goal}
-              onChange={(e) =>
-                setGoal(e.target.value as NutritionGoal)
-              }
+              onChange={(e) => setGoal(e.target.value as NutritionGoal)}
             >
               {goals.map((option) => (
                 <option key={option.value} value={option.value}>
@@ -115,12 +106,12 @@ export default function ComparePage() {
           <div className="field">
             <label htmlFor="comparison-date">Menu Date</label>
             <input
-                id="comparison-date"
-                type="date"
-                className="input"
-                value={date}
-                onChange={(e) => setDate(e.target.value)}
-                required
+              id="comparison-date"
+              type="date"
+              className="input"
+              value={date}
+              onChange={(e) => setDate(e.target.value)}
+              required
             />
           </div>
 
@@ -144,22 +135,22 @@ export default function ComparePage() {
 
           <div className="form">
             <div className="comparison-profile-note">
-                <p>
-                Your saved dietary preferences are automatically applied
-                to recommendations.
-                </p>
-                <Link href="/profile">Update My Diet</Link>
+              <p>
+                Your saved dietary preferences are automatically applied to
+                recommendations.
+              </p>
+              <Link href="/profile">Update My Diet</Link>
             </div>
 
             <div className="button-row">
-                <button
+              <button
                 type="button"
                 className="btn"
                 onClick={findMeals}
                 disabled={loading}
-                >
+              >
                 {loading ? "Finding Meals..." : "Find Recommendations"}
-                </button>
+              </button>
             </div>
           </div>
         </div>
@@ -175,15 +166,13 @@ export default function ComparePage() {
         <section>
           <h2 className="section-title">
             Recommended Meals
-            <span className="count">
-              {results.length} found
-            </span>
+            <span className="count">{results.length} found</span>
           </h2>
 
           {results.length === 0 ? (
             <div className="state-message">
-              No eligible meals found. Try another nutrition
-              goal or meal period.
+              No eligible meals found. Try another nutrition goal or meal
+              period.
             </div>
           ) : (
             <div className="stack">
@@ -202,23 +191,21 @@ export default function ComparePage() {
                       </span>
                     </div>
 
-                    <p className="meta">
-                      {item.location_name}
-                    </p>
+                    <p className="meta">{item.location_name}</p>
 
                     <button
-                        type="button"
-                        className="btn btn-small btn-outline"
-                        aria-pressed={selectedMeals.includes(mealKey(item))}
-                        disabled={
-                            selectedMeals.length >= 2 &&
-                            !selectedMeals.includes(mealKey(item))
-                        }
-                        onClick={() => toggleMealSelection(mealKey(item))}
-                        >
-                        {selectedMeals.includes(mealKey(item))
-                            ? "Remove from Comparison"
-                            : "Select to Compare"}
+                      type="button"
+                      className="btn btn-small btn-outline"
+                      aria-pressed={selectedMeals.includes(mealKey(item))}
+                      disabled={
+                        selectedMeals.length >= 2 &&
+                        !selectedMeals.includes(mealKey(item))
+                      }
+                      onClick={() => toggleMealSelection(mealKey(item))}
+                    >
+                      {selectedMeals.includes(mealKey(item))
+                        ? "Remove from Comparison"
+                        : "Select to Compare"}
                     </button>
                   </div>
 
@@ -227,9 +214,7 @@ export default function ComparePage() {
                       <tbody>
                         <tr>
                           <th scope="row">Calories</th>
-                          <td>
-                            {item.nutrition.calories ?? "N/A"}
-                          </td>
+                          <td>{item.nutrition.calories ?? "N/A"}</td>
                         </tr>
                         <tr>
                           <th scope="row">Protein</th>
@@ -253,8 +238,7 @@ export default function ComparePage() {
                     <p>{item.reason}</p>
 
                     <p className="help">
-                      Serving:{" "}
-                      {item.nutrition.serving_size ?? "Not listed"}
+                      Serving: {item.nutrition.serving_size ?? "Not listed"}
                     </p>
                   </div>
                 </article>
@@ -264,76 +248,74 @@ export default function ComparePage() {
         </section>
       )}
 
-
-        {comparedMeals.length > 0 && (
+      {comparedMeals.length > 0 && (
         <section className="panel">
-            <h2 className="section-title">Side-by-Side Comparison</h2>
+          <h2 className="section-title">Side-by-Side Comparison</h2>
 
-            {comparedMeals.length < 2 ? (
+          {comparedMeals.length < 2 ? (
             <p className="help">
-                Select one more meal to compare nutritional information.
+              Select one more meal to compare nutritional information.
             </p>
-            ) : (
+          ) : (
             <>
-                <p className="page-lede">
-                Compare nutrition per listed serving. Serving sizes
-                may differ between meals.
-                </p>
+              <p className="page-lede">
+                Compare nutrition per listed serving. Serving sizes may differ
+                between meals.
+              </p>
 
-                <div style={{ overflowX: "auto", marginTop: "1rem" }}>
+              <div style={{ overflowX: "auto", marginTop: "1rem" }}>
                 <table className="nutrition-table comparison-table">
-                    <thead>
+                  <thead>
                     <tr>
-                        <th scope="col">Nutrient</th>
-                        {comparedMeals.map((item) => (
+                      <th scope="col">Nutrient</th>
+                      {comparedMeals.map((item) => (
                         <th scope="col" key={mealKey(item)}>
-                            {item.name}
-                            <span className="meta" style={{ display: "block" }}>
+                          {item.name}
+                          <span className="meta" style={{ display: "block" }}>
                             {item.location_name}
-                            </span>
+                          </span>
                         </th>
-                        ))}
+                      ))}
                     </tr>
-                    </thead>
+                  </thead>
 
-                    <tbody>
+                  <tbody>
                     {(
-                        [
+                      [
                         ["Calories", "calories", ""],
                         ["Protein", "protein_g", "g"],
                         ["Carbohydrates", "carbs_g", "g"],
                         ["Fat", "fat_g", "g"],
                         ["Sodium", "sodium_mg", "mg"],
-                        ] as const
+                      ] as const
                     ).map(([label, field, unit]) => (
-                        <tr key={field}>
+                      <tr key={field}>
                         <th scope="row">{label}</th>
                         {comparedMeals.map((item) => (
-                            <td key={mealKey(item)}>
+                          <td key={mealKey(item)}>
                             {item.nutrition[field] == null
-                                ? "N/A"
-                                : `${item.nutrition[field]} ${unit}`.trim()}
-                            </td>
+                              ? "N/A"
+                              : `${item.nutrition[field]} ${unit}`.trim()}
+                          </td>
                         ))}
-                        </tr>
+                      </tr>
                     ))}
 
                     <tr>
-                        <th scope="row">Serving Size</th>
-                        {comparedMeals.map((item) => (
+                      <th scope="row">Serving Size</th>
+                      {comparedMeals.map((item) => (
                         <td key={mealKey(item)}>
-                            {item.nutrition.serving_size ?? "Not listed"}
+                          {item.nutrition.serving_size ?? "Not listed"}
                         </td>
-                        ))}
+                      ))}
                     </tr>
-                    </tbody>
+                  </tbody>
                 </table>
-                </div>
+              </div>
             </>
-            )}
+          )}
         </section>
-        )}
-
+      )}
     </PageShell>
   );
 }

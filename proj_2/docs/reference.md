@@ -4,7 +4,7 @@
 
 Every public module, class, and function in the Python code, with its signature and description, read from the source. The website (`frontend/`) is described in [how.md](how.md) instead.
 
-**459 of 462** modules, classes, and functions have a description.
+**474 of 480** modules, classes, and functions have a description.
 
 - **API** (`backend/app/`)
   - [`app`](#app)
@@ -63,6 +63,7 @@ Every public module, class, and function in the Python code, with its signature 
   - [`app.services.label_reviews`](#appserviceslabel_reviews)
   - [`app.services.menus`](#appservicesmenus)
   - [`app.services.passwords`](#appservicespasswords)
+  - [`app.services.recommendations`](#appservicesrecommendations)
   - [`app.startup`](#appstartup)
 - **Database** (`db/`)
   - [`db`](#db)
@@ -2789,6 +2790,30 @@ def needs_rehash(stored: str) -> bool
 
 True if `stored` wasn't made with the current settings.
 
+## `app.services.recommendations`
+
+Source: [`backend/app/services/recommendations.py`](../backend/app/services/recommendations.py)
+
+Rule-based meal recommendations for PackPlate M5.
+
+### `rank_meals`
+
+```python
+def rank_meals(items: list, goal: NutritionGoal) -> list
+```
+
+Return meals ranked by the selected nutrition goal.
+
+Excludes meals with missing or unreliable nutrition data.
+
+### `recommend_meals`
+
+```python
+def recommend_meals(items: list, goal: NutritionGoal, profile: Profile) -> list
+```
+
+Return compatible meals ranked by the user's nutrition goal.
+
 ## `app.startup`
 
 Source: [`backend/app/startup.py`](../backend/app/startup.py)
@@ -3191,6 +3216,26 @@ Fields:
 - `created_at: Mapped[datetime]`
 - `expires_at: Mapped[datetime]`
 - `user: Mapped[User]`
+
+### class `DietProfile` (Base)
+
+A logged-in user's saved dietary profile (M5). Writer: backend (the API).
+
+One row per account, only once the user saves a profile while logged in;
+logged-out profiles stay in the browser. Same fields and limits as a filter
+request's profile (app/schemas/filters.py). NULL goal = no limit set.
+Deleted with the account (ON DELETE CASCADE).
+
+Fields:
+
+- `user_id: Mapped[int]`
+- `name: Mapped[str | None]`
+- `avoid: Mapped[list]`
+- `diets: Mapped[list]`
+- `min_protein_g: Mapped[float | None]`
+- `max_calories: Mapped[float | None]`
+- `max_sodium_mg: Mapped[float | None]`
+- `updated_at: Mapped[datetime]`
 
 ## `db.seed_location_points`
 

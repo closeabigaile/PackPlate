@@ -341,6 +341,7 @@ class DietProfile(Base):
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
     )
 
+
 # The dining assistant's chat history (M3) is in its own file, imported the same way.
 import db.assistant_models  # noqa: E402, F401
 

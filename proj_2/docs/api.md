@@ -834,6 +834,7 @@ For one profile at one location: how many items fit, are incomplete, or conflict
 | Field | Type | Required |
 |---|---|---|
 | `recommendations` | list of [RecommendationItem](#recommendationitem) | no |
+
 ### ReplyOut
 
 The assistant's reply, with result cards (menu items) to show beside it.

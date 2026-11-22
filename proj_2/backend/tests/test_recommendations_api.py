@@ -1,14 +1,13 @@
-
 """API tests for PackPlate M5 recommendations."""
 
-from datetime import date, datetime
+from datetime import datetime
 from types import SimpleNamespace
 from unittest.mock import patch
 
 from fastapi.testclient import TestClient
 
-from app.main import app
 from app.deps import get_db
+from app.main import app
 
 client = TestClient(app)
 
@@ -52,7 +51,6 @@ def test_recommendations_empty_menus():
         app.dependency_overrides.clear()
 
 
-
 def test_recommendations_reject_invalid_goal():
     """An unsupported nutrition goal returns HTTP 422."""
 
@@ -73,11 +71,8 @@ def test_recommendations_reject_invalid_goal():
         app.dependency_overrides.clear()
 
 
-
 def test_recommendations_across_locations():
     """Rank meals from multiple campus dining locations."""
-
-    from types import SimpleNamespace
 
     meal_a = SimpleNamespace(
         id=101,

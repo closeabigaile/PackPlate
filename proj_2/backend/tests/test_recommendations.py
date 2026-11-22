@@ -1,4 +1,3 @@
-
 """Unit tests for PackPlate M5 meal recommendations."""
 
 from types import SimpleNamespace
@@ -66,7 +65,8 @@ def test_missing_nutrition():
 
 def test_flagged_nutrition():
     meal = make_meal(
-        1, "Incomplete Meal",
+        1,
+        "Incomplete Meal",
         protein=30,
         missing_fields=["Protein"],
     )
@@ -77,7 +77,6 @@ def test_flagged_nutrition():
 def test_invalid_goal(meals):
     with pytest.raises(ValueError):
         rank_meals(meals, "invalid_goal")
-
 
 
 def test_excludes_allergen_conflicts():
