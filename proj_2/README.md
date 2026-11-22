@@ -25,6 +25,7 @@ proj_2/
 │   │   │   ├── filters.py      /filters/locations/{id}/menus, /filters/group
 │   │   │   ├── crowd.py        /crowd/{id}
 │   │   │   ├── auth.py         /auth/register, /auth/login, /auth/logout, /auth/me
+│   │   │   ├── profile.py      /profile: a logged-in user's saved diet (M5)
 │   │   │   └── chat_room.py    /chat/rooms, /chat/invitations, /chat/open-to-chat (M4)
 │   │   ├── schemas/        Pydantic response models
 │   │   ├── services/       business logic (no database)
@@ -116,6 +117,7 @@ python -m uvicorn app.main:app --app-dir backend --reload
 | `POST /auth/login` | same body; logs in (sets the session cookie), 401 if wrong, 429 after 10 failed tries in 15 min |
 | `POST /auth/logout` | ends this browser's session (204) |
 | `GET /auth/me` | the logged-in account `{id, username, open_to_chat, created_at}`, or 401. `PATCH` with `{"open_to_chat": bool}` changes that setting (off by default); `DELETE` with `{"password"}` deletes the account |
+| `GET /profile` | the logged-in user's saved dietary profile, or `null` if none (401 when logged out). `PUT` with a profile (same fields and rules as in a filter request) saves it; `DELETE` removes it |
 | `/chat/...` | group chat for logged-in users (401 otherwise): rooms, invitations, messages, and the Open to Chat list; see `docs/api.md` |
 
 Time-dependent routes take `?at=2026-10-06T12:00:00-04:00` (default now, campus
@@ -131,8 +133,9 @@ the reporter.
 **Filtering.** The body is `{"profiles": [...]}`, 1–10 profiles, each with any of
 `name`, `avoid` (allergen keys: dairy, egg, gluten, nuts, pork, seafood, sesame,
 soy), `diets` (halal, vegan, vegetarian), `min_protein_g`, `max_calories`,
-`max_sodium_mg`. Unknown keys or fields are a 422, never ignored. Profiles are
-not stored. The rules are at the top of `services/filter_engine.py`; in short, an
+`max_sodium_mg`. Unknown keys or fields are a 422, never ignored. The filter
+endpoints don't store profiles; a logged-in user's own profile is saved through
+`/profile`. The rules are at the top of `services/filter_engine.py`; in short, an
 item only `fits` an allergy when it has a nutrition label and no unrecognized
 traits, and only fits a diet when it is tagged with it.
 

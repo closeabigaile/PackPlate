@@ -182,6 +182,32 @@ export interface ChatMessage {
   created_at: string;
 }
 
+// schemas/recommendations.py
+export type NutritionGoal = "high_protein" | "lower_calories" | "lower_sodium";
+
+export interface RecommendationRequest {
+  goal: NutritionGoal;
+  date?: string | null;
+  meal?: string | null;
+  profile?: Profile | null;
+}
+
+export interface RecommendationItem {
+  rank: number;
+  item_id: number;
+  name: string;
+  location_id: number;
+  location_name: string;
+  meal: string;
+  meal_periods: string[];
+  nutrition: Nutrition;
+  reason: string;
+}
+
+export interface RecommendationResponse {
+  recommendations: RecommendationItem[];
+}
+
 // schemas/assistant.py (the dining assistant)
 
 // A menu item shown beside a reply: from tools.filter_items on the backend.

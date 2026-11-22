@@ -81,7 +81,8 @@ export function AccountPanel() {
           {new Date(session.user.created_at).toLocaleDateString(undefined, {
             dateStyle: "long",
           })}
-          . Your dietary profile still lives only in this browser.
+          . Your <Link href="/profile">dietary profile</Link> is saved to this
+          account.
         </p>
         <label className="checkbox-line">
           <input

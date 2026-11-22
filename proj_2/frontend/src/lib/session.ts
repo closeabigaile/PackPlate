@@ -67,6 +67,11 @@ function subscribe(onChange: () => void): () => void {
   };
 }
 
+// The session right now, outside React.
+export function getSession(): Session {
+  return current;
+}
+
 export function useSession(): Session {
   return useSyncExternalStore(
     subscribe,

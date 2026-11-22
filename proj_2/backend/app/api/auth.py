@@ -4,8 +4,9 @@ A successful sign-up or login sets an HttpOnly session cookie; the browser
 sends it back on every request (the frontend uses credentials: "include"), and
 routes read the account through app.deps.current_user / optional_user.
 
-Only a username, a password hash, and the Open to Chat setting are stored. Dietary profiles stay in the
-browser, as before.
+Only a username, a password hash, and the Open to Chat setting are stored on the
+account. A dietary profile saved while logged in is kept by api/profile.py and
+deleted with the account.
 """
 
 import math

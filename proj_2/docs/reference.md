@@ -4,7 +4,7 @@
 
 Every public module, class, and function in the Python code, with its signature and description, read from the source. The website (`frontend/`) is described in [how.md](how.md) instead.
 
-**459 of 462** modules, classes, and functions have a description.
+**474 of 480** modules, classes, and functions have a description.
 
 - **API** (`backend/app/`)
   - [`app`](#app)
@@ -16,6 +16,8 @@ Every public module, class, and function in the Python code, with its signature 
   - [`app.api.filters`](#appapifilters)
   - [`app.api.locations`](#appapilocations)
   - [`app.api.meta`](#appapimeta)
+  - [`app.api.profile`](#appapiprofile)
+  - [`app.api.recommendations`](#appapirecommendations)
   - [`app.deps`](#appdeps)
   - [`app.main`](#appmain)
   - [`app.repositories`](#apprepositories)
@@ -27,6 +29,7 @@ Every public module, class, and function in the Python code, with its signature 
   - [`app.repositories.location_points`](#apprepositorieslocation_points)
   - [`app.repositories.locations`](#apprepositorieslocations)
   - [`app.repositories.menus`](#apprepositoriesmenus)
+  - [`app.repositories.profiles`](#apprepositoriesprofiles)
   - [`app.repositories.users`](#apprepositoriesusers)
   - [`app.schemas`](#appschemas)
   - [`app.schemas.assistant`](#appschemasassistant)
@@ -36,6 +39,7 @@ Every public module, class, and function in the Python code, with its signature 
   - [`app.schemas.filters`](#appschemasfilters)
   - [`app.schemas.locations`](#appschemaslocations)
   - [`app.schemas.meta`](#appschemasmeta)
+  - [`app.schemas.recommendations`](#appschemasrecommendations)
   - [`app.services`](#appservices)
   - [`app.services.assistant`](#appservicesassistant)
   - [`app.services.assistant.answers`](#appservicesassistantanswers)
@@ -59,6 +63,7 @@ Every public module, class, and function in the Python code, with its signature 
   - [`app.services.label_reviews`](#appserviceslabel_reviews)
   - [`app.services.menus`](#appservicesmenus)
   - [`app.services.passwords`](#appservicespasswords)
+  - [`app.services.recommendations`](#appservicesrecommendations)
   - [`app.startup`](#appstartup)
 - **Database** (`db/`)
   - [`db`](#db)
@@ -177,8 +182,9 @@ A successful sign-up or login sets an HttpOnly session cookie; the browser
 sends it back on every request (the frontend uses credentials: "include"), and
 routes read the account through app.deps.current_user / optional_user.
 
-Only a username, a password hash, and the Open to Chat setting are stored. Dietary profiles stay in the
-browser, as before.
+Only a username, a password hash, and the Open to Chat setting are stored on the
+account. A dietary profile saved while logged in is kept by api/profile.py and
+deleted with the account.
 
 ### `get_login_limiter`
 
@@ -483,6 +489,60 @@ def freshness(at: datetime | None=None, db: Session=Depends(get_db))
 ```
 
 When ingestion last finished, and whether the data is stale at `at` (default now).
+
+## `app.api.profile`
+
+Source: [`backend/app/api/profile.py`](../backend/app/api/profile.py)
+
+Routes for a logged-in user's saved dietary profile (M5).
+
+Logged out, the profile lives only in the browser, as before. Logged in, the
+frontend keeps a copy on the account here so it follows the user to any device
+and is used by My diet, Menus, Compare Meals, and Eat as a group. The filter and
+recommendation endpoints still take the profile in the request body.
+
+### `get_profile`
+
+```python
+@router.get('', response_model=Profile | None)
+def get_profile(user: User=Depends(current_user), db: Session=Depends(get_db))
+```
+
+The logged-in user's saved profile, or null if they haven't saved one. 401 when logged out.
+
+### `put_profile`
+
+```python
+@router.put('', response_model=Profile)
+def put_profile(body: Profile, user: User=Depends(current_user), db: Session=Depends(get_db))
+```
+
+Save (create or replace) the logged-in user's profile. Same rules as a filter
+request's profile: unknown allergens, diets, or fields are a 422.
+
+### `delete_profile`
+
+```python
+@router.delete('', status_code=204, response_class=Response)
+def delete_profile(user: User=Depends(current_user), db: Session=Depends(get_db))
+```
+
+Remove the logged-in user's saved profile. Succeeds if there wasn't one.
+
+## `app.api.recommendations`
+
+Source: [`backend/app/api/recommendations.py`](../backend/app/api/recommendations.py)
+
+API routes for PackPlate M5 meal recommendations.
+
+### `get_recommendations`
+
+```python
+@router.post('', response_model=RecommendationResponse)
+def get_recommendations(request: RecommendationRequest, db: Session=Depends(get_db))
+```
+
+Recommend meals across campus based on a nutrition goal.
 
 ## `app.deps`
 
@@ -839,6 +899,36 @@ def all_menus_on(db: Session, day: date) -> list[Menu]
 ```
 
 Every location's menus on `day`, with items and their nutrition labels loaded.
+
+## `app.repositories.profiles`
+
+Source: [`backend/app/repositories/profiles.py`](../backend/app/repositories/profiles.py)
+
+Queries for logged-in users' saved dietary profiles (M5).
+
+### `get`
+
+```python
+def get(db: Session, user_id: int) -> DietProfile | None
+```
+
+The account's saved profile, if it has one.
+
+### `save`
+
+```python
+def save(db: Session, user_id: int, values: dict) -> DietProfile
+```
+
+Create or replace the account's profile with these FIELDS.
+
+### `delete_for`
+
+```python
+def delete_for(db: Session, user_id: int)
+```
+
+Remove the account's profile. Does nothing if there isn't one.
 
 ## `app.repositories.users`
 
@@ -1349,6 +1439,47 @@ Fields:
 - `last_run_status: Literal['ok', 'partial'] | None`
 - `stale: bool`
 - `stale_after_hours: int`
+
+## `app.schemas.recommendations`
+
+Source: [`backend/app/schemas/recommendations.py`](../backend/app/schemas/recommendations.py)
+
+Request and response schemas for PackPlate M5 recommendations.
+
+### class `RecommendationRequest` (BaseModel)
+
+_No description yet._
+
+Fields:
+
+- `goal: NutritionGoal`
+- `date: Date | None`
+- `meal: str | None`
+- `profile: Profile | None`
+
+### class `RecommendationItem` (BaseModel)
+
+_No description yet._
+
+Fields:
+
+- `rank: int`
+- `item_id: int`
+- `name: str`
+- `location_id: int`
+- `location_name: str`
+- `meal: str`
+- `meal_periods: list[str]`
+- `nutrition: Nutrition`
+- `reason: str`
+
+### class `RecommendationResponse` (BaseModel)
+
+_No description yet._
+
+Fields:
+
+- `recommendations: list[RecommendationItem]`
 
 ## `app.services`
 
@@ -2659,6 +2790,30 @@ def needs_rehash(stored: str) -> bool
 
 True if `stored` wasn't made with the current settings.
 
+## `app.services.recommendations`
+
+Source: [`backend/app/services/recommendations.py`](../backend/app/services/recommendations.py)
+
+Rule-based meal recommendations for PackPlate M5.
+
+### `rank_meals`
+
+```python
+def rank_meals(items: list, goal: NutritionGoal) -> list
+```
+
+Return meals ranked by the selected nutrition goal.
+
+Excludes meals with missing or unreliable nutrition data.
+
+### `recommend_meals`
+
+```python
+def recommend_meals(items: list, goal: NutritionGoal, profile: Profile) -> list
+```
+
+Return compatible meals ranked by the user's nutrition goal.
+
 ## `app.startup`
 
 Source: [`backend/app/startup.py`](../backend/app/startup.py)
@@ -2861,8 +3016,8 @@ Tables.
 Single writer per table (proj_1b report, Figure 1):
     ingestion/  writes locations, hours_days, menus, menu_items, nutrition, ingest_runs,
                 label_reviews
-    backend/    reads those; writes crowd_reports, users, auth_sessions, and the
-                chat tables (chat_models.py)
+    backend/    reads those; writes crowd_reports, users, auth_sessions,
+                diet_profiles, and the chat tables (chat_models.py)
 
 Unknown stays unknown: a NULL nutrient or a missing label means "not published",
 never zero or safe.
@@ -3028,8 +3183,9 @@ Fields:
 
 A PackPlate account. Writer: backend (the API).
 
-Only a username, a password hash, and the Open to Chat setting are stored:
-no email, no real name, and no dietary profile (that stays in the browser).
+Only a username, a password hash, and the Open to Chat setting are stored
+here: no email and no real name. A saved dietary profile is its own table
+(DietProfile), deleted with the account.
 open_to_chat (off by default) is whether the user appears in chat's list of
 people to invite. username is stored
 lowercased, so "Wolf" and "wolf" are the same account. Other features
@@ -3060,6 +3216,26 @@ Fields:
 - `created_at: Mapped[datetime]`
 - `expires_at: Mapped[datetime]`
 - `user: Mapped[User]`
+
+### class `DietProfile` (Base)
+
+A logged-in user's saved dietary profile (M5). Writer: backend (the API).
+
+One row per account, only once the user saves a profile while logged in;
+logged-out profiles stay in the browser. Same fields and limits as a filter
+request's profile (app/schemas/filters.py). NULL goal = no limit set.
+Deleted with the account (ON DELETE CASCADE).
+
+Fields:
+
+- `user_id: Mapped[int]`
+- `name: Mapped[str | None]`
+- `avoid: Mapped[list]`
+- `diets: Mapped[list]`
+- `min_protein_g: Mapped[float | None]`
+- `max_calories: Mapped[float | None]`
+- `max_sodium_mg: Mapped[float | None]`
+- `updated_at: Mapped[datetime]`
 
 ## `db.seed_location_points`
 

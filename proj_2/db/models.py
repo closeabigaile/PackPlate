@@ -3,8 +3,8 @@
 Single writer per table (proj_1b report, Figure 1):
     ingestion/  writes locations, hours_days, menus, menu_items, nutrition, ingest_runs,
                 label_reviews
-    backend/    reads those; writes crowd_reports, users, auth_sessions, and the
-                chat tables (chat_models.py)
+    backend/    reads those; writes crowd_reports, users, auth_sessions,
+                diet_profiles, and the chat tables (chat_models.py)
 
 Unknown stays unknown: a NULL nutrient or a missing label means "not published",
 never zero or safe.
@@ -265,8 +265,9 @@ class LabelReview(Base):
 class User(Base):
     """A PackPlate account. Writer: backend (the API).
 
-    Only a username, a password hash, and the Open to Chat setting are stored:
-    no email, no real name, and no dietary profile (that stays in the browser).
+    Only a username, a password hash, and the Open to Chat setting are stored
+    here: no email and no real name. A saved dietary profile is its own table
+    (DietProfile), deleted with the account.
     open_to_chat (off by default) is whether the user appears in chat's list of
     people to invite. username is stored
     lowercased, so "Wolf" and "wolf" are the same account. Other features
@@ -314,6 +315,31 @@ class AuthSession(Base):
     expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
 
     user: Mapped[User] = relationship(back_populates="sessions")
+
+
+class DietProfile(Base):
+    """A logged-in user's saved dietary profile (M5). Writer: backend (the API).
+
+    One row per account, only once the user saves a profile while logged in;
+    logged-out profiles stay in the browser. Same fields and limits as a filter
+    request's profile (app/schemas/filters.py). NULL goal = no limit set.
+    Deleted with the account (ON DELETE CASCADE).
+    """
+
+    __tablename__ = "diet_profiles"
+
+    user_id: Mapped[int] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), primary_key=True
+    )
+    name: Mapped[str | None] = mapped_column(String(50))
+    avoid: Mapped[list] = mapped_column(JSONB, default=list)  # allergen keys
+    diets: Mapped[list] = mapped_column(JSONB, default=list)  # diet keys
+    min_protein_g: Mapped[float | None] = mapped_column(Float)
+    max_calories: Mapped[float | None] = mapped_column(Float)
+    max_sodium_mg: Mapped[float | None] = mapped_column(Float)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
+    )
 
 
 # The dining assistant's chat history (M3) is in its own file, imported the same way.
