@@ -4,7 +4,7 @@
 
 Every public module, class, and function in the Python code, with its signature and description, read from the source. The website (`frontend/`) is described in [how.md](how.md) instead.
 
-**259 of 259** modules, classes, and functions have a description.
+**264 of 267** modules, classes, and functions have a description.
 
 - **API** (`backend/app/`)
   - [`app`](#app)
@@ -28,6 +28,7 @@ Every public module, class, and function in the Python code, with its signature 
   - [`app.schemas.meta`](#appschemasmeta)
   - [`app.services`](#appservices)
   - [`app.services.crowd`](#appservicescrowd)
+  - [`app.services.crowd_forecast`](#appservicescrowd_forecast)
   - [`app.services.filter_engine`](#appservicesfilter_engine)
   - [`app.services.freshness`](#appservicesfreshness)
   - [`app.services.hours`](#appserviceshours)
@@ -403,6 +404,16 @@ Fields:
 - `report_count: int`
 - `last_reported_at: datetime | None`
 
+### class `CrowdForecast` (BaseModel)
+
+Predicted crowd level from the time of day and opening hours: no student input needed.
+
+Fields:
+
+- `level: CrowdLevel | None`
+- `estimate: CrowdLevel | None`
+- `source: Literal['forecast', 'reports', 'forecast+reports', 'none']`
+
 ## `app.schemas.filters`
 
 Source: [`backend/app/schemas/filters.py`](../backend/app/schemas/filters.py)
@@ -531,6 +542,7 @@ Fields:
 - `opens_next_at: datetime | None`
 - `today: HoursDay`
 - `crowd: Crowd`
+- `forecast: CrowdForecast`
 
 ### class `MenuSummary` (BaseModel)
 
@@ -665,6 +677,80 @@ def hit(self, key) -> float
 ```
 
 Record a report for key. Returns 0 if allowed, else seconds until it would be.
+
+## `app.services.crowd_forecast`
+
+Source: [`backend/app/services/crowd_forecast.py`](../backend/app/services/crowd_forecast.py)
+
+```text
+Predicted crowd level: no student input needed.
+
+Goes in backend/app/services/crowd_forecast.py. Pure functions, no database.
+
+The forecast comes from three things PackPlate already knows or can know for free:
+  1. The time of day: meal rushes (a hand-tuned curve, easy to adjust below).
+  2. The opening hours already stored in HoursDay: crowds are thin right after
+     opening and right before closing, and a closed location has no crowd.
+  3. A campus-calendar factor: breaks and exam weeks (fill in CALENDAR below).
+
+Student reports stay optional: if any exist in the window they pull the level
+toward what students saw, but nobody is ever asked to report.
+```
+
+### class `Forecast`
+
+_No description yet._
+
+Fields:
+
+- `level: str | None`
+- `score: float | None`
+
+### `calendar_factor`
+
+```python
+def calendar_factor(day: date) -> float
+```
+
+_No description yet._
+
+### `bucket`
+
+```python
+def bucket(score: float) -> str
+```
+
+_No description yet._
+
+### `forecast`
+
+```python
+def forecast(at: datetime, open_period: tuple[datetime, datetime] | None, location_id: int=0) -> Forecast
+```
+
+open_period: the (opens, closes) period containing `at`, or None if closed/unknown.
+
+### `blend`
+
+```python
+def blend(forecast_score: float | None, reports, at: datetime, window: timedelta)
+```
+
+Combine the forecast (as a prior) with optional reports. Returns (level, source).
+
+reports: (level, created_at) pairs. Each counts like in services.crowd.aggregate
+(weight 1 when new, falling to 0 at the window's end).
+
+### `current_period`
+
+```python
+def current_period(at: datetime, today, yesterday) -> tuple[datetime, datetime] | None
+```
+
+The open period containing `at`, from HoursDay rows for at's date and the day before.
+
+Checks yesterday first because a close at or past midnight runs into today.
+Returns None if closed, or if the hours are unknown.
 
 ## `app.services.filter_engine`
 
