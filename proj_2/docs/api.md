@@ -471,6 +471,16 @@ A location's current crowd level, worked out from recent student reports.
 | `report_count` | integer | yes |
 | `last_reported_at` | string (date-time) or null | yes |
 
+### CrowdForecast
+
+Predicted crowd level from the time of day and opening hours: no student input needed.
+
+| Field | Type | Required |
+|---|---|---|
+| `level` | `not_busy` / `moderate` / `crowded` or null | yes |
+| `estimate` | `not_busy` / `moderate` / `crowded` or null | yes |
+| `source` | `forecast` / `reports` / `forecast+reports` / `none` | yes |
+
 ### CrowdReportIn
 
 A student's report of how busy a location is right now. Extra fields are rejected.
@@ -584,6 +594,7 @@ A location's summary plus 7 days of hours (from today) and its menus from today 
 | `opens_next_at` | string (date-time) or null | yes |
 | `today` | [HoursDay](#hoursday) | yes |
 | `crowd` | [Crowd](#crowd) | yes |
+| `forecast` | [CrowdForecast](#crowdforecast) | yes |
 | `hours` | list of [HoursDay](#hoursday) | yes |
 | `menus` | list of [MenuSummary](#menusummary) | yes |
 
@@ -602,6 +613,7 @@ A location with today's hours, whether it's open, and its crowd level.
 | `opens_next_at` | string (date-time) or null | yes |
 | `today` | [HoursDay](#hoursday) | yes |
 | `crowd` | [Crowd](#crowd) | yes |
+| `forecast` | [CrowdForecast](#crowdforecast) | yes |
 
 ### Menu
 

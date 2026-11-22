@@ -9,7 +9,7 @@ from typing import Literal
 
 from pydantic import BaseModel
 
-from app.schemas.crowd import Crowd
+from app.schemas.crowd import Crowd, CrowdForecast
 
 
 class Period(BaseModel):
@@ -42,6 +42,9 @@ class LocationSummary(BaseModel):
     opens_next_at: datetime | None  # next opening later today
     today: HoursDay
     crowd: Crowd  # from recent student reports (services/crowd.py)
+    forecast: (
+        CrowdForecast  # predicted from time and hours (services/crowd_forecast.py)
+    )
 
 
 class MenuSummary(BaseModel):
