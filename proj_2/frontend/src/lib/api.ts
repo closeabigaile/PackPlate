@@ -3,6 +3,8 @@
 //
 // Set NEXT_PUBLIC_API_URL in .env.local to override the local dev server.
 import type {
+  AssistantMessage,
+  AssistantReply,
   ChatInvitation,
   ChatMessage,
   ChatPerson,
@@ -166,6 +168,16 @@ export const api = {
 
   leaveChatRoom: (roomId: number) =>
     request<void>(`/chat/rooms/${roomId}/leave`, undefined, "POST"),
+
+  // The dining assistant (needs a logged-in user). The profile goes in the body
+  // and is never stored; only the messages and replies are.
+  assistantMessages: () => request<AssistantMessage[]>("/assistant/messages"),
+
+  sendAssistantMessage: (text: string, profile: Profile) =>
+    request<AssistantReply>("/assistant/messages", { text, profile }),
+
+  clearAssistantMessages: () =>
+    request<void>("/assistant/messages", undefined, "DELETE"),
 };
 
 export function errorMessage(error: unknown): string {

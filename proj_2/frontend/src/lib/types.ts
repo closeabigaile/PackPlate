@@ -174,3 +174,35 @@ export interface ChatMessage {
   sender_id: number | null;
   created_at: string;
 }
+
+// schemas/assistant.py (the dining assistant)
+
+// A menu item shown beside a reply: from tools.filter_items on the backend.
+export interface AssistantCard {
+  type: "menu_item";
+  id: number;
+  name: string;
+  meal: string;
+  station: string | null;
+  serving_size: string | null;
+  calories: number | null; // null = no usable label, never zero
+  protein_g: number | null;
+  sodium_mg: number | null;
+  nutrition_available: boolean;
+  verdict: Verdict;
+  reasons: string[];
+}
+
+export interface AssistantMessage {
+  id: number;
+  role: "user" | "assistant";
+  text: string;
+  cards: AssistantCard[];
+  created_at: string;
+}
+
+export interface AssistantReply {
+  reply: string;
+  cards: AssistantCard[];
+  source: string; // "rules", or "fallback" when a reply failed validation
+}
