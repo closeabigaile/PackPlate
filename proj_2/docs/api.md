@@ -31,6 +31,9 @@ Every endpoint and data model of the PackPlate API, read from the API's own Open
 - [`GET /chat/users/{username}`](#get-chatusersusername)
 - [`GET /chat/open-to-chat`](#get-chatopen-to-chat)
 - [`PUT /chat/open-to-chat`](#put-chatopen-to-chat)
+- [`POST /assistant/messages`](#post-assistantmessages)
+- [`GET /assistant/messages`](#get-assistantmessages)
+- [`DELETE /assistant/messages`](#delete-assistantmessages)
 - [`GET /health`](#get-health)
 
 ### `GET /locations`
@@ -343,6 +346,40 @@ Show or hide the current user on the Open to Chat list (off by default).
 | 200 Successful Response | [OpenToChatOut](#opentochatout) |
 | 422 Validation Error | [HTTPValidationError](#httpvalidationerror) |
 
+### `POST /assistant/messages`
+
+Ask the assistant something. Returns its reply, and saves both messages.
+
+429 (with Retry-After) when the account is asking too fast.
+
+**Request body:** [MessageIn](#messagein)
+
+| Response | Body |
+|---|---|
+| 201 Successful Response | [ReplyOut](#replyout) |
+| 422 Validation Error | [HTTPValidationError](#httpvalidationerror) |
+
+### `GET /assistant/messages`
+
+The logged-in account's latest messages, oldest first. Never anyone else's.
+
+| Parameter | In | Type | Required | Default |
+|---|---|---|---|---|
+| `limit` | query | integer | no | `50` |
+
+| Response | Body |
+|---|---|
+| 200 Successful Response | list of [MessageOut](#messageout) |
+| 422 Validation Error | [HTTPValidationError](#httpvalidationerror) |
+
+### `DELETE /assistant/messages`
+
+Delete the logged-in account's whole conversation.
+
+| Response | Body |
+|---|---|
+| 204 Successful Response |  |
+
 ### `GET /health`
 
 Whether the API is up, can reach the database, and has the expected schema.
@@ -618,6 +655,28 @@ One meal's menu on one day, without its items.
 | `meal` | string | yes |
 | `scraped` | boolean | yes |
 
+### MessageIn
+
+A message to the assistant. The account comes from the login, not from here.
+
+| Field | Type | Required |
+|---|---|---|
+| `text` | string | yes |
+| `profile` | [Profile](#profile) or null | no |
+| `at` | string (date-time) or null | no |
+
+### MessageOut
+
+One saved message in the account's history.
+
+| Field | Type | Required |
+|---|---|---|
+| `id` | integer | yes |
+| `role` | `user` / `assistant` | yes |
+| `text` | string | yes |
+| `cards` | list of object | yes |
+| `created_at` | string (date-time) | yes |
+
 ### Nutrition
 
 An item's nutrition label from NetNutrition. Values it doesn't give are null, not zero.
@@ -703,6 +762,16 @@ For one profile at one location: how many items fit, are incomplete, or conflict
 | `fits` | integer | yes |
 | `incomplete` | integer | yes |
 | `conflicts` | integer | yes |
+
+### ReplyOut
+
+The assistant's reply, with result cards (menu items) to show beside it.
+
+| Field | Type | Required |
+|---|---|---|
+| `reply` | string | yes |
+| `cards` | list of object | yes |
+| `source` | string | yes |
 
 ### RoomStatus
 

@@ -11,16 +11,26 @@ the Python path: see the README.
 """
 
 import os
+from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import text
 
-from app.api import auth, chat_room, crowd, filters, locations, meta
+from app import startup
+from app.api import assistant, auth, chat_room, crowd, filters, locations, meta
 from app.deps import get_engine
 from db.migrate import check_current
 
-app = FastAPI(title="PackPlate API")
+
+@asynccontextmanager
+async def lifespan(_app: FastAPI):
+    """On start, bring a local database up to date (see app/startup.py)."""
+    startup.migrate_if_local()
+    yield
+
+
+app = FastAPI(title="PackPlate API", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
@@ -36,6 +46,7 @@ app.include_router(filters.router)
 app.include_router(crowd.router)
 app.include_router(auth.router)
 app.include_router(chat_room.router)
+app.include_router(assistant.router)
 
 
 @app.get("/health")
