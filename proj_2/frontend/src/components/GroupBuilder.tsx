@@ -13,7 +13,9 @@ import {
 import { formatTime } from "@/lib/format";
 import { useHydrated, useSavedProfile } from "@/lib/profileStore";
 import type { GroupLocation, Profile } from "@/lib/types";
+import { Avatar } from "./Avatar";
 import { StatusPill } from "./Badges";
+import { Icon } from "./Icon";
 import { ProfileFields } from "./ProfileFields";
 import { StateMessage } from "./StateMessage";
 
@@ -30,6 +32,10 @@ type Search =
 
 function labelFor(profile: Profile, index: number): string {
   return profile.name?.trim() || `Person ${index + 1}`;
+}
+
+function nameOf(name: string | null, labels: string[], index: number): string {
+  return name?.trim() || labels[index] || `Person ${index + 1}`;
 }
 
 function ResultCard({
@@ -57,6 +63,23 @@ function ResultCard({
         <StatusPill isOpen={location.is_open} />
       </div>
       {when ? <p className="meta">{when}</p> : null}
+      {location.items_checked > 0 ? (
+        <p className="avatar-row">
+          {location.profiles.map((counts, index) => (
+            <Avatar
+              key={index}
+              name={nameOf(counts.name, labels, index)}
+              index={index}
+              status={counts.fits > 0 ? "fits" : "none"}
+            />
+          ))}
+          <span className={location.everyone_fits ? "match-yes" : "match-no"}>
+            {location.everyone_fits
+              ? "Something for everyone"
+              : `${location.profiles.filter((c) => c.fits === 0).length} left out`}
+          </span>
+        </p>
+      ) : null}
 
       {location.items_checked === 0 ? (
         <p className="banner banner-warn">
@@ -65,10 +88,9 @@ function ResultCard({
       ) : (
         <ul className="count-list">
           {location.profiles.map((counts, index) => (
-            <li key={index}>
-              <strong>
-                {counts.name?.trim() || labels[index] || `Person ${index + 1}`}
-              </strong>
+            <li key={index} className="count-person">
+              <Avatar name={nameOf(counts.name, labels, index)} index={index} />
+              <strong>{nameOf(counts.name, labels, index)}</strong>
               {": "}
               {counts.fits} fit · {counts.incomplete} need a check ·{" "}
               {counts.conflicts} don’t fit
@@ -78,8 +100,13 @@ function ResultCard({
         </ul>
       )}
 
-      <div className="row-links">
-        <Link href={`/menus?location=${location.id}`}>View menu</Link>
+      <div className="row-actions">
+        <Link
+          href={`/menus?location=${location.id}`}
+          className="btn btn-small btn-quiet"
+        >
+          View menu <Icon name="arrow" size={16} />
+        </Link>
       </div>
     </li>
   );
@@ -155,7 +182,8 @@ function GroupForm({ initial }: { initial: Profile }) {
             aria-label={labelFor(member.profile, index)}
           >
             <div className="member-head">
-              <h2 className="section-title" style={{ marginBottom: 0 }}>
+              <h2 className="section-title member-title">
+                <Avatar name={labelFor(member.profile, index)} index={index} />
                 {labelFor(member.profile, index)}
               </h2>
               {members.length > 1 ? (
@@ -224,7 +252,7 @@ function GroupForm({ initial }: { initial: Profile }) {
               No dining locations have been loaded yet.
             </StateMessage>
           ) : (
-            <div className="page-body" style={{ marginTop: 0 }}>
+            <div className="page-body results-body">
               <div>
                 <h2 className="section-title">
                   Everyone can eat here{" "}
@@ -236,7 +264,7 @@ function GroupForm({ initial }: { initial: Profile }) {
                     restriction, or look at who is left out below.
                   </StateMessage>
                 ) : (
-                  <ul className="stack">
+                  <ul className="result-grid">
                     {everyone.map((location) => (
                       <ResultCard
                         key={location.id}
@@ -254,7 +282,7 @@ function GroupForm({ initial }: { initial: Profile }) {
                     Someone is left out{" "}
                     <span className="count">({others.length})</span>
                   </h2>
-                  <ul className="stack">
+                  <ul className="result-grid">
                     {others.map((location) => (
                       <ResultCard
                         key={location.id}

@@ -1,7 +1,7 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useState } from "react";
+import { SignInPrompt } from "@/components/SignInPrompt";
 import { StateMessage } from "@/components/StateMessage";
 import { api, ApiError, errorMessage } from "@/lib/api";
 import { refreshSession, setOpenToChat, useSession } from "@/lib/session";
@@ -52,10 +52,15 @@ export function ChatPanel() {
   }
   if (session.status === "signed_out") {
     return (
-      <StateMessage kind="empty">
-        <Link href="/login">Log in</Link> or{" "}
-        <Link href="/signup">create an account</Link> to join Group Chat.
-      </StateMessage>
+      <SignInPrompt
+        icon="chat"
+        title="Plan meals with friends"
+        points={[
+          "Make a chat room and invite friends by username",
+          "Turn on Open to Chat to let other students find you",
+          "Agree on where to eat without leaving PackPlate",
+        ]}
+      />
     );
   }
   // Start fresh when someone switches accounts so their rooms and drafts stay separate.

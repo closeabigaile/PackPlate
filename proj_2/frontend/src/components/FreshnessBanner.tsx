@@ -54,9 +54,19 @@ export function FreshnessBanner() {
     );
   }
 
+  if (partial) {
+    return (
+      <p className="banner banner-warn" role="status">
+        Hours and menus last updated {formatAge(ageHours)}.{partial}
+      </p>
+    );
+  }
+
+  // Fresh data needs no warning, so it is a small status chip, not a banner.
   return (
-    <p className={partial ? "banner banner-warn" : "banner"} role="status">
-      Hours and menus last updated {formatAge(ageHours)}.{partial}
+    <p className="fresh-chip" role="status">
+      <span className="fresh-dot" aria-hidden="true" />
+      Hours and menus updated {formatAge(ageHours)}
     </p>
   );
 }

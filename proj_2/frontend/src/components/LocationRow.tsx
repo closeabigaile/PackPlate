@@ -1,7 +1,15 @@
+"use client";
+
 import Link from "next/link";
+import { formatDuration, minutesUntil, useNow } from "@/lib/clock";
 import { formatHours, formatTime } from "@/lib/format";
 import type { LocationSummary } from "@/lib/types";
 import { StatusPill } from "./Badges";
+import { HoursTimeline } from "./HoursTimeline";
+import { Icon } from "./Icon";
+
+// Under this many minutes to closing, the card says so.
+const CLOSING_SOON = 60;
 
 function timing(location: LocationSummary): string | null {
   if (location.is_open === true && location.closes_at) {
@@ -15,30 +23,59 @@ function timing(location: LocationSummary): string | null {
   return null;
 }
 
-// One location in the What's Open Now lists.
-export function LocationRow({ location }: { location: LocationSummary }) {
+// One location on the What's Open Now page. `showStatus` is off where the
+// section heading already says it (for example "Hours unknown").
+export function LocationRow({
+  location,
+  showStatus = true,
+}: {
+  location: LocationSummary;
+  showStatus?: boolean;
+}) {
+  const now = useNow();
   const when = timing(location);
+  const left =
+    now !== null && location.is_open === true && location.closes_at
+      ? minutesUntil(location.closes_at, now)
+      : null;
+  const soon = left !== null && left <= CLOSING_SOON ? left : null;
+  const tone =
+    location.is_open === true
+      ? "location-card is-open"
+      : location.is_open === false
+        ? "location-card is-closed"
+        : "location-card";
 
   return (
-    <li className="panel location-row">
+    <li className={`panel ${tone}`}>
       <div className="location-row-head">
         <span className="location-name">{location.name}</span>
-        <StatusPill isOpen={location.is_open} />
+        {showStatus ? <StatusPill isOpen={location.is_open} /> : null}
       </div>
-      <p className="meta">
+      {soon !== null ? (
+        <p className="closing-soon">
+          <Icon name="clock" size={16} /> Closes in {formatDuration(soon)}
+        </p>
+      ) : null}
+      <HoursTimeline day={location.today} />
+      <p className="location-when">
+        {when ? <strong>{when}</strong> : null}
+        {when ? " · " : ""}
         Today: {formatHours(location.today)}
-        {when ? ` · ${when}` : ""}
       </p>
       {location.description ? (
-        <p className="meta">{location.description}</p>
+        <p className="meta location-desc">{location.description}</p>
       ) : null}
-      <div className="row-links">
-        <Link href={`/menus?location=${location.id}`}>View menu</Link>
+      <div className="row-actions">
+        <Link href={`/menus?location=${location.id}`} className="btn btn-small">
+          View menu <Icon name="arrow" size={16} />
+        </Link>
         {location.dining_url ? (
           <a
             href={location.dining_url}
             target="_blank"
             rel="noopener noreferrer"
+            className="btn btn-small btn-quiet"
           >
             Dining page <span aria-hidden="true">↗</span>
             <span className="visually-hidden"> (opens in a new tab)</span>

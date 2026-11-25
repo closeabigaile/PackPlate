@@ -16,7 +16,8 @@ export default async function MenusPage({
 
   return (
     <PageShell
-      title="Menus & Nutrition"
+      title="Menus and nutrition"
+      icon="utensils"
       lede="Menus, allergens, diets and nutrition for every dining location."
     >
       <MenusBrowser initialLocationId={initialLocationId} />

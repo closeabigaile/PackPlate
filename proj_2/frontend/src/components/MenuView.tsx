@@ -2,12 +2,13 @@
 
 import { useState } from "react";
 import { ALLERGENS, allergenLabel, dietLabel } from "@/lib/diet";
-import { formatNumber } from "@/lib/format";
 import { splitLabel, stationLabel, stationRank } from "@/lib/stations";
 import { reasonSummary, shortReason } from "@/lib/verdicts";
 import type { ItemResult, MenuItem, MenuSummary, Nutrition } from "@/lib/types";
 import { StateMessage } from "./StateMessage";
 import { VerdictBadge } from "./Badges";
+import { Icon, type IconName } from "./Icon";
+import { NutritionBars } from "./NutritionBars";
 
 // Works for plain menus and for menus already checked against one profile
 // (FilteredMenu), which add `results` to each item.
@@ -18,28 +19,10 @@ export interface ViewMenu extends MenuSummary {
   items: ViewItem[];
 }
 
-function NutritionTable({ nutrition }: { nutrition: Nutrition }) {
-  const rows: [string, string][] = [
-    ["Serving size", nutrition.serving_size ?? "not listed"],
-    ["Calories", formatNumber(nutrition.calories, "")],
-    ["Protein", formatNumber(nutrition.protein_g, " g")],
-    ["Fat", formatNumber(nutrition.fat_g, " g")],
-    ["Carbs", formatNumber(nutrition.carbs_g, " g")],
-    ["Sodium", formatNumber(nutrition.sodium_mg, " mg")],
-  ];
+function NutritionDetail({ nutrition }: { nutrition: Nutrition }) {
   return (
-    <div>
-      <table className="nutrition-table">
-        <caption className="visually-hidden">Nutrition facts</caption>
-        <tbody>
-          {rows.map(([label, value]) => (
-            <tr key={label}>
-              <th scope="row">{label}</th>
-              <td>{value}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+    <div className="stack">
+      <NutritionBars nutrition={nutrition} />
       {nutrition.missing_fields.length > 0 ? (
         <p className="help">
           The label doesn’t give: {nutrition.missing_fields.join(", ")}.
@@ -52,12 +35,29 @@ function NutritionTable({ nutrition }: { nutrition: Nutrition }) {
   );
 }
 
+const DIET_ICONS: Record<string, IconName> = {
+  vegan: "leaf",
+  vegetarian: "sprout",
+  halal: "moon",
+};
+
 // Allergens the ingredients mention that NC State's label doesn't list.
 function possibleAllergens(item: ViewItem): [string, string[]][] {
   const flags = item.nutrition?.ingredient_flags ?? {};
   return ALLERGENS.filter(
     (a) => flags[a.key] && !item.allergens.includes(a.key),
   ).map((a) => [a.key, flags[a.key]]);
+}
+
+// "320 cal · 12 g protein" for the row itself, from the label. Nothing when
+// there's no usable label, so a missing number is never shown as zero.
+function quickStats(item: ViewItem): string | null {
+  const n = item.nutrition;
+  if (!n || item.nutrition_unavailable) return null;
+  const parts: string[] = [];
+  if (n.calories != null) parts.push(`${Math.round(n.calories)} cal`);
+  if (n.protein_g != null) parts.push(`${Math.round(n.protein_g)} g protein`);
+  return parts.length > 0 ? parts.join(" · ") : null;
 }
 
 const VERDICT_ORDER = { fits: 0, incomplete: 1, conflicts: 2 } as const;
@@ -86,6 +86,7 @@ function Item({ sizes }: { sizes: ViewItem[] }) {
   const tone = result ? `item item-${result.verdict}` : "item";
   const possible = possibleAllergens(item);
   const removed = Object.entries(item.diets_removed ?? {});
+  const stats = quickStats(item);
   const worse = sizes
     .map((s, i) => ({ s, i }))
     .filter(({ s }) => s.results && rank(s) > rank(sizes[best]));
@@ -94,12 +95,18 @@ function Item({ sizes }: { sizes: ViewItem[] }) {
     <li className={tone}>
       <details>
         <summary>
-          <span className="item-name">{item.name}</span>
+          <span className="item-name">
+            {item.name}
+            {stats ? <span className="item-stats">{stats}</span> : null}
+          </span>
           {result ? (
             <VerdictBadge verdict={result.verdict} reasons={result.reasons} />
           ) : null}
           {item.diets.map((diet) => (
             <span key={diet} className="pill pill-diet">
+              {DIET_ICONS[diet] ? (
+                <Icon name={DIET_ICONS[diet]} size={13} />
+              ) : null}
               {dietLabel(diet)}
             </span>
           ))}
@@ -210,7 +217,7 @@ function Item({ sizes }: { sizes: ViewItem[] }) {
               ) : null}
             </div>
           ) : item.nutrition ? (
-            <NutritionTable nutrition={item.nutrition} />
+            <NutritionDetail nutrition={item.nutrition} />
           ) : (
             <p className="banner banner-warn">
               No nutrition label for this item, so allergens come from icons
@@ -309,8 +316,52 @@ function MenuBody({
   );
   const hidden = total - sections.reduce((n, [, d]) => n + d.length, 0);
 
+  // With a profile: how the whole meal comes out, by each dish's best size.
+  const counts = { fits: 0, incomplete: 0, conflicts: 0 };
+  let checked = 0;
+  for (const [, dishes] of groupByCourse(menu.items)) {
+    for (const sizes of dishes) {
+      const verdicts = sizes
+        .map((s) => s.results?.[0]?.verdict)
+        .filter((v): v is NonNullable<typeof v> => v !== undefined);
+      if (verdicts.length === 0) continue;
+      checked += 1;
+      const best = verdicts.reduce((b, v) =>
+        VERDICT_ORDER[v] < VERDICT_ORDER[b] ? v : b,
+      );
+      counts[best] += 1;
+    }
+  }
+
   return (
     <>
+      {checked > 0 ? (
+        <div className="fit-summary" role="status">
+          <p>
+            <strong>
+              {counts.fits} of {checked}
+            </strong>{" "}
+            {checked === 1 ? "dish fits" : "dishes fit"} your profile
+          </p>
+          <span className="fit-bar" aria-hidden="true">
+            <span
+              className="fit-seg fit-ok"
+              style={{ flexGrow: counts.fits }}
+            />
+            <span
+              className="fit-seg fit-warn"
+              style={{ flexGrow: counts.incomplete }}
+            />
+            <span
+              className="fit-seg fit-bad"
+              style={{ flexGrow: counts.conflicts }}
+            />
+          </span>
+          <p className="meta">
+            {counts.incomplete} need a check · {counts.conflicts} don’t fit
+          </p>
+        </div>
+      ) : null}
       {hidden > 0 ? (
         <p className="help">
           {hidden} item{hidden === 1 ? "" : "s"} hidden because{" "}
@@ -364,7 +415,8 @@ export function MenuView({
   const menu = shown.find((m) => m.meal === meal) ?? shown[0];
 
   return (
-    <div className="stack">
+    // Flex, not grid, so the meal tabs can stay pinned while the menu scrolls.
+    <div className="menu-view">
       {shown.length > 1 ? (
         <div className="meal-tabs" role="tablist" aria-label="Meal">
           {shown.map((m) => (

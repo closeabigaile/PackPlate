@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { api } from "@/lib/api";
 import {
   allergenLabel,
@@ -9,11 +9,12 @@ import {
   hasConstraints,
   toRequestProfile,
 } from "@/lib/diet";
-import { formatDay } from "@/lib/format";
+import { formatDay, formatHours, formatTime } from "@/lib/format";
 import { useSavedProfile } from "@/lib/profileStore";
 import type { LocationDetail, LocationSummary, Profile } from "@/lib/types";
 import { useAsync } from "@/lib/useAsync";
 import { StatusPill } from "./Badges";
+import { Icon } from "./Icon";
 import { MenuView, type ViewMenu } from "./MenuView";
 import { StateMessage } from "./StateMessage";
 
@@ -32,6 +33,19 @@ function describeProfile(profile: Profile): string {
   if (profile.max_sodium_mg != null)
     parts.push(`under ${profile.max_sodium_mg} mg sodium`);
   return parts.join("; ");
+}
+
+// "Closes at 8:00 PM", "Opens again at 7:00 AM", or the day's hours.
+function shortWhen(location: LocationSummary): string {
+  if (location.is_open === true && location.closes_at) {
+    return `Until ${formatTime(location.closes_at)}`;
+  }
+  if (location.is_open === false) {
+    return location.opens_next_at
+      ? `Opens ${formatTime(location.opens_next_at)}`
+      : "Closed for today";
+  }
+  return "Hours unknown";
 }
 
 // The menus for one day at one location, with a date picker.
@@ -137,62 +151,49 @@ function LocationMenus({
   );
 }
 
-// A dropdown for one location. Nothing is fetched until it is opened.
-function LocationPanel({
+// The chosen location: its name and hours on top, its menu below.
+function MenuPane({
   location,
-  defaultOpen,
   profile,
   hideConflicts,
 }: {
   location: LocationSummary;
-  defaultOpen: boolean;
   profile: Profile | null;
   hideConflicts: boolean;
 }) {
-  const [open, setOpen] = useState(defaultOpen);
-  const panelId = `menu-panel-${location.id}`;
-
   return (
-    <div className="accordion">
-      <h3>
-        <button
-          type="button"
-          className="accordion-head"
-          aria-expanded={open}
-          aria-controls={panelId}
-          onClick={() => setOpen((value) => !value)}
-        >
-          <span className="accordion-title">
-            <span className="location-name">{location.name}</span>
-            <StatusPill isOpen={location.is_open} />
-          </span>
-          <span className="chevron" aria-hidden="true">
-            ▾
-          </span>
-        </button>
-      </h3>
-      {open ? (
-        <div id={panelId} className="accordion-body">
-          {location.dining_url ? (
-            <div className="row-links">
-              <a
-                href={location.dining_url}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                Dining page <span aria-hidden="true">↗</span>
-                <span className="visually-hidden"> (opens in a new tab)</span>
-              </a>
-            </div>
-          ) : null}
-          <LocationMenus
-            location={location}
-            profile={profile}
-            hideConflicts={hideConflicts}
-          />
+    <section
+      className="panel menu-pane"
+      aria-labelledby={`menu-title-${location.id}`}
+    >
+      <div className="menu-pane-head">
+        <div>
+          <h2 id={`menu-title-${location.id}`} className="menu-pane-title">
+            {location.name}
+          </h2>
+          <p className="meta">Today: {formatHours(location.today)}</p>
         </div>
-      ) : null}
-    </div>
+        <div className="menu-pane-actions">
+          <StatusPill isOpen={location.is_open} />
+          {location.dining_url ? (
+            <a
+              href={location.dining_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn btn-small btn-quiet"
+            >
+              Dining page <span aria-hidden="true">↗</span>
+              <span className="visually-hidden"> (opens in a new tab)</span>
+            </a>
+          ) : null}
+        </div>
+      </div>
+      <LocationMenus
+        location={location}
+        profile={profile}
+        hideConflicts={hideConflicts}
+      />
+    </section>
   );
 }
 
@@ -205,56 +206,69 @@ export function MenusBrowser({
   const saved = useSavedProfile();
   const [applyProfile, setApplyProfile] = useState(true);
   const [hideConflicts, setHideConflicts] = useState(false);
+  const [chosenId, setChosenId] = useState<number | null>(initialLocationId);
 
   const constrained = hasConstraints(saved);
   const profile = applyProfile && constrained ? toRequestProfile(saved) : null;
 
-  const open = locations.data?.filter((l) => l.is_open === true) ?? [];
-  const closed = locations.data?.filter((l) => l.is_open === false) ?? [];
-  const unknown = locations.data?.filter((l) => l.is_open === null) ?? [];
+  const all = locations.data ?? [];
+  const groups = [
+    { title: "Open now", list: all.filter((l) => l.is_open === true) },
+    { title: "Hours unknown", list: all.filter((l) => l.is_open === null) },
+    { title: "Closed", list: all.filter((l) => l.is_open === false) },
+  ].filter((g) => g.list.length > 0);
 
-  function renderPanels(list: LocationSummary[]) {
-    return list.map((location) => (
-      <LocationPanel
-        key={location.id}
-        location={location}
-        defaultOpen={location.id === initialLocationId}
-        profile={profile}
-        hideConflicts={hideConflicts}
-      />
-    ));
-  }
+  // The linked or picked location, else the first open one, else the first.
+  const selected =
+    all.find((l) => l.id === chosenId) ?? groups[0]?.list[0] ?? null;
+
+  // Bring the chosen location into view inside the list (sideways on phones),
+  // scrolling only the list itself, never the page.
+  const pickerRef = useRef<HTMLElement>(null);
+  const selectedId = selected?.id ?? null;
+  useEffect(() => {
+    const nav = pickerRef.current;
+    const button = nav?.querySelector<HTMLElement>('[aria-pressed="true"]');
+    if (!nav || !button) return;
+    const n = nav.getBoundingClientRect();
+    const b = button.getBoundingClientRect();
+    if (b.left < n.left || b.right > n.right) {
+      nav.scrollLeft += b.left - n.left - 16;
+    }
+    if (b.top < n.top || b.bottom > n.bottom) {
+      nav.scrollTop += b.top - n.top - 40;
+    }
+  }, [selectedId]);
 
   return (
     <>
-      <section className="panel" aria-label="Dietary profile">
+      <section className="panel profile-bar" aria-label="Dietary profile">
         {constrained ? (
-          <div className="stack">
-            <label className="checkbox-line">
+          <div className="profile-bar-inner">
+            <label className="toggle">
               <input
                 type="checkbox"
                 checked={applyProfile}
                 onChange={(event) => setApplyProfile(event.target.checked)}
               />
-              Check items against my dietary profile
+              <span className="toggle-track" aria-hidden="true" />
+              Check items against my diet
             </label>
             {applyProfile ? (
               <>
                 <p className="help">
-                  Using your profile: {describeProfile(saved)}.{" "}
-                  <Link
-                    href="/profile"
-                    style={{ color: "var(--red)", fontWeight: 600 }}
-                  >
+                  {describeProfile(saved)}.{" "}
+                  <Link href="/profile" className="text-link">
                     Edit
                   </Link>
                 </p>
-                <label className="checkbox-line">
+                <label className="toggle">
                   <input
                     type="checkbox"
                     checked={hideConflicts}
                     onChange={(event) => setHideConflicts(event.target.checked)}
                   />
+                  <span className="toggle-track" aria-hidden="true" />
                   Hide items that don’t fit (items that need a check stay
                   visible)
                 </label>
@@ -263,11 +277,8 @@ export function MenusBrowser({
           </div>
         ) : (
           <p className="help">
-            Showing every item.{" "}
-            <Link
-              href="/profile"
-              style={{ color: "var(--red)", fontWeight: 600 }}
-            >
+            <Icon name="info" size={16} /> Showing every item.{" "}
+            <Link href="/profile" className="text-link">
               Set your dietary profile
             </Link>{" "}
             to see which items fit you.
@@ -281,54 +292,63 @@ export function MenusBrowser({
         </StateMessage>
       ) : !locations.data ? (
         <StateMessage kind="loading">Loading locations…</StateMessage>
-      ) : locations.data.length === 0 ? (
+      ) : selected === null ? (
         <StateMessage kind="empty">
           No dining locations have been loaded yet.
         </StateMessage>
       ) : (
-        <>
-          <section aria-labelledby="open-menus-title">
-            <h2 id="open-menus-title" className="section-title">
-              Open locations <span className="count">({open.length})</span>
-            </h2>
-            <p className="help" style={{ marginBottom: "0.6rem" }}>
-              Open a location to see its menu for today.
-            </p>
-            {open.length === 0 ? (
-              <StateMessage kind="empty">
-                Nothing is open right now.
-              </StateMessage>
-            ) : (
-              <div className="stack">{renderPanels(open)}</div>
-            )}
-          </section>
+        <div className="menus-layout">
+          <nav
+            ref={pickerRef}
+            className="location-picker"
+            aria-label="Dining locations"
+          >
+            {groups.map((group) => (
+              <div key={group.title} className="picker-group">
+                <p className="picker-heading">
+                  {group.title}{" "}
+                  <span className="count">({group.list.length})</span>
+                </p>
+                <ul>
+                  {group.list.map((location) => (
+                    <li key={location.id}>
+                      <button
+                        type="button"
+                        className="picker-item"
+                        aria-pressed={location.id === selected.id}
+                        onClick={() => setChosenId(location.id)}
+                      >
+                        <span
+                          className={`picker-dot ${
+                            location.is_open === true
+                              ? "is-open"
+                              : location.is_open === false
+                                ? "is-closed"
+                                : ""
+                          }`}
+                          aria-hidden="true"
+                        />
+                        <span className="picker-text">
+                          <span className="picker-name">{location.name}</span>
+                          <span className="picker-when">
+                            {shortWhen(location)}
+                          </span>
+                        </span>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </nav>
 
-          {unknown.length > 0 ? (
-            <section aria-labelledby="unknown-menus-title">
-              <h2 id="unknown-menus-title" className="section-title">
-                Hours unknown <span className="count">({unknown.length})</span>
-              </h2>
-              <div className="stack">{renderPanels(unknown)}</div>
-            </section>
-          ) : null}
-
-          <section aria-labelledby="closed-menus-title">
-            <h2 id="closed-menus-title" className="section-title">
-              Closed locations <span className="count">({closed.length})</span>
-            </h2>
-            <p className="help" style={{ marginBottom: "0.6rem" }}>
-              Open a location to see its next menu, and pick another day if you
-              like.
-            </p>
-            {closed.length === 0 ? (
-              <StateMessage kind="empty">
-                Nothing is closed right now.
-              </StateMessage>
-            ) : (
-              <div className="stack">{renderPanels(closed)}</div>
-            )}
-          </section>
-        </>
+          <MenuPane
+            key={selected.id}
+            location={selected}
+            profile={profile}
+            hideConflicts={hideConflicts}
+          />
+        </div>
       )}
     </>
   );
