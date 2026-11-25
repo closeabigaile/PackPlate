@@ -1,0 +1,366 @@
+{
+  "generated_at": "2026-11-24T20:54:08Z",
+  "repository": "https://github.com/closeabigaile/PackPlate",
+  "branch": "dev",
+  "commit": "eeefa498df914ebec1c1ceb65f22b12304f129c7",
+  "runs": [
+    {
+      "source": "https://api.github.com/repos/closeabigaile/PackPlate/actions/runs/45071945540/jobs?per_page=100",
+      "run_id": 45071945540,
+      "jobs": [
+        {
+          "id": 137360640156,
+          "name": "Frontend build",
+          "head_sha": "eeefa498df914ebec1c1ceb65f22b12304f129c7",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-11-22T21:24:42Z",
+          "completed_at": "2026-11-22T21:25:07Z",
+          "html_url": "https://github.com/closeabigaile/PackPlate/actions/runs/45071945540/job/137360640156",
+          "steps": [
+            {
+              "name": "Set up job",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 1,
+              "started_at": "2026-11-22T21:24:43Z",
+              "completed_at": "2026-11-22T21:24:43Z"
+            },
+            {
+              "name": "Run actions/checkout@v7",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 2,
+              "started_at": "2026-11-22T21:24:43Z",
+              "completed_at": "2026-11-22T21:24:46Z"
+            },
+            {
+              "name": "Run actions/setup-node@v7",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 3,
+              "started_at": "2026-11-22T21:24:46Z",
+              "completed_at": "2026-11-22T21:24:49Z"
+            },
+            {
+              "name": "Install dependencies",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 4,
+              "started_at": "2026-11-22T21:24:49Z",
+              "completed_at": "2026-11-22T21:24:57Z"
+            },
+            {
+              "name": "Build",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 5,
+              "started_at": "2026-11-22T21:24:57Z",
+              "completed_at": "2026-11-22T21:25:04Z"
+            },
+            {
+              "name": "Post Run actions/setup-node@v7",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 9,
+              "started_at": "2026-11-22T21:25:04Z",
+              "completed_at": "2026-11-22T21:25:04Z"
+            },
+            {
+              "name": "Post Run actions/checkout@v7",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 10,
+              "started_at": "2026-11-22T21:25:04Z",
+              "completed_at": "2026-11-22T21:25:04Z"
+            },
+            {
+              "name": "Complete job",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 11,
+              "started_at": "2026-11-22T21:25:04Z",
+              "completed_at": "2026-11-22T21:25:04Z"
+            }
+          ]
+        },
+        {
+          "id": 137360640475,
+          "name": "Backend and ingestion tests",
+          "head_sha": "eeefa498df914ebec1c1ceb65f22b12304f129c7",
+          "status": "completed",
+          "conclusion": "failure",
+          "started_at": "2026-11-22T21:24:42Z",
+          "completed_at": "2026-11-22T21:26:07Z",
+          "html_url": "https://github.com/closeabigaile/PackPlate/actions/runs/45071945540/job/137360640475",
+          "steps": [
+            {
+              "name": "Set up job",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 1,
+              "started_at": "2026-11-22T21:24:43Z",
+              "completed_at": "2026-11-22T21:24:44Z"
+            },
+            {
+              "name": "Initialize containers",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 2,
+              "started_at": "2026-11-22T21:24:44Z",
+              "completed_at": "2026-11-22T21:25:05Z"
+            },
+            {
+              "name": "Run actions/checkout@v7",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 3,
+              "started_at": "2026-11-22T21:25:05Z",
+              "completed_at": "2026-11-22T21:25:07Z"
+            },
+            {
+              "name": "Run actions/setup-python@v7",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 4,
+              "started_at": "2026-11-22T21:25:07Z",
+              "completed_at": "2026-11-22T21:25:08Z"
+            },
+            {
+              "name": "Install dependencies",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 5,
+              "started_at": "2026-11-22T21:25:08Z",
+              "completed_at": "2026-11-22T21:25:19Z"
+            },
+            {
+              "name": "Backend tests",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 6,
+              "started_at": "2026-11-22T21:25:19Z",
+              "completed_at": "2026-11-22T21:25:46Z"
+            },
+            {
+              "name": "Ingestion tests",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 7,
+              "started_at": "2026-11-22T21:25:46Z",
+              "completed_at": "2026-11-22T21:25:56Z"
+            },
+            {
+              "name": "M0 eval tests",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 8,
+              "started_at": "2026-11-22T21:25:56Z",
+              "completed_at": "2026-11-22T21:26:01Z"
+            },
+            {
+              "name": "M0 loop 2 tests",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 9,
+              "started_at": "2026-11-22T21:26:01Z",
+              "completed_at": "2026-11-22T21:26:02Z"
+            },
+            {
+              "name": "Generated docs are up to date",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 10,
+              "started_at": "2026-11-22T21:26:02Z",
+              "completed_at": "2026-11-22T21:26:03Z"
+            },
+            {
+              "name": "Upload coverage",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 11,
+              "started_at": "2026-11-22T21:26:03Z",
+              "completed_at": "2026-11-22T21:26:05Z"
+            },
+            {
+              "name": "Count tests",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 12,
+              "started_at": "2026-11-22T21:26:05Z",
+              "completed_at": "2026-11-22T21:26:05Z"
+            },
+            {
+              "name": "Update test badge",
+              "status": "completed",
+              "conclusion": "failure",
+              "number": 13,
+              "started_at": "2026-11-22T21:26:05Z",
+              "completed_at": "2026-11-22T21:26:05Z"
+            },
+            {
+              "name": "Post Run actions/setup-python@v7",
+              "status": "completed",
+              "conclusion": "skipped",
+              "number": 24,
+              "started_at": "2026-11-22T21:26:05Z",
+              "completed_at": "2026-11-22T21:26:05Z"
+            },
+            {
+              "name": "Post Run actions/checkout@v7",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 25,
+              "started_at": "2026-11-22T21:26:05Z",
+              "completed_at": "2026-11-22T21:26:05Z"
+            },
+            {
+              "name": "Stop containers",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 26,
+              "started_at": "2026-11-22T21:26:05Z",
+              "completed_at": "2026-11-22T21:26:06Z"
+            },
+            {
+              "name": "Complete job",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 27,
+              "started_at": "2026-11-22T21:26:06Z",
+              "completed_at": "2026-11-22T21:26:06Z"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "source": "https://api.github.com/repos/closeabigaile/PackPlate/actions/runs/45071945531/jobs?per_page=100",
+      "run_id": 45071945531,
+      "jobs": [
+        {
+          "id": 137360640581,
+          "name": "Project 3 M0 reproduces",
+          "head_sha": "eeefa498df914ebec1c1ceb65f22b12304f129c7",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-11-22T21:24:42Z",
+          "completed_at": "2026-11-22T21:25:23Z",
+          "html_url": "https://github.com/closeabigaile/PackPlate/actions/runs/45071945531/job/137360640581",
+          "steps": [
+            {
+              "name": "Set up job",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 1,
+              "started_at": "2026-11-22T21:24:43Z",
+              "completed_at": "2026-11-22T21:24:43Z"
+            },
+            {
+              "name": "Initialize containers",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 2,
+              "started_at": "2026-11-22T21:24:43Z",
+              "completed_at": "2026-11-22T21:25:04Z"
+            },
+            {
+              "name": "Run actions/checkout@v7",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 3,
+              "started_at": "2026-11-22T21:25:04Z",
+              "completed_at": "2026-11-22T21:25:07Z"
+            },
+            {
+              "name": "Run actions/setup-python@v7",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 4,
+              "started_at": "2026-11-22T21:25:07Z",
+              "completed_at": "2026-11-22T21:25:09Z"
+            },
+            {
+              "name": "Install the existing dependencies",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 5,
+              "started_at": "2026-11-22T21:25:09Z",
+              "completed_at": "2026-11-22T21:25:13Z"
+            },
+            {
+              "name": "Reproduce Project 3 M0 and verify the faulty controls",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 6,
+              "started_at": "2026-11-22T21:25:13Z",
+              "completed_at": "2026-11-22T21:25:17Z"
+            },
+            {
+              "name": "Reproduce inherited M0 loop 1",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 7,
+              "started_at": "2026-11-22T21:25:17Z",
+              "completed_at": "2026-11-22T21:25:19Z"
+            },
+            {
+              "name": "Reproduce inherited M0 loop 2",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 8,
+              "started_at": "2026-11-22T21:25:19Z",
+              "completed_at": "2026-11-22T21:25:19Z"
+            },
+            {
+              "name": "Post Run actions/setup-python@v7",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 14,
+              "started_at": "2026-11-22T21:25:19Z",
+              "completed_at": "2026-11-22T21:25:19Z"
+            },
+            {
+              "name": "Post Run actions/checkout@v7",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 15,
+              "started_at": "2026-11-22T21:25:19Z",
+              "completed_at": "2026-11-22T21:25:20Z"
+            },
+            {
+              "name": "Stop containers",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 16,
+              "started_at": "2026-11-22T21:25:20Z",
+              "completed_at": "2026-11-22T21:25:21Z"
+            },
+            {
+              "name": "Complete job",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 17,
+              "started_at": "2026-11-22T21:25:21Z",
+              "completed_at": "2026-11-22T21:25:21Z"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "failure_annotations": [
+    {
+      "path": ".github",
+      "blob_href": "https://github.com/closeabigaile/PackPlate/blob/eeefa498df914ebec1c1ceb65f22b12304f129c7/.github",
+      "start_line": 23,
+      "start_column": null,
+      "end_line": 23,
+      "end_column": null,
+      "annotation_level": "failure",
+      "title": "",
+      "message": "Missing auth secret",
+      "raw_details": ""
+    }
+  ]
+}
