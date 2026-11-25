@@ -313,14 +313,12 @@ rebuild its schema and empty its tables; keep this URL separate from the
 application's shared Supabase `DATABASE_URL`. Run the backend and ingestion
 database suites sequentially when they use the same test database.
 
-| Suite                                   | Run from         | Command                                                                 |
-| --------------------------------------- | ---------------- | ----------------------------------------------------------------------- |
-| Backend                                 | `proj_2/backend` | `pytest`                                                                |
-| Ingestion                               | `proj_2`         | `pytest ingestion`                                                      |
-| Backend with coverage                   | `proj_2/backend` | `pytest --cov=app --cov-config=../pyproject.toml`                       |
-| Ingestion with coverage                 | `proj_2`         | `pytest ingestion --cov=ingestion --cov=db --cov-config=pyproject.toml` |
-| Inherited M0 loop 1 tests (no database) | `proj_2`         | `pytest eval`                                                           |
-| Inherited M0 loop 2 tests (no database) | `proj_2`         | `pytest eval_loop2`                                                     |
+| Suite                   | Run from         | Command                                                                 |
+| ----------------------- | ---------------- | ----------------------------------------------------------------------- |
+| Backend                 | `proj_2/backend` | `pytest`                                                                |
+| Ingestion               | `proj_2`         | `pytest ingestion`                                                      |
+| Backend with coverage   | `proj_2/backend` | `pytest --cov=app --cov-config=../pyproject.toml`                       |
+| Ingestion with coverage | `proj_2`         | `pytest ingestion --cov=ingestion --cov=db --cov-config=pyproject.toml` |
 
 The backend suite includes Project 3's account, forecast, assistant, chat,
 saved-profile, recommendation, and startup-migration tests. Review the test
@@ -332,13 +330,11 @@ keep ordinary tests independent of live services and the shared database.
 
 ### Reproducing M0
 
-Run all three reproduction checks from `proj_2/` with the Python environment
-active:
+Project 3's account and private-chat evaluation is the M0 check required by
+current CI. Run it from `proj_2/` with the Python environment active:
 
 | Evaluation                          | Command                              | Database                                         |
 | ----------------------------------- | ------------------------------------ | ------------------------------------------------ |
-| Inherited Project 2 loop 1          | `python -m eval.m0 --check`          | None; committed snapshot and review sheet        |
-| Inherited Project 2 loop 2          | `python -m eval_loop2.m0 --check`    | None; committed snapshot and review sheet        |
 | Project 3 accounts and private chat | `python eval_project3/m0.py --check` | Dedicated local `packplate_m0_project3` database |
 
 For Project 3, follow the disposable database setup in
@@ -349,8 +345,13 @@ Postgres database named `packplate_m0_project3`, applies migrations in a
 temporary schema, and removes that schema afterward. An API server does not
 need to be running.
 
-The [Project 3 workflow](.github/workflows/m0_project3.yml) checks the new M0
-and both inherited loops. The inherited loops also have their own workflows.
+The [Project 3 workflow](.github/workflows/m0_project3.yml) runs this check on
+pushes and pull requests. The inherited Project 2 evaluators and their
+results remain as historical evidence; their workflows are manual-only, and
+their instrument tests are outside the routine application test workflow.
+Use `python -m eval.m0 --check`, `python -m eval_loop2.m0 --check`,
+`pytest eval`, or `pytest eval_loop2` only when working on those historical
+evaluators.
 A passing reproduction check means the committed evidence matches the run;
 read the recorded verdict separately to see whether a target was met.
 
@@ -387,9 +388,13 @@ Prettier on everything at once.
 
 The hooks cover Python and frontend formatting; they do not run the test
 suites, generated-doc checks, M0 evaluators, ESLint, Typecheck, or the build.
-The [Tests workflow](.github/workflows/tests.yml) runs the backend, ingestion,
-both inherited M0 test suites, coverage, the generated-doc check, and the
-frontend build. The checkers and M0 evaluators have separate workflows.
+The [Tests workflow](.github/workflows/tests.yml) runs the backend and
+ingestion suites, coverage, the generated-doc check, and the frontend build.
+It saves the JUnit and coverage XML reports as an Actions artifact for 30
+days. External gist badge publishing runs only when `GIST_SECRET` and
+`TEST_BADGE_GIST_ID` are configured; missing settings are noted in the run
+summary. An unconfigured badge publisher is separate from test success.
+The checkers and Project 3 M0 have separate workflows.
 
 The frontend currently has no automated component or browser test script.
 For a UI change, run its checkers and build, then record the relevant browser

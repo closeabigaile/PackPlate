@@ -1,13 +1,13 @@
+# Historical Project 2 M0: available on demand, outside Project 3 CI.
 # Reruns the M0 risk-killer eval and checks it reproduces eval/results.json.
 # Passing means the committed numbers reproduce, not that M0's targets were met
 # (the targets and the result are in the pre-registration issue and results.json).
 # It fails if the eval crashes, the hand spot-check sheet no longer matches the
 # scan, or the numbers change without results.json being updated.
-name: M0 eval
+name: Inherited M0 loop 1 (manual)
 
 on:
-  push:
-  pull_request:
+  workflow_dispatch:
 
 permissions:
   contents: read
