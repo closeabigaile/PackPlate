@@ -808,6 +808,8 @@ For one profile at one location: how many items fit, are incomplete, or conflict
 
 ### RecommendationItem
 
+A ranked meal with location, meal periods, and nutrition details.
+
 | Field | Type | Required |
 |---|---|---|
 | `rank` | integer | yes |
@@ -822,6 +824,8 @@ For one profile at one location: how many items fit, are incomplete, or conflict
 
 ### RecommendationRequest
 
+Nutrition goal, menu filters, and optional dietary profile.
+
 | Field | Type | Required |
 |---|---|---|
 | `goal` | `high_protein` / `lower_calories` / `lower_sodium` | yes |
@@ -830,6 +834,8 @@ For one profile at one location: how many items fit, are incomplete, or conflict
 | `profile` | [Profile](#profile) or null | no |
 
 ### RecommendationResponse
+
+The list of meals matching the recommendation request.
 
 | Field | Type | Required |
 |---|---|---|
