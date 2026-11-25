@@ -11,6 +11,7 @@ changed, and how the result was checked.
 |---|---|---|---|
 | Claude Code | Claude Opus 5.5 | Ethan, Moe, Morgan | VS Code extension |
 | Claude | Sonnet 5.5 | Savanah | Browser |
+| Claude Code | Claude Opus 5.5 | Aditya (Project 3) | Terminal (CLI) |
 | _TODO_ | | | |
 
 ## What we use AI for
@@ -20,6 +21,10 @@ changed, and how the result was checked.
 - Explaining course requirements and tooling options
 - Porting a prototype into production code, finding its bugs, and writing
   tests (see [02-ingestion](artifacts/02-ingestion.md))
+- Project 3: building user accounts, wiring a teammate's chat code to them,
+  and saving diets to accounts (see [14-accounts](artifacts/14-accounts.md))
+- Project 3: auditing and redesigning the UI, and recording the demo videos
+  (see [15-ui-refresh](artifacts/15-ui-refresh.md))
 - _TODO: add as the project goes (e.g. first drafts of tests, PR review)_
 
 ## What we do not use AI for
@@ -56,3 +61,5 @@ changed, and how the result was checked.
 | 10 | [Menu display and nutrition info unavailable](artifacts/10-menu-display.md) | Morgan Simon | 2026-10-20 |
 | 11 | [M0 loop 2: re-testing after the fixes](artifacts/11-m0-loop-2.md) | Ethan Goodman | 2026-10-20 |
 | 12 | [Frontend development from wireframes](artifacts/12-frontend.md) | Savanah Hendzel | 2026-10-18 |
+| 14 | [User accounts, chat integration, and saved diets](artifacts/14-accounts.md) | Aditya | 2026-11-16 |
+| 15 | [UI refresh and demo videos](artifacts/15-ui-refresh.md) | Aditya | 2026-11-25 |

@@ -13,6 +13,7 @@ import {
   toRequestProfile,
 } from "@/lib/diet";
 import { useHydrated, useSavedProfile } from "@/lib/profileStore";
+import { nowMs } from "@/lib/now";
 import { refreshSession, useSession } from "@/lib/session";
 import type {
   AssistantCard,
@@ -180,7 +181,7 @@ function AssistantWorkspace({ user }: { user: User }) {
       const reply = await withSession(
         api.sendAssistantMessage(question, toRequestProfile(profile)),
       );
-      const now = new Date().toISOString();
+      const now = new Date(nowMs()).toISOString();
       setSent((previous) => [
         ...previous,
         {

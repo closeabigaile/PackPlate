@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { ALLERGENS, allergenLabel, dietLabel } from "@/lib/diet";
 import { splitLabel, stationLabel, stationRank } from "@/lib/stations";
+import { nowMs } from "@/lib/now";
 import { reasonSummary, shortReason } from "@/lib/verdicts";
 import type { ItemResult, MenuItem, MenuSummary, Nutrition } from "@/lib/types";
 import { StateMessage } from "./StateMessage";
@@ -272,7 +273,7 @@ function defaultMeal(menus: ViewMenu[]): string {
     hour: "2-digit",
     minute: "2-digit",
     hourCycle: "h23",
-  }).formatToParts(new Date());
+  }).formatToParts(new Date(nowMs()));
   const get = (type: string) => parts.find((p) => p.type === type)?.value;
   const today = `${get("year")}-${get("month")}-${get("day")}`;
   const minutes = Number(get("hour")) * 60 + Number(get("minute"));

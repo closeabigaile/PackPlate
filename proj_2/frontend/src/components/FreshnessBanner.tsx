@@ -2,14 +2,14 @@
 
 import { api } from "@/lib/api";
 import { formatAge } from "@/lib/format";
+import { nowMs } from "@/lib/now";
 import { useAsync } from "@/lib/useAsync";
 
 // Defined outside the component so reading the clock is not part of rendering.
 async function loadFreshness() {
   const freshness = await api.freshness();
   const ageHours = freshness.last_run_finished_at
-    ? (Date.now() - new Date(freshness.last_run_finished_at).getTime()) /
-      3_600_000
+    ? (nowMs() - new Date(freshness.last_run_finished_at).getTime()) / 3_600_000
     : null;
   return { freshness, ageHours };
 }

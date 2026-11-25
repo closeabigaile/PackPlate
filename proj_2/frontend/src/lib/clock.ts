@@ -1,22 +1,23 @@
 "use client";
 
 import { useSyncExternalStore } from "react";
+import { nowMs } from "./now";
 
 // The current time for things like "closes in 20 min" and the "now" line on an
 // hours bar. Read from a store that ticks every 30 seconds, so reading the
 // clock is never part of rendering. Null until the page is in the browser.
 
 const TICK_MS = 30_000;
-let now = Date.now();
+let now = nowMs();
 const listeners = new Set<() => void>();
 let timer: ReturnType<typeof setInterval> | null = null;
 
 function subscribe(listener: () => void) {
   listeners.add(listener);
   if (timer === null) {
-    now = Date.now();
+    now = nowMs();
     timer = setInterval(() => {
-      now = Date.now();
+      now = nowMs();
       listeners.forEach((l) => l());
     }, TICK_MS);
   }

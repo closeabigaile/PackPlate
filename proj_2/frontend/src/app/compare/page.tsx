@@ -5,6 +5,7 @@ import { Bar, NUTRIENTS } from "@/components/NutritionBars";
 import { PageShell } from "@/components/PageShell";
 import { StateMessage } from "@/components/StateMessage";
 import { formatNumber } from "@/lib/format";
+import { nowMs } from "@/lib/now";
 import { api, errorMessage } from "@/lib/api";
 import { useSavedProfile } from "@/lib/profileStore";
 import type { NutritionGoal, RecommendationItem } from "@/lib/types";
@@ -28,7 +29,7 @@ export default function ComparePage() {
       year: "numeric",
       month: "2-digit",
       day: "2-digit",
-    }).format(new Date()),
+    }).format(new Date(nowMs())),
   );
   const [meal, setMeal] = useState("");
   const [results, setResults] = useState<RecommendationItem[]>([]);
