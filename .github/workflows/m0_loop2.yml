@@ -19,7 +19,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: proj_2
+        working-directory: proj_3
     steps:
       - uses: actions/checkout@v7
 
@@ -28,9 +28,9 @@ jobs:
           python-version: "3.12"
           cache: pip
           cache-dependency-path: |
-            proj_2/requirements-dev.txt
-            proj_2/backend/requirements.txt
-            proj_2/ingestion/requirements.txt
+            proj_3/requirements-dev.txt
+            proj_3/backend/requirements.txt
+            proj_3/ingestion/requirements.txt
 
       - name: Install dependencies
         run: pip install -r requirements-dev.txt

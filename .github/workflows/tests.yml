@@ -41,15 +41,15 @@ jobs:
           python-version: "3.12"
           cache: pip
           cache-dependency-path: |
-            proj_2/requirements-dev.txt
-            proj_2/backend/requirements.txt
-            proj_2/ingestion/requirements.txt
+            proj_3/requirements-dev.txt
+            proj_3/backend/requirements.txt
+            proj_3/ingestion/requirements.txt
 
       - name: Install dependencies
-        run: pip install -r proj_2/requirements-dev.txt
+        run: pip install -r proj_3/requirements-dev.txt
 
       - name: Backend tests
-        working-directory: proj_2/backend
+        working-directory: proj_3/backend
         run: >-
           pytest --cov=app --cov-config=../pyproject.toml
           --junitxml="$GITHUB_WORKSPACE/test-results/backend.xml"
@@ -58,7 +58,7 @@ jobs:
       - name: Ingestion tests
         # Run even if the backend failed, so the badge counts both suites.
         if: ${{ !cancelled() }}
-        working-directory: proj_2
+        working-directory: proj_3
         run: >-
           pytest ingestion --cov=ingestion --cov=db --cov-config=pyproject.toml
           --junitxml="$GITHUB_WORKSPACE/test-results/ingestion.xml"
@@ -67,7 +67,7 @@ jobs:
       # docs/reference.md and docs/api.md are generated from the code.
       - name: Generated docs are up to date
         if: ${{ !cancelled() }}
-        working-directory: proj_2
+        working-directory: proj_3
         run: python docs/generate.py --check
 
       # Retain the source measurements even when a test or external upload fails.
@@ -137,7 +137,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: proj_2/frontend
+        working-directory: proj_3/frontend
     steps:
       - uses: actions/checkout@v7
 
@@ -145,7 +145,7 @@ jobs:
         with:
           node-version: "22"
           cache: npm
-          cache-dependency-path: proj_2/frontend/package-lock.json
+          cache-dependency-path: proj_3/frontend/package-lock.json
 
       - name: Install dependencies
         run: npm ci

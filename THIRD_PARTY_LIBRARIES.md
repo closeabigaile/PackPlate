@@ -2,7 +2,7 @@
 
 Every library, tool, and asset PackPlate uses, with its license. The licenses
 were read from each package's own metadata (the installed Python packages, and
-the npm lockfile `proj_2/frontend/package-lock.json`), not assumed. Versions
+the npm lockfile `proj_3/frontend/package-lock.json`), not assumed. Versions
 are the ones installed when this list was made (2026-10-19). Python
 requirements files don't pin most versions, so a fresh install may get newer
 ones.
@@ -15,8 +15,8 @@ PackPlate itself is MIT licensed (see [LICENSE.md](LICENSE.md)).
 
 ## Python: direct dependencies
 
-From `proj_2/backend/requirements.txt`, `proj_2/ingestion/requirements.txt`,
-and `proj_2/requirements-dev.txt`.
+From `proj_3/backend/requirements.txt`, `proj_3/ingestion/requirements.txt`,
+and `proj_3/requirements-dev.txt`.
 
 | Package | Version | Used for | License |
 |---|---|---|---|
@@ -83,7 +83,7 @@ and `proj_2/requirements-dev.txt`.
 
 ## Website (npm): direct dependencies
 
-From `proj_2/frontend/package.json`.
+From `proj_3/frontend/package.json`.
 
 | Package | Version | Used for | License |
 |---|---|---|---|
@@ -126,7 +126,7 @@ is installed. The other non-MIT ones are `caniuse-lite` (CC-BY-4.0), `tslib`
 To see every package and its license:
 
 ```bash
-cd proj_2/frontend
+cd proj_3/frontend
 node -e "const l=require('./package-lock.json');for(const[k,v]of Object.entries(l.packages))if(k)console.log(k.replace('node_modules/',''),v.version,v.license)"
 ```
 
@@ -173,4 +173,4 @@ Menus, nutrition labels, and hours come from NC State's NetNutrition
 (`netmenu2.cbord.com`) and dining.ncsu.edu. They are NC State's data, not a
 software library; NC State Dining gave the team permission to scrape them at
 most once or twice a day. A trimmed copy for the M0 eval is committed in
-`proj_2/eval/data/snapshot.json`.
+`proj_3/eval/data/snapshot.json`.

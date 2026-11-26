@@ -1,14 +1,14 @@
-# Formatting check for proj_2/frontend (settings in .prettierrc).
+# Formatting check for proj_3/frontend (settings in .prettierrc).
 name: Prettier
 
 on:
   push:
     paths:
-      - "proj_2/frontend/**"
+      - "proj_3/frontend/**"
       - ".github/workflows/prettier.yml"
   pull_request:
     paths:
-      - "proj_2/frontend/**"
+      - "proj_3/frontend/**"
       - ".github/workflows/prettier.yml"
 
 permissions:
@@ -20,7 +20,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: proj_2/frontend
+        working-directory: proj_3/frontend
     steps:
       - uses: actions/checkout@v7
 
@@ -28,7 +28,7 @@ jobs:
         with:
           node-version: "22"
           cache: npm
-          cache-dependency-path: proj_2/frontend/package-lock.json
+          cache-dependency-path: proj_3/frontend/package-lock.json
 
       - name: Install dependencies
         run: npm ci

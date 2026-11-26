@@ -63,7 +63,7 @@ when it is off or unreachable.
 | `ASSISTANT_ROUTING_ENABLED` | Driving distance to halls too far to walk (OSRM) | Straight-line miles |
 
 No account or payment is needed for any of them. `ASSISTANT_ENABLED=false`
-removes the assistant. All settings are in [`proj_2/.env.example`](proj_2/.env.example).
+removes the assistant. All settings are in [`proj_3/.env.example`](proj_3/.env.example).
 
 ## 🚀 Quick start
 
@@ -72,14 +72,14 @@ steps, including Windows and the team's shared database, are in
 [INSTALL.md](INSTALL.md).
 
 ```bash
-git clone https://github.com/morgansimon425/PackPlate.git
+git clone --branch dev https://github.com/closeabigaile/PackPlate.git
 cd PackPlate
-python3 -m venv proj_2/.venv
-source proj_2/.venv/bin/activate
-pip install -r proj_2/requirements-dev.txt
-(cd proj_2/frontend && npm ci)
+python3 -m venv proj_3/.venv
+source proj_3/.venv/bin/activate
+pip install -r proj_3/requirements-dev.txt
+(cd proj_3/frontend && npm ci)
 
-cd proj_2
+cd proj_3
 cp .env.example .env
 docker compose up -d db
 export DATABASE_URL=postgresql://packplate:packplate@localhost:5432/packplate
@@ -95,7 +95,7 @@ Open http://localhost:3000. Check http://localhost:8000/health shows
 
 - After you pull new migrations, a local database updates itself when the API
   starts. A hosted database such as Supabase never does: run
-  `alembic -c db/alembic.ini upgrade head` once from `proj_2/`.
+  `alembic -c db/alembic.ini upgrade head` once from `proj_3/`.
 - The app does not read `.env` by itself. Export the settings, or run
   `set -a; source .env; set +a` first.
 - If the website runs on a port other than 3000, start the API with
@@ -142,11 +142,11 @@ message.
   the result does not show that students want chat.
 - **Controls:** three deliberately broken versions are each caught, so the
   eval can fail.
-- **Reproduce:** `cd proj_2 && python eval_project3/m0.py --check`. It needs a
+- **Reproduce:** `cd proj_3 && python eval_project3/m0.py --check`. It needs a
   local `packplate_m0_project3` database (`M0_DATABASE_URL`). The **M0 Project
   3** badge means the committed numbers reproduce.
-- **Details:** [the plan](proj_2/docs/m0-eval-project3.md) and
-  [the result](proj_2/eval_project3/results.json).
+- **Details:** [the plan](proj_3/docs/m0-eval-project3.md) and
+  [the result](proj_3/eval_project3/results.json).
 
 ### Project 2: food safety
 
@@ -168,10 +168,10 @@ PackPlate ever telling someone a dish is safe when it isn't.
 - **Useful:** simulated groups of 2–5 people, with restriction rates from
   published studies. These are **simulated users, not real ones**.
 - **Data:** a frozen snapshot of Oct 12–14, 2026, committed to the repo.
-- **Reproduce:** `cd proj_2 && python -m eval.m0`. The **M0 loop 1** badge
+- **Reproduce:** `cd proj_3 && python -m eval.m0`. The **M0 loop 1** badge
   means the committed numbers reproduce, not that the targets were met.
-- **Details:** [the plan](proj_2/docs/m0-eval.md),
-  [the result](proj_2/eval/results.json), and the review decision in
+- **Details:** [the plan](proj_3/docs/Project%202%20docs/m0-eval.md),
+  [the result](proj_3/eval/results.json), and the review decision in
   [issue #11](https://github.com/morgansimon425/PackPlate/issues/11).
 
 #### Loop 2: after the fixes
@@ -201,19 +201,19 @@ use a word list: a person read the ingredients of 50 random "fits" answers.
 - **Useful:** lower than loop 1's 100%. The days and the filter both changed,
   so the eval can't say how much of the drop each one caused.
 - **Data:** a frozen snapshot of Oct 20–22, 2026, committed to the repo.
-- **Reproduce:** `cd proj_2 && python -m eval_loop2.m0`. It has its own
+- **Reproduce:** `cd proj_3 && python -m eval_loop2.m0`. It has its own
   **M0 loop 2** badge and shares no code with loop 1.
-- **Details:** [the plan and limits](proj_2/docs/m0-eval.md#loop-2-after-the-fixes)
-  and [the result](proj_2/eval_loop2/results.json).
+- **Details:** [the plan and limits](proj_3/docs/Project%202%20docs/m0-eval.md#loop-2-after-the-fixes)
+  and [the result](proj_3/eval_loop2/results.json).
 
 ## 📚 Documentation
 
 | | |
 |---|---|
-| [Why PackPlate](proj_2/docs/why.md) | The problem, who it's for, and the evidence that it works |
-| [How to use it](proj_2/docs/how.md) | Worked examples: the website, the API, and common developer tasks |
-| [Code reference](proj_2/docs/reference.md) | Every module, class, and function, generated from the code |
-| [HTTP API](proj_2/docs/api.md) | Every endpoint and data model, generated from the API |
+| [Why PackPlate](proj_3/docs/why.md) | The problem, who it's for, and the evidence that it works |
+| [How to use it](proj_3/docs/how.md) | Worked examples: the website, the API, and common developer tasks |
+| [Code reference](proj_3/docs/reference.md) | Every module, class, and function, generated from the code |
+| [HTTP API](proj_3/docs/api.md) | Every endpoint and data model, generated from the API |
 | [Install](INSTALL.md) | Getting PackPlate running on your machine |
 | [Contributing](CONTRIBUTING.md) | Setup, tests, checkers, and how to make changes safely |
 | [Code of conduct](CODE-OF-CONDUCT.md) · [License](LICENSE.md) · [Third-party libraries](THIRD_PARTY_LIBRARIES.md) | |
@@ -235,7 +235,7 @@ use a word list: a person read the ingredients of 50 random "fits" answers.
 
 ```
 proj_1b/    Project 1b — requirements
-proj_2/     Projects 2 and 3 — implementation (Next.js + FastAPI + Postgres)
+proj_3/     Projects 2 and 3 — implementation (Next.js + FastAPI + Postgres)
             backend/ API · frontend/ website · ingestion/ scraper · db/ schema
             docs/ guides · eval/ M0 tests
 ```

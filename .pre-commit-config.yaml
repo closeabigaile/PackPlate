@@ -1,7 +1,7 @@
-# Formats and lints proj_2 on every commit (proj_1b is left alone).
-# Setup, once per clone: pip install -r proj_2/requirements-dev.txt && pre-commit install
-# Versions match proj_2/requirements-dev.txt and proj_2/frontend/package.json.
-files: ^proj_2/
+# Formats and lints proj_3 on every commit (proj_1b is left alone).
+# Setup, once per clone: pip install -r proj_3/requirements-dev.txt && pre-commit install
+# Versions match proj_3/requirements-dev.txt and proj_3/frontend/package.json.
+files: ^proj_3/
 
 repos:
   # Ruff before Black: its fixes (e.g. import order) then get formatted.
@@ -26,5 +26,5 @@ repos:
         additional_dependencies: ["prettier@3.9.10"]
         entry: prettier --write --ignore-unknown
         types: [text]
-        files: ^proj_2/frontend/
-        exclude: ^proj_2/frontend/package-lock\.json$
+        files: ^proj_3/frontend/
+        exclude: ^proj_3/frontend/package-lock\.json$

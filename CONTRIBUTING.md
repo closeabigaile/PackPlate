@@ -5,7 +5,7 @@
 PackPlate helps NC State students choose where to eat on campus. CSC 510
 Project 3 extends the inherited application with accounts, crowd forecasts,
 a dining assistant, group chat, saved dietary profiles, and recommendations.
-The application is in `proj_2/`; `proj_1b/` is inherited coursework and is not
+The application is in `proj_3/`; `proj_1b/` is inherited coursework and is not
 linted, formatted, or tested.
 
 Contributions from team members, future maintainers, and outside contributors
@@ -68,22 +68,22 @@ Both contribution paths use the same setup. From the repository root, with
 Python 3.12 selected:
 
 ```bash
-python -m venv proj_2/.venv
+python -m venv proj_3/.venv
 ```
 
 Activate it from the repository root in each new Python terminal:
 
 | Shell         | Command                                |
 | ------------- | -------------------------------------- |
-| PowerShell    | `proj_2\.venv\Scripts\Activate.ps1`    |
-| Git Bash      | `source proj_2/.venv/Scripts/activate` |
-| macOS / Linux | `source proj_2/.venv/bin/activate`     |
+| PowerShell    | `proj_3\.venv\Scripts\Activate.ps1`    |
+| Git Bash      | `source proj_3/.venv/Scripts/activate` |
+| macOS / Linux | `source proj_3/.venv/bin/activate`     |
 
 Then install the dependencies and enable the commit hooks:
 
 ```bash
-python -m pip install -r proj_2/requirements-dev.txt
-cd proj_2/frontend
+python -m pip install -r proj_3/requirements-dev.txt
+cd proj_3/frontend
 npm ci
 cd ../..
 
@@ -96,7 +96,7 @@ git config blame.ignoreRevsFile .git-blame-ignore-revs
 - The `blame` line makes `git blame` skip the one big formatting commit, so it
   shows who really wrote each line. GitHub already does this.
 
-[`proj_2/.gitattributes`](proj_2/.gitattributes) keeps text files on LF line
+[`proj_3/.gitattributes`](proj_3/.gitattributes) keeps text files on LF line
 endings across platforms. Keep this setting when adding new files.
 
 For normal development, use the local database and ingestion steps in
@@ -169,7 +169,7 @@ The hooks run on the files you're committing:
 
 If a hook changes a file, **the commit stops**. Look at the changes, `git add`
 them, and commit again. If Ruff reports something it can't fix, fix it by hand.
-Settings are in `proj_2/pyproject.toml` and `proj_2/frontend/.prettierrc`.
+Settings are in `proj_3/pyproject.toml` and `proj_3/frontend/.prettierrc`.
 
 ## 6. Pull Request Process
 
@@ -203,14 +203,14 @@ include failed scenario IDs or changed metrics and the team's review decision.
 ## 7. Coding Standards and Extending the Application
 
 Follow the surrounding code and the settings in
-[`proj_2/pyproject.toml`](proj_2/pyproject.toml),
-[`proj_2/frontend/eslint.config.mjs`](proj_2/frontend/eslint.config.mjs), and
-[`proj_2/frontend/.prettierrc`](proj_2/frontend/.prettierrc).
+[`proj_3/pyproject.toml`](proj_3/pyproject.toml),
+[`proj_3/frontend/eslint.config.mjs`](proj_3/frontend/eslint.config.mjs), and
+[`proj_3/frontend/.prettierrc`](proj_3/frontend/.prettierrc).
 
-- Within `proj_2/backend/app/`, keep HTTP routes in `api/`, business rules
+- Within `proj_3/backend/app/`, keep HTTP routes in `api/`, business rules
   in `services/`, database queries in `repositories/`, and request/response
   models in `schemas/`.
-- Within `proj_2/frontend/src/`, keep pages in `app/`, shared components
+- Within `proj_3/frontend/src/`, keep pages in `app/`, shared components
   in `components/`, and API and profile helpers in `lib/`.
 - Treat missing hours, ingredients, allergens, or nutrition as unknown.
   Preserve `fits`, `conflicts`, and `incomplete` behavior and its reasons.
@@ -224,7 +224,7 @@ Follow the surrounding code and the settings in
 
 Put Python tests in the relevant test directory, in a file named `test_*.py`:
 
-- **Backend** (`proj_2/backend/tests/`)
+- **Backend** (`proj_3/backend/tests/`)
   - Logic with no database (rules in `app/services/`): call the function
     directly. See `test_filter_engine.py`.
   - API endpoints: use the `client` fixture (the API on the test database) and
@@ -234,13 +234,13 @@ Put Python tests in the relevant test directory, in a file named `test_*.py`:
     and `test_recommendations_api.py`. Use separate session cookies when
     testing multiple accounts and include attempts to access another user's
     rooms, messages, or saved profile.
-- **Ingestion** (`proj_2/ingestion/tests/`)
+- **Ingestion** (`proj_3/ingestion/tests/`)
   - Parsing: use `fixture_html("name.html")` with captured pages in
     `tests/fixtures/`, so tests run offline. See `test_parse.py`. Trim new
     captures to the HTML the parser reads.
   - Writing to the database: use the `db` fixture. See `test_write.py`.
-- **Inherited evaluations** (`proj_2/eval/tests/` and
-  `proj_2/eval_loop2/tests/`): use small, fixed inputs to test the instrument;
+- **Inherited evaluations** (`proj_3/eval/tests/` and
+  `proj_3/eval_loop2/tests/`): use small, fixed inputs to test the instrument;
   run the reproduction commands in section 8 to check the committed evidence.
 
 Any test that uses `db`, `client`, or `seed` needs Postgres. The database is
@@ -254,8 +254,8 @@ out `incomplete` rather than `fits`.
 
 ### Database migrations
 
-Edit the appropriate models in `proj_2/db/`, then create and review an
-Alembic migration from `proj_2/`:
+Edit the appropriate models in `proj_3/db/`, then create and review an
+Alembic migration from `proj_3/`:
 
 ```bash
 python -m alembic -c db/alembic.ini revision --autogenerate -m "describe the change"
@@ -284,7 +284,7 @@ Without `TEST_DATABASE_URL`, or if the database is unreachable, those tests
 skip locally. CI sets `REQUIRE_TEST_DB=1` so either condition fails instead;
 use the same setting locally when checking a change before a PR.
 
-Start the database (from `proj_2/`):
+Start the database (from `proj_3/`):
 
 ```bash
 docker compose up -d db
@@ -305,7 +305,7 @@ $env:TEST_DATABASE_URL = "postgresql://packplate:packplate@localhost:5432/packpl
 $env:REQUIRE_TEST_DB = "1"
 ```
 
-(If 5432 is taken by a local Postgres, set `POSTGRES_PORT` in `proj_2/.env`
+(If 5432 is taken by a local Postgres, set `POSTGRES_PORT` in `proj_3/.env`
 and use that port here.)
 
 Use a **disposable local database** for `TEST_DATABASE_URL`. The fixtures
@@ -315,10 +315,10 @@ database suites sequentially when they use the same test database.
 
 | Suite                   | Run from         | Command                                                                 |
 | ----------------------- | ---------------- | ----------------------------------------------------------------------- |
-| Backend                 | `proj_2/backend` | `pytest`                                                                |
-| Ingestion               | `proj_2`         | `pytest ingestion`                                                      |
-| Backend with coverage   | `proj_2/backend` | `pytest --cov=app --cov-config=../pyproject.toml`                       |
-| Ingestion with coverage | `proj_2`         | `pytest ingestion --cov=ingestion --cov=db --cov-config=pyproject.toml` |
+| Backend                 | `proj_3/backend` | `pytest`                                                                |
+| Ingestion               | `proj_3`         | `pytest ingestion`                                                      |
+| Backend with coverage   | `proj_3/backend` | `pytest --cov=app --cov-config=../pyproject.toml`                       |
+| Ingestion with coverage | `proj_3`         | `pytest ingestion --cov=ingestion --cov=db --cov-config=pyproject.toml` |
 
 The backend suite includes Project 3's account, forecast, assistant, chat,
 saved-profile, recommendation, and startup-migration tests. Review the test
@@ -331,14 +331,14 @@ keep ordinary tests independent of live services and the shared database.
 ### Reproducing M0
 
 Project 3's account and private-chat evaluation is the M0 check required by
-current CI. Run it from `proj_2/` with the Python environment active:
+current CI. Run it from `proj_3/` with the Python environment active:
 
 | Evaluation                          | Command                              | Database                                         |
 | ----------------------------------- | ------------------------------------ | ------------------------------------------------ |
 | Project 3 accounts and private chat | `python eval_project3/m0.py --check` | Dedicated local `packplate_m0_project3` database |
 
 For Project 3, follow the disposable database setup in
-[m0-eval-project3.md](proj_2/docs/m0-eval-project3.md#reproduce). Set
+[m0-eval-project3.md](proj_3/docs/m0-eval-project3.md#reproduce). Set
 `M0_DATABASE_URL` in the evaluator's terminal; this is separate from both
 `DATABASE_URL` and `TEST_DATABASE_URL`. The evaluator accepts only a local
 Postgres database named `packplate_m0_project3`, applies migrations in a
@@ -365,8 +365,8 @@ affect Project 3's scenarios and controls.
 Keep snapshots, scenario definitions, thresholds, and manual review sheets
 consistent with the evaluation plan. Changed snapshot or sampling inputs can
 require a new manual review; preserve the earlier loop's evidence. See the
-[inherited plan](proj_2/docs/m0-eval.md) and
-[Project 3 plan](proj_2/docs/m0-eval-project3.md).
+[inherited plan](proj_3/docs/Project%202%20docs/m0-eval.md) and
+[Project 3 plan](proj_3/docs/m0-eval-project3.md).
 
 ### Format, lint, type, and build checks
 
@@ -376,12 +376,12 @@ confirm the result for your branch.
 
 | Checker                    | Check (what CI runs)                        | Fix                  |
 | -------------------------- | ------------------------------------------- | -------------------- |
-| Ruff (Python lint)         | `ruff check .` in `proj_2`                  | `ruff check --fix .` |
-| Black (Python format)      | `black --check .` in `proj_2`               | `black .`            |
-| Prettier (frontend format) | `npm run format:check` in `proj_2/frontend` | `npm run format`     |
-| ESLint (frontend lint)     | `npm run lint` in `proj_2/frontend`         | by hand              |
-| Typecheck (frontend)       | `npm run typecheck` in `proj_2/frontend`    | by hand              |
-| Frontend production build  | `npm run build` in `proj_2/frontend`        | resolve build errors |
+| Ruff (Python lint)         | `ruff check .` in `proj_3`                  | `ruff check --fix .` |
+| Black (Python format)      | `black --check .` in `proj_3`               | `black .`            |
+| Prettier (frontend format) | `npm run format:check` in `proj_3/frontend` | `npm run format`     |
+| ESLint (frontend lint)     | `npm run lint` in `proj_3/frontend`         | by hand              |
+| Typecheck (frontend)       | `npm run typecheck` in `proj_3/frontend`    | by hand              |
+| Frontend production build  | `npm run build` in `proj_3/frontend`        | resolve build errors |
 
 `pre-commit run --all-files` (from the repo root) runs Ruff, Black, and
 Prettier on everything at once.
@@ -404,11 +404,11 @@ point.
 
 ## 9. Documentation
 
-[`proj_2/docs/reference.md`](proj_2/docs/reference.md) and
-[`proj_2/docs/api.md`](proj_2/docs/api.md) are generated from the code: every
+[`proj_3/docs/reference.md`](proj_3/docs/reference.md) and
+[`proj_3/docs/api.md`](proj_3/docs/api.md) are generated from the code: every
 public module, class, and function needs a docstring, and the API's routes
 describe themselves. After changing a docstring, a function signature, or an
-API route, run this from `proj_2/` and commit the result:
+API route, run this from `proj_3/` and commit the result:
 
 ```bash
 python docs/generate.py
@@ -420,11 +420,11 @@ same way as the existing ones: one sentence saying what it does or returns,
 plus anything a caller must know (what `None` means, what it raises).
 
 Keep hand-written instructions in [INSTALL.md](INSTALL.md), this guide,
-[why.md](proj_2/docs/why.md), [how.md](proj_2/docs/how.md), and the relevant
+[why.md](proj_3/docs/why.md), [how.md](proj_3/docs/how.md), and the relevant
 milestone pages in sync with the behavior. Project 3's
-[account notes](proj_2/docs/m1-accounts.md),
-[chat milestone](proj_2/docs/m4-chat-room.md), and
-[M0 evidence](proj_2/docs/m0-eval-project3.md) describe the new collaboration
+[account notes](proj_3/docs/m1-accounts.md),
+[chat milestone](proj_3/docs/m4-chat-room.md), and
+[M0 evidence](proj_3/docs/m0-eval-project3.md) describe the new collaboration
 features. If you change something a worked example in `how.md` shows, rerun
 the example and update it. Preserve the inherited M0 results alongside the
 new Project 3 results, and link README claims to their result files and
@@ -435,8 +435,8 @@ workflow runs in this team's repository.
 When AI tools assist with a contribution, record the tool, what it helped
 with, and a concise prompt or plan summary in the PR or a linked repository
 document. For significant assistance, use the existing
-[AI usage recordkeeping](proj_2/ai/AI_USAGE.md) and
-[artifact template](proj_2/ai/artifacts/TEMPLATE.md).
+[AI usage recordkeeping](proj_3/ai/AI_USAGE.md) and
+[artifact template](proj_3/ai/artifacts/TEMPLATE.md).
 
 Record who reviewed the output, which code or claims they checked, the
 commands and results used for verification, and any corrections or remaining

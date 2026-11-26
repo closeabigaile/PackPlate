@@ -1,18 +1,18 @@
-# Style and lint check for proj_2's Python (settings in proj_2/pyproject.toml).
+# Style and lint check for proj_3's Python (settings in proj_3/pyproject.toml).
 name: Ruff
 
 on:
   push:
     paths:
-      - "proj_2/**/*.py"
-      - "proj_2/pyproject.toml"
-      - "proj_2/requirements-dev.txt"
+      - "proj_3/**/*.py"
+      - "proj_3/pyproject.toml"
+      - "proj_3/requirements-dev.txt"
       - ".github/workflows/ruff.yml"
   pull_request:
     paths:
-      - "proj_2/**/*.py"
-      - "proj_2/pyproject.toml"
-      - "proj_2/requirements-dev.txt"
+      - "proj_3/**/*.py"
+      - "proj_3/pyproject.toml"
+      - "proj_3/requirements-dev.txt"
       - ".github/workflows/ruff.yml"
 
 permissions:
@@ -24,7 +24,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: proj_2
+        working-directory: proj_3
     steps:
       - uses: actions/checkout@v7
 

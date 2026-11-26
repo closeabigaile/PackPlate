@@ -1,0 +1,58 @@
+# AI Usage
+
+How the PackPlate team uses AI tools in Project 2, and where to find the
+evidence. Every significant AI-assisted change has an artifact file in
+[`artifacts/`](artifacts/) recording what the AI proposed, what a human
+changed, and how the result was checked.
+
+## Tools
+
+| Tool | Model / version | Used by | Where it runs |
+|---|---|---|---|
+| Claude Code | Claude Opus 5.5 | Ethan, Moe, Morgan | VS Code extension |
+| Claude | Sonnet 5.5 | Savanah | Browser |
+| _TODO_ | | | |
+
+## What we use AI for
+
+- Generating project scaffolding and boilerplate (see
+  [01-scaffolding](artifacts/01-scaffolding.md))
+- Explaining course requirements and tooling options
+- Porting a prototype into production code, finding its bugs, and writing
+  tests (see [02-ingestion](artifacts/02-ingestion.md))
+- _TODO: add as the project goes (e.g. first drafts of tests, PR review)_
+
+## What we do not use AI for
+
+- _TODO: team to decide. Suggestions:_
+  - _Deciding allergen and dietary labelling rules. A wrong "fits" can
+    hurt someone, so these are written and reviewed by people._
+  - _Merging code no human has read._
+  - _Writing M0 eval results or self-assessed rubric scores._
+
+## How AI output is checked
+
+1. Whoever uses AI output reviews it by hand and tests it before
+   committing.
+2. A different teammate reviews the pull request before it is merged.
+3. The person who ran the session writes an artifact file from
+   [`TEMPLATE.md`](artifacts/TEMPLATE.md).
+4. CI runs the test suite on every push, so a regression blocks the
+   merge.
+
+## Artifact index
+
+| # | Artifact | Author | Date |
+|---|---|---|---|
+| 01 | [Project 2 scaffolding](artifacts/01-scaffolding.md) | Whole team | 2026-10-05 |
+| 02 | [Ingestion pipeline](artifacts/02-ingestion.md) | Ethan Goodman | 2026-10-06 |
+| 03 | [Backend database connection and read API](artifacts/03-backend-read-api.md) | Moe Ko | 2026-10-07 |
+| 04 | [Filter engine and crowd reports](artifacts/04-filters-crowd.md) | Moe Ko | 2026-10-12 |
+| 05 | [CI, code quality tools, and badges](artifacts/05-ci-quality.md) | Ethan Goodman | 2026-10-18 |
+| 06 | [M0 risk-killer eval](artifacts/06-m0-eval.md) | Ethan Goodman | 2026-10-18 |
+| 07 | [Ingredient-based allergen flags](artifacts/07-allergen-flags.md) | Morgan Simon | 2026-10-19 |
+| 08 | [Review queue for contradicted diet tags](artifacts/08-label-reviews.md) | Morgan Simon | 2026-10-19 |
+| 09 | [Shared database and daily scrape](artifacts/09-shared-db-schedule.md) | Morgan Simon | 2026-10-19 |
+| 10 | [Menu display and nutrition info unavailable](artifacts/10-menu-display.md) | Morgan Simon | 2026-10-20 |
+| 11 | [M0 loop 2: re-testing after the fixes](artifacts/11-m0-loop-2.md) | Ethan Goodman | 2026-10-20 |
+| 12 | [Frontend development from wireframes](artifacts/12-frontend.md) | Savanah Hendzel | 2026-10-18 |
