@@ -4,7 +4,7 @@
 
 Every public module, class, and function in the Python code, with its signature and description, read from the source. The website (`frontend/`) is described in [how.md](how.md) instead.
 
-**499 of 505** modules, classes, and functions have a description.
+**502 of 505** modules, classes, and functions have a description.
 
 - **API** (`backend/app/`)
   - [`app`](#app)
@@ -1450,7 +1450,7 @@ Request and response schemas for PackPlate M5 recommendations.
 
 ### class `RecommendationRequest` (BaseModel)
 
-_No description yet._
+Nutrition goal, menu filters, and optional dietary profile.
 
 Fields:
 
@@ -1461,7 +1461,7 @@ Fields:
 
 ### class `RecommendationItem` (BaseModel)
 
-_No description yet._
+A ranked meal with location, meal periods, and nutrition details.
 
 Fields:
 
@@ -1477,7 +1477,7 @@ Fields:
 
 ### class `RecommendationResponse` (BaseModel)
 
-_No description yet._
+The list of meals matching the recommendation request.
 
 Fields:
 

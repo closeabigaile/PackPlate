@@ -16,6 +16,8 @@ NutritionGoal = Literal[
 
 
 class RecommendationRequest(BaseModel):
+    """Nutrition goal, menu filters, and optional dietary profile."""
+
     goal: NutritionGoal
     date: Date | None = None
     meal: str | None = None
@@ -23,6 +25,8 @@ class RecommendationRequest(BaseModel):
 
 
 class RecommendationItem(BaseModel):
+    """A ranked meal with location, meal periods, and nutrition details."""
+
     rank: int
     item_id: int
     name: str
@@ -35,4 +39,6 @@ class RecommendationItem(BaseModel):
 
 
 class RecommendationResponse(BaseModel):
+    """The list of meals matching the recommendation request."""
+
     recommendations: list[RecommendationItem] = Field(default_factory=list)
