@@ -7,6 +7,10 @@ are the ones installed when this list was made (2026-10-19). Python
 requirements files don't pin most versions, so a fresh install may get newer
 ones.
 
+Project 3 dependency manifests were reviewed on 2026-11-24. No new
+direct Python or npm packages were identified. New assistant integrations
+are listed separately below.
+
 PackPlate itself is MIT licensed (see [LICENSE.md](LICENSE.md)).
 
 ## Python: direct dependencies
@@ -143,6 +147,25 @@ node -e "const l=require('./package-lock.json');for(const[k,v]of Object.entries(
 | schneegans/dynamic-badges-action | The test-count badge | MIT |
 | astral-sh/ruff-pre-commit | Ruff commit hook | Apache-2.0 |
 | psf/black-pre-commit-mirror | Black commit hook (it only installs Black, which is MIT; the mirror repo has no license file) | — |
+
+## Project 3: Dining Assistant integrations
+
+Project 3 adds the following optional tools, models, and external services.
+They are accessed through HTTP and are not bundled Python or npm dependencies.
+
+| Tool or service | Used for | License |
+|---|---|---|
+| [Ollama](https://github.com/ollama/ollama) | Running the optional local language model | MIT |
+| [Qwen2.5-1.5B](https://ollama.com/library/qwen2.5) | Default language model for the Dining Assistant | Apache-2.0 |
+| [Nominatim](https://github.com/osm-search/Nominatim) | Looking up geographic locations | GPL-3.0-or-later (Python source) |
+| [OSRM](https://github.com/Project-OSRM/osrm-backend) | Calculating driving distances | BSD-2-Clause |
+
+The assistant uses rule-based answers when the language model is
+unavailable. If geocoding fails, it can ask the user for their location.
+If routing fails, it uses straight-line distances instead.
+
+These integrations can be configured or disabled through environment
+variables. External services have their own usage policies.
 
 ## Data
 

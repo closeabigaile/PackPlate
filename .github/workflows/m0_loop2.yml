@@ -1,14 +1,14 @@
+# Historical Project 2 M0: available on demand, outside Project 3 CI.
 # Reruns M0 loop 2 (#26) and checks it reproduces eval_loop2/results.json.
 # Passing means the committed numbers reproduce, not that the targets were met
 # (the targets are in #26; the result is in results.json).
 # It fails if the eval crashes, the hand-check sheet no longer matches the
 # snapshot and the draw, or the numbers change without results.json being updated.
 # Kept separate from m0.yml (loop 1) so either loop can be removed on its own.
-name: M0 loop 2
+name: Inherited M0 loop 2 (manual)
 
 on:
-  push:
-  pull_request:
+  workflow_dispatch:
 
 permissions:
   contents: read

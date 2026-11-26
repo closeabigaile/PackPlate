@@ -1,4 +1,5 @@
-# Runs proj_2's test suites on every push and pull request.
+# Runs the application test suites on every push and pull request.
+# Project 3 M0 runs separately; inherited evaluation suites are historical.
 # Versions match docker-compose.yml and the Dockerfiles (Postgres 16, Python 3.12, Node 22).
 name: Tests
 
@@ -63,36 +64,32 @@ jobs:
           --junitxml="$GITHUB_WORKSPACE/test-results/ingestion.xml"
           --cov-report=xml:"$GITHUB_WORKSPACE/coverage/ingestion.xml"
 
-      - name: M0 eval tests
-        if: ${{ !cancelled() }}
-        working-directory: proj_2
-        run: >-
-          pytest eval --cov=eval --cov-config=pyproject.toml
-          --junitxml="$GITHUB_WORKSPACE/test-results/eval.xml"
-          --cov-report=xml:"$GITHUB_WORKSPACE/coverage/eval.xml"
-
-      - name: M0 loop 2 tests
-        if: ${{ !cancelled() }}
-        working-directory: proj_2
-        run: >-
-          pytest eval_loop2 --cov=eval_loop2 --cov-config=pyproject.toml
-          --junitxml="$GITHUB_WORKSPACE/test-results/eval_loop2.xml"
-          --cov-report=xml:"$GITHUB_WORKSPACE/coverage/eval_loop2.xml"
-
       # docs/reference.md and docs/api.md are generated from the code.
       - name: Generated docs are up to date
         if: ${{ !cancelled() }}
         working-directory: proj_2
         run: python docs/generate.py --check
 
-      # Coverage badge: Codecov reads the four reports. A Codecov outage only
+      # Retain the source measurements even when a test or external upload fails.
+      - name: Save Python test and coverage reports
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: python-test-reports-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            test-results/
+            coverage/
+          if-no-files-found: error
+          retention-days: 30
+
+      # Coverage badge: Codecov reads the two reports. A Codecov outage only
       # skips the upload; it never fails the tests.
       - name: Upload coverage
         if: ${{ !cancelled() }}
         uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v7.1.1
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          files: coverage/backend.xml,coverage/ingestion.xml,coverage/eval.xml,coverage/eval_loop2.xml
+          files: coverage/backend.xml,coverage/ingestion.xml
           disable_search: true
           fail_ci_if_error: false
 
@@ -105,12 +102,27 @@ jobs:
         shell: bash
         run: >-
           python .github/scripts/test_badge.py
-          test-results/backend.xml test-results/ingestion.xml test-results/eval.xml
-          test-results/eval_loop2.xml
+          test-results/backend.xml test-results/ingestion.xml
           | tee -a "$GITHUB_OUTPUT"
 
-      - name: Update test badge
+      # A fork can run the checks without access to an external gist. Keep
+      # publishing optional while retaining all test results in this run.
+      - name: Check test badge configuration
+        id: badge
         if: ${{ !cancelled() && github.event_name == 'push' && github.ref == 'refs/heads/dev' }}
+        env:
+          PACKPLATE_BADGE_TOKEN: ${{ secrets.GIST_SECRET }}
+          PACKPLATE_BADGE_GIST_ID: ${{ vars.TEST_BADGE_GIST_ID }}
+        run: |
+          if [ -n "$PACKPLATE_BADGE_TOKEN" ] && [ -n "$PACKPLATE_BADGE_GIST_ID" ]; then
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+            echo "Test badge publishing is not configured. See this run's test and coverage artifacts." >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Update test badge
+        if: ${{ !cancelled() && steps.badge.outputs.configured == 'true' }}
         uses: schneegans/dynamic-badges-action@28b0fa8bdeb46170ac397105ece0c1fe58f68910 # v1.9.0
         with:
           auth: ${{ secrets.GIST_SECRET }}

@@ -145,7 +145,9 @@ docker stop packplate-m0-project3
 ```
 
 The separate [Project 3 workflow](../../.github/workflows/m0_project3.yml)
-runs this check using PostgreSQL 16 and also reruns both inherited M0 loops.
+runs this check using PostgreSQL 16. It is the only M0 evaluation in routine
+Project 3 CI. Both inherited M0 loops remain available manually as
+historical evidence; the earlier runs recorded below also reproduced them.
 
 ## Result
 

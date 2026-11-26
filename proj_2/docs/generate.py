@@ -7,9 +7,10 @@ route, and commit the result:
     python docs/generate.py --check    # fail if either is out of date (CI)
 
 reference.md lists every public module, class, and function in backend/app,
-db, ingestion, and eval, with its signature and docstring, read straight from
-the source. api.md lists every HTTP endpoint and data model, read from the
-API's own OpenAPI description, so neither can drift from the code.
+db, ingestion, eval, eval_loop2, and eval_project3, with its signature and
+docstring, read straight from the source. api.md lists every HTTP endpoint
+and data model, read from the API's own OpenAPI description, so neither can
+drift from the code.
 """
 
 import argparse
@@ -26,6 +27,7 @@ PACKAGES = [
     ("Scraper", "ingestion", "ingestion"),
     ("M0 loop 1", "eval", "eval"),
     ("M0 loop 2", "eval_loop2", "eval_loop2"),
+    ("M0 Project 3", "eval_project3", "eval_project3"),
 ]
 SKIP_DIRS = {"tests", "migrations", "__pycache__"}
 MISSING = "_No description yet._"
