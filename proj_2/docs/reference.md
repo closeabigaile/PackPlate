@@ -4,7 +4,7 @@
 
 Every public module, class, and function in the Python code, with its signature and description, read from the source. The website (`frontend/`) is described in [how.md](how.md) instead.
 
-**477 of 480** modules, classes, and functions have a description.
+**502 of 505** modules, classes, and functions have a description.
 
 - **API** (`backend/app/`)
   - [`app`](#app)
