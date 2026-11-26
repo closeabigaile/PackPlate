@@ -1,7 +1,7 @@
 # AI Usage — Project 3
 
 AI-assisted work recorded by PackPlate's Project 3 team: **Abigail, Aditya,
-Satwi, and Supreme**. This file contains our team's notes and supporting
+Demaris, Satwi, and Supreme**. This file contains our team's notes and supporting
 artifacts.
 
 The original team's record is preserved in
@@ -15,6 +15,7 @@ in [Project 2 ai/artifacts/](Project%202%20ai/artifacts/).
 |---|---|---|---|
 | Abigail Close | OpenAI Codex | GPT-6.1 Sol| M4 review, M0 verification, documentation, and CI |
 | Aditya | Claude Code (terminal / CLI) | Claude Opus 5.5 | Accounts, chat integration, saved diets, UI refresh, and demo videos |
+| Demaris | Claude Code (VS Code extension) | Claude Sonnet 5.5 | Drafting code, tests, and documents for the M3 dining assistant. Demaris set the requirements, tested it, and made the commits |
 | Satwi | TODO | TODO | Add the AI-use notes for crowd forecasting |
 | Supreme Constantine | ChatGPT (browser) | GPT-6 series | Meal recommendations, integration, testing, and documentation |
 
@@ -71,6 +72,26 @@ See [14 — User accounts, chat integration, and saved diets](artifacts/14-accou
 and [15 — UI refresh and demo videos](artifacts/15-ui-refresh.md) for the
 requests, proposals, human review, final changes, and verification.
 
+## Demaris — M3 dining assistant , Integration,documentation And README, 
+
+**Tool:** Claude Code, Claude Sonnet 5.5, used in the VS Code extension.
+**Recorded dates:** November 22–25, 2026.
+
+- **AI assistance:** Planning and building the dining assistant, working out
+  how the inherited code fits together, writing tests, debugging wrong
+  answers, connecting the assistant to the accounts and menu data from the
+  other Project 3 work, and drafting the milestone documentation.
+- **Human review:** Reviewing the existing repository, keeping the assistant
+  inside the application and within the instructions given, checking the
+  intended workflow by using it in the browser, working through the wrong
+  answers found, and reviewing and committing the changes through Git.
+- **Final work:** A rule-based dining assistant, API, and chat page that
+  answers menu, diet, hours, crowd, recommendation, and closest-hall questions
+  from PackPlate's own data and the signed-in student's saved diet.
+
+See [16 — M3 dining assistant](artifacts/16-m3-dining-assistant.md) for the
+full session record.
+
 ## Satwi — crowd forecasting
 
 **TODO:** Satwi has not added her AI-use notes yet. Add the tool and model,
@@ -107,6 +128,7 @@ for the full session record.
 | 13 | [M5 meal comparison and integration](artifacts/13-m5-meal-comparison.md) | Supreme Constantine | 2026-11-24 |
 | 14 | [User accounts, chat integration, and saved diets](artifacts/14-accounts.md) | Aditya | 2026-11-09 to 2026-11-16 |
 | 15 | [UI refresh and demo videos](artifacts/15-ui-refresh.md) | Aditya | 2026-11-25 |
+| 16 | [M3 dining assistant](artifacts/16-m3-dining-assistant.md) | Demaris | 2026-11-22 to 2026-11-25 |
 
 Abigail's notes and supporting reports are recorded above. Satwi's entry
 remains TODO. Keep the original artifact numbers so existing references
