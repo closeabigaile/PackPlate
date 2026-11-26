@@ -5,6 +5,7 @@ export default function SignupPage() {
   return (
     <PageShell
       title="Create an account"
+      icon="user"
       lede="You don’t need an account to check menus. It’s for features that need to know who you are, like chatting with friends."
       showFreshness={false}
     >

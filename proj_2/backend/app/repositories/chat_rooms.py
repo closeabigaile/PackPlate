@@ -5,13 +5,13 @@ succeeds. Room changes use the same transaction so they are saved together.
 """
 
 from collections.abc import Iterable
-from datetime import UTC, datetime
 from typing import cast
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session, joinedload, selectinload
 
 from app.services.chat_room import ChatRoom, RoomStatus
+from app.services.hours import campus_time
 from db.chat_models import ChatInvitation, ChatMessage, ChatRoomMember, ChatRoomRecord
 
 
@@ -191,7 +191,7 @@ def add_message(db: Session, room_id: int, sender_id: int, text: str) -> ChatMes
 
     # Use the account ID from login and give the message a time on the backend.
     message = ChatMessage(
-        room_id=room_id, sender_id=sender_id, text=text, created_at=datetime.now(UTC)
+        room_id=room_id, sender_id=sender_id, text=text, created_at=campus_time()
     )
     db.add(message)
     db.flush()

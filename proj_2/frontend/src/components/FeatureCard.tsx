@@ -1,36 +1,41 @@
 import Link from "next/link";
 import type { CSSProperties } from "react";
+import { Icon, type IconName } from "./Icon";
 
-// One of the five cards on the Home page: art on top, a coloured label with a
-// button at the bottom, like the NC State Dining cards the wireframe borrows.
-// Swap the emoji for an <Image> when real photos are available.
+// One feature on the Home page: an icon, what it is, and what it's for. The
+// whole card is the link.
 export function FeatureCard({
   href,
   title,
-  action,
+  description,
+  icon,
   accent,
-  art,
+  tag,
 }: {
   href: string;
   title: string;
-  action: string;
+  description: string;
+  icon: IconName;
   accent: string;
-  art: string;
+  tag?: string;
 }) {
   return (
-    <article
+    <Link
+      href={href}
       className="feature-card"
       style={{ "--accent": accent } as CSSProperties}
     >
-      <div className="feature-art" aria-hidden="true">
-        {art}
-      </div>
-      <div className="feature-label">
-        <h2>{title}</h2>
-        <Link href={href} className="btn">
-          {action}
-        </Link>
-      </div>
-    </article>
+      <span className="feature-icon" aria-hidden="true">
+        <Icon name={icon} size={24} />
+      </span>
+      <span className="feature-text">
+        <span className="feature-title">
+          {title}
+          {tag ? <span className="feature-tag">{tag}</span> : null}
+        </span>
+        <span className="feature-desc">{description}</span>
+      </span>
+      <Icon name="arrow" size={18} className="feature-arrow" />
+    </Link>
   );
 }

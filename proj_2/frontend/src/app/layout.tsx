@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Bricolage_Grotesque, Geist, Geist_Mono } from "next/font/google";
 import { SiteHeader } from "@/components/SiteHeader";
 import { ProfileSync } from "@/lib/accountProfile";
 import "./globals.css";
@@ -14,6 +14,12 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+// Headings and the logo: a display face with more character than the body text.
+const display = Bricolage_Grotesque({
+  variable: "--font-display",
+  subsets: ["latin"],
+});
+
 export const metadata: Metadata = {
   title: "PackPlate",
   description: "NC State dining, filtered for your whole group",
@@ -21,18 +27,26 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en" className={`${geistSans.variable} ${geistMono.variable}`}>
+    <html
+      lang="en"
+      className={`${geistSans.variable} ${geistMono.variable} ${display.variable}`}
+    >
       <body>
         <SiteHeader />
         <ProfileSync />
         {children}
         <footer className="site-footer">
-          <p>
-            PackPlate is a student project, not run by NC State Dining. Menus
-            come from NC State’s NetNutrition and hours from dining.ncsu.edu. If
-            you have a serious allergy, check the label or ask dining staff
-            before you eat.
-          </p>
+          <div className="site-footer-inner">
+            <p className="footer-brand">
+              Pack<span>Plate</span>
+            </p>
+            <p>
+              PackPlate is a student project, not run by NC State Dining. Menus
+              come from NC State’s NetNutrition and hours from dining.ncsu.edu.
+              If you have a serious allergy, check the label or ask dining staff
+              before you eat.
+            </p>
+          </div>
         </footer>
       </body>
     </html>

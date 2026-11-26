@@ -7,6 +7,7 @@ Pure functions, no database. Ingestion stores one row per location and date
 previous day's row.
 """
 
+import os
 from dataclasses import dataclass
 from datetime import date, datetime, time, timedelta
 from zoneinfo import ZoneInfo
@@ -15,10 +16,26 @@ CAMPUS_TZ = ZoneInfo("America/New_York")
 MINUTES_PER_DAY = 24 * 60
 
 
+def _demo_offset() -> timedelta:
+    """For recording demos: DEMO_NOW=2026-11-30T12:45:00 makes "now" start at that
+    campus time when the API starts, and keep ticking from there. Unset (the
+    default) means the real clock. Never set it on a shared or hosted server."""
+    raw = os.getenv("DEMO_NOW")
+    if not raw:
+        return timedelta(0)
+    start = datetime.fromisoformat(raw)
+    if start.tzinfo is None:
+        start = start.replace(tzinfo=CAMPUS_TZ)
+    return start - datetime.now(CAMPUS_TZ)
+
+
+_DEMO_OFFSET = _demo_offset()
+
+
 def campus_time(at: datetime | None = None) -> datetime:
     """`at` in campus time. None means now; a naive datetime is taken as campus time."""
     if at is None:
-        return datetime.now(CAMPUS_TZ)
+        return datetime.now(CAMPUS_TZ) + _DEMO_OFFSET
     if at.tzinfo is None:
         return at.replace(tzinfo=CAMPUS_TZ)
     return at.astimezone(CAMPUS_TZ)

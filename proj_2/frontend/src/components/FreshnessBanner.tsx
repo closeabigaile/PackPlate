@@ -2,14 +2,14 @@
 
 import { api } from "@/lib/api";
 import { formatAge } from "@/lib/format";
+import { nowMs } from "@/lib/now";
 import { useAsync } from "@/lib/useAsync";
 
 // Defined outside the component so reading the clock is not part of rendering.
 async function loadFreshness() {
   const freshness = await api.freshness();
   const ageHours = freshness.last_run_finished_at
-    ? (Date.now() - new Date(freshness.last_run_finished_at).getTime()) /
-      3_600_000
+    ? (nowMs() - new Date(freshness.last_run_finished_at).getTime()) / 3_600_000
     : null;
   return { freshness, ageHours };
 }
@@ -54,9 +54,19 @@ export function FreshnessBanner() {
     );
   }
 
+  if (partial) {
+    return (
+      <p className="banner banner-warn" role="status">
+        Hours and menus last updated {formatAge(ageHours)}.{partial}
+      </p>
+    );
+  }
+
+  // Fresh data needs no warning, so it is a small status chip, not a banner.
   return (
-    <p className={partial ? "banner banner-warn" : "banner"} role="status">
-      Hours and menus last updated {formatAge(ageHours)}.{partial}
+    <p className="fresh-chip" role="status">
+      <span className="fresh-dot" aria-hidden="true" />
+      Hours and menus updated {formatAge(ageHours)}
     </p>
   );
 }

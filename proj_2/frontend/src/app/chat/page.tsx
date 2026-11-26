@@ -5,7 +5,8 @@ import { ChatPanel } from "./ChatPanel";
 export default function ChatPage() {
   return (
     <PageShell
-      title="Group Chat"
+      title="Group chat"
+      icon="chat"
       lede="Invite other PackPlate users and make dining plans together."
       showFreshness={false}
     >

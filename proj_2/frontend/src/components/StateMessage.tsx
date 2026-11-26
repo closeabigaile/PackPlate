@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 
 // One look for "loading", "failed" and "nothing here" across every page.
+// Loading shows grey placeholder cards; the words are still read out.
 export function StateMessage({
   kind,
   children,
@@ -10,6 +11,16 @@ export function StateMessage({
   children: ReactNode;
   onRetry?: () => void;
 }) {
+  if (kind === "loading") {
+    return (
+      <div className="skeleton-group" role="status">
+        <span className="visually-hidden">{children}</span>
+        <span className="skeleton" aria-hidden="true" />
+        <span className="skeleton" aria-hidden="true" />
+        <span className="skeleton skeleton-short" aria-hidden="true" />
+      </div>
+    );
+  }
   return (
     <div
       className={kind === "error" ? "state-message error" : "state-message"}

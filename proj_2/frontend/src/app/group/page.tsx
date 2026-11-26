@@ -6,7 +6,8 @@ import { PageShell } from "@/components/PageShell";
 export default function GroupPage() {
   return (
     <PageShell
-      title="Eat as a Group"
+      title="Eat as a group"
+      icon="users"
       lede="Add everyone’s allergies and diets. PackPlate finds a location where each person has something to eat."
     >
       <GroupBuilder />

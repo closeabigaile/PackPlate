@@ -5,9 +5,16 @@ import { reasonSummary } from "@/lib/verdicts";
 // Meaning is always in the words, never in colour alone.
 
 export function StatusPill({ isOpen }: { isOpen: boolean | null }) {
-  if (isOpen === true) return <span className="pill pill-ok">● Open now</span>;
+  if (isOpen === true) {
+    return (
+      <span className="pill pill-ok">
+        <span className="pill-dot" aria-hidden="true" />
+        Open now
+      </span>
+    );
+  }
   if (isOpen === false) return <span className="pill">Closed</span>;
-  return <span className="pill pill-warn">? Hours unknown</span>;
+  return <span className="pill pill-muted">Hours unknown</span>;
 }
 
 export function CrowdBadge({ crowd }: { crowd: Crowd }) {

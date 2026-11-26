@@ -12,6 +12,7 @@ import { emptyProfile, validateProfile } from "@/lib/diet";
 import { useHydrated, useSavedProfile } from "@/lib/profileStore";
 import { useSession } from "@/lib/session";
 import type { Profile } from "@/lib/types";
+import { DietPreview } from "./DietPreview";
 import { ProfileFields } from "./ProfileFields";
 import { StateMessage } from "./StateMessage";
 
@@ -104,18 +105,11 @@ function ProfileForm({
             {status.kind === "account"
               ? "Saved to your account. "
               : "Saved in this browser. "}
-            <Link href="/menus" style={{ fontWeight: 700 }}>
-              See menus for you
-            </Link>
+            <Link href="/menus">See menus for you</Link>
             {", "}
-            <Link href="/compare" style={{ fontWeight: 700 }}>
-              compare meals
-            </Link>
+            <Link href="/compare">compare meals</Link>
             {" or "}
-            <Link href="/group" style={{ fontWeight: 700 }}>
-              eat as a group
-            </Link>
-            .
+            <Link href="/group">eat as a group</Link>.
           </p>
         ) : null}
         {status.kind === "cleared" ? (
@@ -139,6 +133,8 @@ function ProfileForm({
           </p>
         ) : null}
       </form>
+
+      <DietPreview profile={draft} />
 
       <section className="panel" aria-labelledby="privacy-title">
         <h2 id="privacy-title" className="section-title">

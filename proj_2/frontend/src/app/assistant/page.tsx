@@ -5,7 +5,8 @@ import { AssistantPanel } from "./AssistantPanel";
 export default function AssistantPage() {
   return (
     <PageShell
-      title="Dining Assistant"
+      title="Dining assistant"
+      icon="bot"
       lede="Ask about menus, hours, and how busy a dining hall is. Answers use your saved diet."
       showFreshness={false}
     >

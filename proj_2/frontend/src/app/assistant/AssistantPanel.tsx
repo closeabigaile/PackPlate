@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { VerdictBadge } from "@/components/Badges";
+import { SignInPrompt } from "@/components/SignInPrompt";
 import { StateMessage } from "@/components/StateMessage";
 import { api, ApiError, errorMessage } from "@/lib/api";
 import {
@@ -12,6 +13,7 @@ import {
   toRequestProfile,
 } from "@/lib/diet";
 import { useHydrated, useSavedProfile } from "@/lib/profileStore";
+import { nowMs } from "@/lib/now";
 import { refreshSession, useSession } from "@/lib/session";
 import type {
   AssistantCard,
@@ -80,11 +82,21 @@ export function AssistantPanel() {
   }
   if (session.status === "signed_out") {
     return (
-      <StateMessage kind="empty">
-        <Link href="/login">Log in</Link> or{" "}
-        <Link href="/signup">create an account</Link> to use the Dining
-        Assistant.
-      </StateMessage>
+      <SignInPrompt
+        icon="bot"
+        title="Ask about campus dining in plain words"
+        points={[
+          "Answers come only from PackPlate’s menus, hours and crowd data",
+          "Uses your saved diet to say what fits, never that a food is safe",
+          "Finds the closest open dining hall to where you are",
+        ]}
+        examples={[
+          "What’s for dinner at Fountain tonight?",
+          "Vegan options at Clark",
+          "What’s open right now?",
+          "Is Talley busy?",
+        ]}
+      />
     );
   }
   // Start fresh when someone switches accounts so their chats stay separate.
@@ -169,7 +181,7 @@ function AssistantWorkspace({ user }: { user: User }) {
       const reply = await withSession(
         api.sendAssistantMessage(question, toRequestProfile(profile)),
       );
-      const now = new Date().toISOString();
+      const now = new Date(nowMs()).toISOString();
       setSent((previous) => [
         ...previous,
         {

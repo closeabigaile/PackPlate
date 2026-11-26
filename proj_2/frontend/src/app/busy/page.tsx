@@ -3,7 +3,8 @@
 // How Busy Is It?: crowd levels at open locations, and a way to report.
 // Backed by `crowd` in GET /locations and POST /crowd/{id}.
 import { useState } from "react";
-import { CrowdBadge, ForecastBadge, StatusPill } from "@/components/Badges";
+import { StatusPill } from "@/components/Badges";
+import { CrowdMeter } from "@/components/CrowdMeter";
 import { PageShell } from "@/components/PageShell";
 import { StateMessage } from "@/components/StateMessage";
 import { api, ApiError, errorMessage } from "@/lib/api";
@@ -17,6 +18,36 @@ const LEVELS: CrowdLevel[] = ["not_busy", "moderate", "crowded"];
 interface Notice {
   tone: "ok" | "bad";
   text: string;
+}
+
+function reportsText(count: number): string {
+  return `${count} report${count === 1 ? "" : "s"}`;
+}
+
+// What the meter shows: the forecast blended with recent reports, or, right
+// after you report, the fresh level from reports alone. Always says which.
+function meterFor(
+  location: LocationSummary,
+  crowd: Crowd,
+): { level: CrowdLevel | null; basis: string } {
+  if (crowd !== location.crowd) {
+    return { level: crowd.level, basis: reportsText(crowd.report_count) };
+  }
+  const { estimate, source } = location.forecast;
+  if (estimate !== null && source !== "none") {
+    return {
+      level: estimate,
+      basis:
+        source === "reports"
+          ? reportsText(crowd.report_count)
+          : source === "forecast+reports"
+            ? `predicted + ${reportsText(crowd.report_count)}`
+            : "predicted, no reports yet",
+    };
+  }
+  return crowd.level !== null
+    ? { level: crowd.level, basis: reportsText(crowd.report_count) }
+    : { level: null, basis: "no recent reports" };
 }
 
 export default function BusyPage() {
@@ -56,13 +87,82 @@ export default function BusyPage() {
   const crowdOf = (location: LocationSummary): Crowd =>
     updated[location.id] ?? location.crowd;
 
-  const reportable = data?.filter((l) => l.is_open !== false) ?? [];
+  // Unknown hours can still be reported (you may be standing there), but they
+  // are listed apart from "Open now" so this page agrees with What's open.
+  const open = data?.filter((l) => l.is_open === true) ?? [];
+  const unknown = data?.filter((l) => l.is_open === null) ?? [];
   const closed = data?.filter((l) => l.is_open === false) ?? [];
+
+  function renderReportable(list: LocationSummary[], showStatus: boolean) {
+    return (
+      <ul className="stack">
+        {list.map((location) => {
+          const crowd = crowdOf(location);
+          const notice = notices[location.id];
+          return (
+            <li key={location.id} className="panel busy-card">
+              <div className="location-row-head">
+                <span className="location-name">{location.name}</span>
+                {showStatus ? <StatusPill isOpen={location.is_open} /> : null}
+              </div>
+              <div className="busy-levels">
+                <CrowdMeter {...meterFor(location, crowd)} />
+                {crowd.last_reported_at ? (
+                  <span className="meta">
+                    Last report at {formatTime(crowd.last_reported_at)}
+                  </span>
+                ) : null}
+              </div>
+
+              <div className="crowd-report">
+                <span className="meta" id={`report-${location.id}`}>
+                  Here now? It’s:
+                </span>
+                <div
+                  className="segmented"
+                  role="group"
+                  aria-labelledby={`report-${location.id}`}
+                >
+                  {LEVELS.map((level) => (
+                    <button
+                      key={level}
+                      type="button"
+                      className={`segment segment-${level}`}
+                      disabled={pending !== null}
+                      onClick={() => report(location, level)}
+                      aria-label={`Report ${location.name} as ${CROWD_LABELS[level]}`}
+                    >
+                      <span className="segment-dot" aria-hidden="true" />
+                      {CROWD_LABELS[level]}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {notice ? (
+                <p
+                  className={
+                    notice.tone === "ok"
+                      ? "banner banner-ok"
+                      : "banner banner-bad"
+                  }
+                  role="status"
+                >
+                  {notice.text}
+                </p>
+              ) : null}
+            </li>
+          );
+        })}
+      </ul>
+    );
+  }
 
   return (
     <PageShell
-      title="How Busy Is It?"
-      lede="Crowd levels at open locations, from reports by students in the last 30 minutes. Newer reports count more."
+      title="How busy is it?"
+      icon="activity"
+      lede="Crowd levels from student reports in the last 30 minutes (newer ones count more), plus a forecast when nobody has reported."
     >
       {error ? (
         <StateMessage kind="error" onRetry={reload}>
@@ -79,72 +179,29 @@ export default function BusyPage() {
 
           <section aria-labelledby="busy-open-title">
             <h2 id="busy-open-title" className="section-title">
-              Open now <span className="count">({reportable.length})</span>
+              Open now <span className="count">({open.length})</span>
             </h2>
-            {reportable.length === 0 ? (
+            {open.length === 0 ? (
               <StateMessage kind="empty">
-                Nothing is open right now.
+                Nothing is confirmed open right now.
               </StateMessage>
             ) : (
-              <ul className="stack">
-                {reportable.map((location) => {
-                  const crowd = crowdOf(location);
-                  const notice = notices[location.id];
-                  return (
-                    <li key={location.id} className="panel location-row">
-                      <div className="location-row-head">
-                        <span className="location-name">{location.name}</span>
-                        <StatusPill isOpen={location.is_open} />
-                      </div>
-                      <p>
-                        <CrowdBadge crowd={crowd} />
-                        <ForecastBadge forecast={location.forecast} />{" "}
-                        {crowd.last_reported_at ? (
-                          <span className="meta">
-                            {" "}
-                            Last report at {formatTime(crowd.last_reported_at)}
-                          </span>
-                        ) : null}
-                      </p>
-
-                      <div
-                        className="crowd-actions"
-                        role="group"
-                        aria-label={`Report how busy ${location.name} is`}
-                      >
-                        <span className="meta">Right now it’s:</span>
-                        {LEVELS.map((level) => (
-                          <button
-                            key={level}
-                            type="button"
-                            className="crowd-btn"
-                            disabled={pending !== null}
-                            onClick={() => report(location, level)}
-                            aria-label={`Report ${location.name} as ${CROWD_LABELS[level]}`}
-                          >
-                            {CROWD_LABELS[level]}
-                          </button>
-                        ))}
-                      </div>
-
-                      {notice ? (
-                        <p
-                          className={
-                            notice.tone === "ok"
-                              ? "banner banner-ok"
-                              : "banner banner-bad"
-                          }
-                          role="status"
-                        >
-                          {notice.text}
-                        </p>
-                      ) : null}
-                    </li>
-                  );
-                })}
-              </ul>
+              renderReportable(open, false)
             )}
           </section>
+
+          {unknown.length > 0 ? (
+            <section aria-labelledby="busy-unknown-title">
+              <h2 id="busy-unknown-title" className="section-title">
+                Hours unknown <span className="count">({unknown.length})</span>
+              </h2>
+              <p className="help section-help">
+                We couldn’t get today’s hours for these. If you’re there, you
+                can still report how busy it is.
+              </p>
+              {renderReportable(unknown, false)}
+            </section>
+          ) : null}
 
           {closed.length > 0 ? (
             <section aria-labelledby="busy-closed-title">

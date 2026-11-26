@@ -5,7 +5,8 @@ import { ProfileEditor } from "@/components/ProfileEditor";
 export default function ProfilePage() {
   return (
     <PageShell
-      title="My Dietary Profile"
+      title="My dietary profile"
+      icon="user"
       lede="Add your allergies and dietary preferences, and PackPlate will mark which menu items fit."
       showFreshness={false}
     >
