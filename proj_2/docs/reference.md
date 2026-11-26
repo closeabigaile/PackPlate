@@ -4,7 +4,7 @@
 
 Every public module, class, and function in the Python code, with its signature and description, read from the source. The website (`frontend/`) is described in [how.md](how.md) instead.
 
-**474 of 480** modules, classes, and functions have a description.
+**499 of 505** modules, classes, and functions have a description.
 
 - **API** (`backend/app/`)
   - [`app`](#app)
@@ -106,6 +106,8 @@ Every public module, class, and function in the Python code, with its signature 
   - [`eval_loop2.sample`](#eval_loop2sample)
   - [`eval_loop2.simulate`](#eval_loop2simulate)
   - [`eval_loop2.snapshot`](#eval_loop2snapshot)
+- **M0 Project 3** (`eval_project3/`)
+  - [`eval_project3.m0`](#eval_project3m0)
 
 # API: `backend/app/`
 
@@ -4827,3 +4829,200 @@ def verdict(item: dict, location_id: int, snapshot: dict, approved: dict, profil
 ```
 
 Today's PackPlate verdict for one snapshot item and one profile.
+
+# M0 Project 3: `eval_project3/`
+
+## `eval_project3.m0`
+
+Source: [`eval_project3/m0.py`](../eval_project3/m0.py)
+
+Evaluate Project 3's accounts and private chat using synthetic users.
+
+Run from proj_2/: python eval_project3/m0.py [--check].
+M0_DATABASE_URL must name the local packplate_m0_project3 test database.
+
+### class `CaseFailure` (Exception)
+
+A journey did not behave as the frozen scenario requires.
+
+### `need`
+
+```python
+def need(condition, message)
+```
+
+Stop this case with a useful explanation when a check fails.
+
+### `load_scenarios`
+
+```python
+def load_scenarios()
+```
+
+Read the fixed cases and refuse missing, repeated, or unknown categories.
+
+### `test_database`
+
+```python
+@contextmanager
+def test_database()
+```
+
+Migrate a private temporary schema, then remove only that schema.
+
+### class `Journey`
+
+Three fictional students using the real API and their own cookies.
+
+#### `request`
+
+```python
+def request(self, actor, method, path, status=None, body=None)
+```
+
+Send only this user's cookie, without sharing the client's cookie jar.
+
+#### `register_users`
+
+```python
+def register_users(self)
+```
+
+Register through the API rather than inserting already-signed-in users.
+
+#### `create_room`
+
+```python
+def create_room(self, invitees)
+```
+
+Create a room as Alice and check its starting membership.
+
+#### `invitation`
+
+```python
+def invitation(self, actor, room)
+```
+
+Find the invitation for this room in the invited user's own list.
+
+#### `join`
+
+```python
+def join(self, actor, room)
+```
+
+Accept the actual invitation and check that membership becomes active.
+
+#### `active_room`
+
+```python
+def active_room(self, three=False)
+```
+
+Create a two- or three-person group through the invitation workflow.
+
+#### `message_rows`
+
+```python
+def message_rows(self)
+```
+
+Read stored effects independently of the API's permission checks.
+
+#### `send`
+
+```python
+def send(self, actor, room, message)
+```
+
+Check the returned sender and the message actually saved in the room.
+
+#### `history`
+
+```python
+def history(self, actor, room, expected)
+```
+
+Compare the complete history with our independently specified messages.
+
+#### `finish_membership`
+
+```python
+def finish_membership(self, actor, room, delete=False)
+```
+
+Leave normally, or delete the account using its real password.
+
+#### `authorized`
+
+```python
+def authorized(self, case_id)
+```
+
+Complete one of the six declared journeys without guessing its outcome.
+
+#### `denied_setup`
+
+```python
+def denied_setup(self, case_id)
+```
+
+Set the declared role or session state without using permission helpers.
+
+#### `denied_attempt`
+
+```python
+def denied_attempt(self, case, actor, room, operation)
+```
+
+Check both the response and stored effects, even when access is refused.
+
+### `run_case`
+
+```python
+@contextmanager
+def run_case(engine)
+```
+
+Start each case with clean synthetic data and restore application overrides.
+
+### `authorized_result`
+
+```python
+def authorized_result(engine, case, control=False)
+```
+
+Record an entire journey as failed if any required step fails.
+
+### `denied_results`
+
+```python
+def denied_results(engine, case, control=False)
+```
+
+Record every planned denied attempt; setup failures cannot silently vanish.
+
+### `file_hash`
+
+```python
+def file_hash(paths)
+```
+
+Identify the exact inputs without saving random cookies or timestamps.
+
+### `evaluate`
+
+```python
+def evaluate(engine, scenarios)
+```
+
+Measure all fixed journeys and confirm both deliberately faulty controls fail.
+
+### `main`
+
+```python
+def main(argv=None)
+```
+
+Print the evidence; --check also compares it with the recorded baseline.
