@@ -11,6 +11,7 @@
 [![Typecheck](https://github.com/morgansimon425/PackPlate/actions/workflows/typecheck.yml/badge.svg?branch=dev)](https://github.com/morgansimon425/PackPlate/actions/workflows/typecheck.yml?query=branch%3Adev)
 [![M0 loop 1](https://github.com/morgansimon425/PackPlate/actions/workflows/m0.yml/badge.svg?branch=dev)](https://github.com/morgansimon425/PackPlate/actions/workflows/m0.yml?query=branch%3Adev)
 [![M0 loop 2](https://github.com/morgansimon425/PackPlate/actions/workflows/m0_loop2.yml/badge.svg?branch=dev)](https://github.com/morgansimon425/PackPlate/actions/workflows/m0_loop2.yml?query=branch%3Adev)
+[![M0 Project 3](https://github.com/morgansimon425/PackPlate/actions/workflows/m0_project3.yml/badge.svg?branch=dev)](https://github.com/morgansimon425/PackPlate/actions/workflows/m0_project3.yml?query=branch%3Adev)
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.23521650.svg)](https://doi.org/10.5281/zenodo.23521650)
 
 https://github.com/user-attachments/assets/c9b771b0-a093-43f9-bab0-dbc98d99fb92
@@ -20,10 +21,134 @@ dining hours, menus, and nutrition information from every campus dining
 location in one place, and filters the menus by dietary restrictions and goals
 like allergies, vegetarian, halal, or a protein target. Students can enter
 constraints for several people at once, so a group with different diets can
-find a location where everyone has something to eat. Students can also report
-how busy each location is.
+find a location where everyone has something to eat. Students can report how
+busy each location is, make an account to save their diet, chat with friends,
+and ask a dining assistant questions in plain words.
+
+**Project 3.** This is the third round of the course project. Project 2 built the
+menus, filters, and crowd reports. Project 3 adds user accounts, group chat,
+saved diets and recommendations, a crowd forecast, and the dining assistant
+(M1 to M5 below), and has its own M0 eval for accounts and chat.
+
+**Status:** a working course project. The menu and hours data are NC State's own
+and can be wrong, so PackPlate never says a dish is safe. It says `fits`,
+`conflicts`, or `incomplete`, and `incomplete` is the answer whenever the data
+has a gap.
+
+## ✨ What it does
+
+| | Milestone | What you get |
+|---|---|---|
+| **M0** | Risk-killer evals | Project 2: filters for a whole group, tested against NC State's real data. Project 3: accounts and private chat, tested with simulated users. See [the evidence](#-m0-risk-killer-eval). |
+| **M1** | User accounts | Sign up with a username (3-30 letters, numbers, or `_`) and a password (8-128 characters). Passwords are hashed with scrypt. A login lasts 30 days in an HttpOnly cookie, and the database keeps only a hash of the token. Ten failed logins in 15 minutes lock that username for a while. You can delete your account. |
+| **M2** | Crowd tracker | Tap not busy, moderate, or crowded for a location on the **How busy** page. Reports from the last 30 minutes count, newer ones count more, and one client can report a location once a minute. Nothing about the reporter is stored. When nobody has reported, a **forecast** from the time of day, the opening hours, and the campus calendar fills in. It is an estimate, and it is labeled as one. |
+| **M3** | Dining assistant | Ask in plain words: what is for dinner, what fits my diet, what is open, how busy is it, which hall is closest to where I am. It answers only from PackPlate's own data, never says a food is safe, and refuses medical questions. |
+| **M4** | Group chat | Logged-in students make a chat room, invite friends, and talk. Turn on **Open to Chat** (off by default) to appear on the list others can invite from. |
+| **M5** | Saved diet and recommendations | A logged-in student saves their dietary profile to their account, and it follows them to any device. Logged out, it stays in the browser. Ask for meals that meet a goal, such as high protein or under 600 calories. |
+
+### How the dining assistant answers
+
+A message is read by rules, looked up with read-only tools, and answered from
+fixed templates. A checker rejects any reply that has a number, time, dish, or
+place that was not in the lookup. A diet or place you type is used for that
+question only and is not stored.
+
+Three services are optional, free, and on by default. Each falls back safely
+when it is off or unreachable.
+
+| Setting | What it does | Without it |
+|---|---|---|
+| `ASSISTANT_LLM_ENABLED` | A local [Ollama](https://ollama.com) model (`qwen2.5:1.5b`) works out what was asked. It never writes the reply. | The rules alone |
+| `ASSISTANT_GEOCODE_ENABLED` | Looks up a place you type that is not on the campus list (OpenStreetMap Nominatim) | Only listed campus places are found |
+| `ASSISTANT_ROUTING_ENABLED` | Driving distance to halls too far to walk (OSRM) | Straight-line miles |
+
+No account or payment is needed for any of them. `ASSISTANT_ENABLED=false`
+removes the assistant. All settings are in [`proj_2/.env.example`](proj_2/.env.example).
+
+## 🚀 Quick start
+
+You need Git, Python 3.12, Node 22, and Docker (for a local database). The full
+steps, including Windows and the team's shared database, are in
+[INSTALL.md](INSTALL.md).
+
+```bash
+git clone https://github.com/morgansimon425/PackPlate.git
+cd PackPlate
+python3 -m venv proj_2/.venv
+source proj_2/.venv/bin/activate
+pip install -r proj_2/requirements-dev.txt
+(cd proj_2/frontend && npm ci)
+
+cd proj_2
+cp .env.example .env
+docker compose up -d db
+export DATABASE_URL=postgresql://packplate:packplate@localhost:5432/packplate
+export PYTHONPATH=$PWD
+alembic -c db/alembic.ini upgrade head                       # create the tables
+python -m ingestion.run --units 1 --days 1 --no-nutrition   # a little data to look at
+python -m uvicorn app.main:app --app-dir backend --reload   # terminal 1: the API
+cd frontend && npm run dev                                  # terminal 2: the website
+```
+
+Open http://localhost:3000. Check http://localhost:8000/health shows
+`"db": "ok"` and `"schema": "current"`.
+
+- After you pull new migrations, a local database updates itself when the API
+  starts. A hosted database such as Supabase never does: run
+  `alembic -c db/alembic.ini upgrade head` once from `proj_2/`.
+- The app does not read `.env` by itself. Export the settings, or run
+  `set -a; source .env; set +a` first.
+- If the website runs on a port other than 3000, start the API with
+  `FRONTEND_ORIGIN=http://localhost:<port>`, or the browser blocks its calls.
+- Problems? See the troubleshooting table in [INSTALL.md](INSTALL.md).
+
+## 🧱 Tech stack
+
+| Layer | Technology |
+|---|---|
+| Website | Next.js 16, React 19, TypeScript |
+| API | FastAPI, SQLAlchemy 2, Alembic |
+| Database | PostgreSQL (Docker locally, Supabase shared) |
+| Scraper | Python, runs daily from GitHub Actions |
+| Checks | pytest, Ruff, Black, Prettier, ESLint |
+
+Every library and its license is listed in
+[THIRD_PARTY_LIBRARIES.md](THIRD_PARTY_LIBRARIES.md). The Python requirements
+files don't pin most versions, so a fresh install may get newer ones.
 
 ## 🎯 M0: risk-killer eval
+
+PackPlate has one M0 per project. The **Project 3 M0** comes first and is the
+one for the new accounts and chat. The **Project 2 M0** (food safety, loops 1
+and 2) follows it.
+
+### Project 3: accounts and private chat
+
+**The claim:** simulated students can complete every authorized account and
+chat journey, and nobody without permission can read or write a private
+message.
+
+| Target | Result | |
+|---|---|---|
+| **Reliable:** 100% of authorized journeys complete | **6 of 6** | ✅ met |
+| **Private:** 0 forbidden reads or writes accepted | **0 of 21** attempts | ✅ met |
+
+- **Journeys:** a conversation across logout and sign-in, two separate groups,
+  leaving a three-person and a two-person group, and deleting an account from
+  each. The 21 denied attempts are reads and writes by outsiders, signed-out
+  users, and removed members.
+- **Users:** fictional Alice, Bob, and Charlie, with separate cookies, in a
+  disposable local database. These are **simulated users, not real ones**, and
+  the result does not show that students want chat.
+- **Controls:** three deliberately broken versions are each caught, so the
+  eval can fail.
+- **Reproduce:** `cd proj_2 && python eval_project3/m0.py --check`. It needs a
+  local `packplate_m0_project3` database (`M0_DATABASE_URL`). The **M0 Project
+  3** badge means the committed numbers reproduce.
+- **Details:** [the plan](proj_2/docs/m0-eval-project3.md) and
+  [the result](proj_2/eval_project3/results.json).
+
+### Project 2: food safety
 
 **The claim**, posted in [issue #11](https://github.com/morgansimon425/PackPlate/issues/11)
 before the first run: a group of friends with different diets can find
@@ -49,7 +174,7 @@ PackPlate ever telling someone a dish is safe when it isn't.
   [the result](proj_2/eval/results.json), and the review decision in
   [issue #11](https://github.com/morgansimon425/PackPlate/issues/11).
 
-### Loop 2: after the fixes
+#### Loop 2: after the fixes
 
 Loop 1 showed that NC State's icons leave allergens out, so PackPlate now reads
 the ingredient lists itself and flags what the icons miss
@@ -93,11 +218,26 @@ use a word list: a person read the ingredients of 50 random "fits" answers.
 | [Contributing](CONTRIBUTING.md) | Setup, tests, checkers, and how to make changes safely |
 | [Code of conduct](CODE-OF-CONDUCT.md) · [License](LICENSE.md) · [Third-party libraries](THIRD_PARTY_LIBRARIES.md) | |
 
+## ⚠️ Known limits
+
+- **Labels can be wrong.** PackPlate reads NC State's data. Menus carry the
+  warning "Labels can be wrong; check ingredients."
+- **Estimates are estimates.** The crowd forecast is hand-tuned, and its
+  campus-calendar breaks are not filled in yet. The assistant's walking times
+  come from straight-line distance.
+- **Some coordinates are unverified.** Not every campus place has been checked
+  on a map, and Wolves' Den has no position yet.
+- **Local data goes stale.** The daily scrape updates the shared database, not
+  yours. Run `python -m ingestion.run` at most once or twice a day.
+- **The assistant is not medical advice.** It refuses those questions.
+
 ## 📁 Structure
 
 ```
 proj_1b/    Project 1b — requirements
-proj_2/     Project 2 — implementation (Next.js + FastAPI + Postgres)
+proj_2/     Projects 2 and 3 — implementation (Next.js + FastAPI + Postgres)
+            backend/ API · frontend/ website · ingestion/ scraper · db/ schema
+            docs/ guides · eval/ M0 tests
 ```
 
 ## 🎓 Course

@@ -43,10 +43,27 @@ the group question.
 - **Shows how busy places are**, from quick student reports (not busy,
   moderate, crowded). Recent reports count more, and nothing about the reporter
   is stored.
+- **Estimates crowds when nobody has reported.** A forecast from the time of
+  day, the opening hours, and the campus calendar fills the gap, so nobody has
+  to report for a place to show a level. It is an estimate, not a count, and
+  student reports pull it toward what people actually saw.
+- **Accounts and a saved diet.** You can make an account, and a logged-in
+  student can save their dietary profile so it follows them to any device. It
+  is optional: logged out, the profile stays in your browser only. The filter
+  and recommendation endpoints never store a profile.
+- **Meal recommendations.** Give it a goal such as high protein or under 600
+  calories, and it ranks meals across every location that fit your profile.
+- **A dining assistant.** Logged-in students can ask in plain words: what is
+  for dinner, what fits my diet, what is open, how busy is it, and which dining
+  hall is closest to where I am. It answers only from PackPlate's own data,
+  never says a food is "safe", and refuses medical questions. The optional
+  language model only works out what was asked; it never writes the answer.
+- **Group chat.** Logged-in students can open a chat room, invite friends, and
+  agree on where to eat. People who turn on Open to Chat can be found and
+  invited; it is off by default.
 
-The website is in progress: its pages for open locations, menus, groups, and
-crowd levels call this API. Your dietary profile is kept in your browser only;
-the server never stores it.
+The website's pages (open locations, menus, groups, compare meals, crowd
+levels, the assistant, and chat) all call this API.
 
 ## Does it work? The evidence
 

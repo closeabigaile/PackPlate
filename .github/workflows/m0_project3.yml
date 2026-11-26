@@ -42,11 +42,6 @@ jobs:
             proj_2/backend/requirements.txt
             proj_2/ingestion/requirements.txt
       - name: Install the existing dependencies
-        # The inherited eval imports the ingestion parser too.
         run: pip install -r backend/requirements.txt -r ingestion/requirements.txt
       - name: Reproduce Project 3 M0 and verify the faulty controls
         run: python eval_project3/m0.py --check
-      - name: Reproduce inherited M0 loop 1
-        run: python -m eval.m0 --check
-      - name: Reproduce inherited M0 loop 2
-        run: python -m eval_loop2.m0 --check
