@@ -14,7 +14,9 @@
 [![M0 Project 3](https://github.com/morgansimon425/PackPlate/actions/workflows/m0_project3.yml/badge.svg?branch=dev)](https://github.com/morgansimon425/PackPlate/actions/workflows/m0_project3.yml?query=branch%3Adev)
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.23521650.svg)](https://doi.org/10.5281/zenodo.23521650)
 
-https://github.com/user-attachments/assets/c9b771b0-a093-43f9-bab0-dbc98d99fb92
+**Project 3 teaser (26 seconds):** [Watch the teaser](proj_3/vids/teaser.mp4)
+
+**Project 3 feature walkthrough (4 minutes 12 seconds):** [Watch the walkthrough](proj_3/vids/Demo_vid_packplate.mp4)
 
 A website that helps NC State students decide where to eat on campus. It puts
 dining hours, menus, and nutrition information from every campus dining
