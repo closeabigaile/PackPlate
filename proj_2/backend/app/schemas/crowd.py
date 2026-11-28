@@ -21,3 +21,11 @@ class Crowd(BaseModel):
     level: CrowdLevel | None  # null = no recent reports: unknown, not "not busy"
     report_count: int  # reports in the window
     last_reported_at: datetime | None
+
+
+class CrowdForecast(BaseModel):
+    """Predicted crowd level from the time of day and opening hours: no student input needed."""
+
+    level: CrowdLevel | None  # the forecast alone; null = closed or hours unknown
+    estimate: CrowdLevel | None  # forecast combined with any recent student reports
+    source: Literal["forecast", "reports", "forecast+reports", "none"]

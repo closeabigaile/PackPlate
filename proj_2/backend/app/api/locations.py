@@ -22,6 +22,7 @@ from app.schemas.locations import (
     MenuItem,
     Period,
 )
+from app.services import crowd_forecast
 from app.services.crowd import WINDOW, aggregate
 from app.services.hours import campus_time, open_state, periods
 from app.services.label_reviews import reviewed_items
@@ -49,7 +50,15 @@ def _hours_day(day: date, row) -> HoursDay:
 def _summary(location, hours: dict, reports: dict, at: datetime) -> dict:
     today = at.date()
     todays = hours.get((location.id, today))
-    state = open_state(at, todays, hours.get((location.id, today - timedelta(days=1))))
+    yesterday = hours.get((location.id, today - timedelta(days=1)))
+    state = open_state(at, todays, yesterday)
+    location_reports = reports.get(location.id, [])
+    predicted = crowd_forecast.forecast(
+        at, crowd_forecast.current_period(at, todays, yesterday), location.id
+    )
+    estimate, source = crowd_forecast.blend(
+        predicted.score, location_reports, at, WINDOW
+    )
     return {
         "id": location.id,
         "name": location.name,
@@ -63,7 +72,8 @@ def _summary(location, hours: dict, reports: dict, at: datetime) -> dict:
         "closes_at": state.closes_at,
         "opens_next_at": state.opens_next_at,
         "today": _hours_day(today, todays),
-        "crowd": vars(aggregate(reports.get(location.id, []), at)),
+        "crowd": vars(aggregate(location_reports, at)),
+        "forecast": {"level": predicted.level, "estimate": estimate, "source": source},
     }
 
 

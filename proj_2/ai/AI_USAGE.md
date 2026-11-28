@@ -56,3 +56,24 @@ changed, and how the result was checked.
 | 10 | [Menu display and nutrition info unavailable](artifacts/10-menu-display.md) | Morgan Simon | 2026-10-20 |
 | 11 | [M0 loop 2: re-testing after the fixes](artifacts/11-m0-loop-2.md) | Ethan Goodman | 2026-10-20 |
 | 12 | [Frontend development from wireframes](artifacts/12-frontend.md) | Savanah Hendzel | 2026-10-18 |
+ 
+M2 predicted crowd levels - November 12-25, 2026
+
+AI tool: Claude (Sonnet 5.5), used in the browser chat.
+
+Files: `crowd_forecast.py`, `app/api/locations.py`, `app/schemas/crowd.py`, `app/schemas/locations.py`, `test_crowd_forecast.py`, `test_crowd_forecast_api.py`, `types.ts`, `Badges.tsx`, `busy/page.tsx`, and the M2 milestone description in docs.
+
+Task: Improve the busyness estimates without asking students to report crowd levels, while keeping the existing crowd reports working.
+
+AI assistance: Assisted with comparing options, writing the crowd forecast service, adding the forecast field to the locations API, adding a predicted badge to the How Busy page, writing tests, and drafting the milestone description. The first suggestion assumed a different tech stack (Flask and SQLite) and was corrected after Claude read the repository's FastAPI and Postgres code. The meal-rush times and cut-offs are hand-tuned guesses, and the campus calendar list is left empty because AI should not invent campus dates.
+
+Conclusion and verification: The existing crowd field was left unchanged so other features are not affected. The 13 forecast unit tests passed on my machine, and black, ruff and the docs generator ran clean. Claude also ran the backend tests in its own environment before handoff (100 passed). The 3 database API tests and the frontend checks are run by CI, and the predictions have not yet been compared with real crowds at a dining hall.
+
+Human reviewer: Satwi.
+
+M2 conclusion reports and saved outputs
+
+| Date | Report / conclusion | Supporting output |
+|---|---|---|
+| November 12-25, 2026 | Crowd forecast built and tested | `crowd_forecast.py`, 13 unit tests, 3 API tests |
+| November 27, 2026 | M2 milestone description added | Milestone description in docs |
